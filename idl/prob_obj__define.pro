@@ -829,7 +829,7 @@ pro prob_obj::set_n_par, new_n_par
 ; sets the number of parameters 
 ; new_n_par : new number of parameters 
 
-   self.prob_best = new_best
+   self.n_par = n_par
 end
 
 ;-------------------------------------------------------------------------------------------
