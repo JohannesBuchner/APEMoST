@@ -724,6 +724,8 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
 
+; TODO: rename to set_prob_best for consistency
+
 pro prob_obj::set_best, new_best
 ; sets the best probability achieved by the model
 ; new_best : the value to be set
@@ -735,6 +737,8 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
+
+; TODO: rename to set_y_dat for consistency
 
 pro prob_obj::set_data, new_data, init=init
 ; sets the (observed) data used for fitting
@@ -892,6 +896,8 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
+
+; TODO: rename to set_param_descr for consistency
 
 pro prob_obj::set_par_descr, new_par_descr, ind=ind, all=all, init=init
 ; sets the description of specific or all parameters

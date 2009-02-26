@@ -1,11 +1,16 @@
 
 
-#include "mcmc.h"
+#include "gsl_helper.h"
 
 /**
  * PTR_NEW: 
  *   creates a pointer to a heap variable
  *   argument is copied and a pointer is returned.
+ **
+ * with foo and bar being pointers
+ *   bar = foo lets bar point to the same values as foo
+ *   *bar = foo changes the values of bar to the same ones as foo (copy)
+ *   * does dereferencing
  **
  * DBLARR: 
  *   creates a double/float array/vectro
@@ -31,7 +36,7 @@
 #define DEBUG(str)     IFDEBUG printf(str "\n");
 #define DEBUGD(str, v) IFDEBUG printf(str ": %f\n", v);
 
-gsl_histogram * get_hist(gsl_vector ** param_distr, int index, int nbins) {
+gsl_histogram * calc_hist(gsl_vector ** param_distr, int index, int nbins) {
 	double max;
 	double min;
 	unsigned int i;
@@ -67,5 +72,25 @@ gsl_histogram * get_hist(gsl_vector ** param_distr, int index, int nbins) {
 	return h;
 }
 
+double calc_vector_sum(gsl_vector * v) {
+	double sum = 0;
+	for(int i = 0; i < v->size; i++) {
+		sum += gsl_vector_get(i);
+	}
+	return sum;
+}
+
+gsl_vector * dup_vector(gsl_vector * v) {
+	gsl_vector * r = gsl_vector_alloc(v->size);
+	gsl_vector_memset(r, v);
+	return r;
+}
+
+gsl_vector * calc_normalized(gsl_vector * v) {
+	double sum = calc_vector_sum(v);
+	gsl_vector * r = dup_vector(v);
+	gsl_vector_scale(r, 1/sum);
+	return r;
+}
 
 
