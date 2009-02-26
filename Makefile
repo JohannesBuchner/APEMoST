@@ -1,4 +1,4 @@
-# 
+# Makefile for mcmc
 
 CFLAGS=-O3 -Wall -Werror -Wextra -g -ansi -pedantic
 LDFLAGS=-lgsl -lgslcblas -lm
