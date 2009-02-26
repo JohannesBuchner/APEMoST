@@ -9,7 +9,7 @@
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_vector.h>
 
-gsl_histogram * get_hist(gsl_vector ** param_distr, int index, int nbins);
+gsl_histogram * get_hist(gsl_vector ** vs, int index, int nbins);
 
 
 #endif
