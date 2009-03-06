@@ -299,7 +299,7 @@ catch, error
 
 
 ;error handling -> this code will be run if error != 0 anywhere in the procedure
-if error ne 0 then 
+if error ne 0 then begin
    ;print an error message   
    print,'File I/O error - there was a problem with ', filename
    
@@ -724,8 +724,6 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
 
-; TODO: rename to set_prob_best for consistency
-
 pro prob_obj::set_best, new_best
 ; sets the best probability achieved by the model
 ; new_best : the value to be set
@@ -737,8 +735,6 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
-
-; TODO: rename to set_y_dat for consistency
 
 pro prob_obj::set_data, new_data, init=init
 ; sets the (observed) data used for fitting
@@ -833,7 +829,7 @@ pro prob_obj::set_n_par, new_n_par
 ; sets the number of parameters 
 ; new_n_par : new number of parameters 
 
-   self.n_par = n_par
+   self.n_par = new_n_par
 end
 
 ;-------------------------------------------------------------------------------------------
@@ -896,8 +892,6 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
-
-; TODO: rename to set_param_descr for consistency
 
 pro prob_obj::set_par_descr, new_par_descr, ind=ind, all=all, init=init
 ; sets the description of specific or all parameters
@@ -1077,5 +1071,4 @@ struct = { prob_obj, n_par:0L, accept:0L, reject:0L, prob:0D, prob_best:0D, seed
 	   params_minmax:ptr_new(/allocate_heap), x_dat:ptr_new(/allocate_heap), y_dat:ptr_new(/allocate_heap), model:ptr_new(/allocate_heap)} 
 
 end
-
 
