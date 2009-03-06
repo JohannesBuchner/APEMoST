@@ -74,15 +74,16 @@ gsl_histogram * calc_hist(gsl_vector ** param_distr, int index, int nbins) {
 
 double calc_vector_sum(gsl_vector * v) {
 	double sum = 0;
-	for(int i = 0; i < v->size; i++) {
-		sum += gsl_vector_get(i);
+	unsigned int i;
+	for(i = 0; i < v->size; i++) {
+		sum += gsl_vector_get(v, i);
 	}
 	return sum;
 }
 
 gsl_vector * dup_vector(gsl_vector * v) {
 	gsl_vector * r = gsl_vector_alloc(v->size);
-	gsl_vector_memset(r, v);
+	gsl_vector_memcpy(r, v);
 	return r;
 }
 

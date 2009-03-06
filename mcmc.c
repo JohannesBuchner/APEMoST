@@ -1,6 +1,6 @@
 #include "mcmc.h"
 #include "gsl_helper.h"
-#include <gsl_rng.h>
+#include <gsl/gsl_rng.h>
 
 double get_random_number() {
 	gsl_rng * random;
@@ -34,11 +34,10 @@ void mcmc_init(mcmc m) {
     m.y_dat = NULL;
     m.model = NULL;
     
-    m.temp = get_random_number();
+    get_random_number();
     m.prob = -1e+10;
     m.prob_best = -1e+10;
-    
-};
+}
 
 /* TODO: cleanup */
 
@@ -57,29 +56,34 @@ void mcmc_init(mcmc m) {
  *       I'd let people access the struct directly.
  */
 
-extern calc_model(mcmc * m);
-extern calc_model_for(mcmc * m, int i);
+extern void calc_model(mcmc * m);
+extern void calc_model_for(mcmc * m, int i);
 
-extern calc_prob(mcmc * m);
+extern double calc_prob(mcmc * m);
 
 void add_values(mcmc * m, int n_iter) {
 	/* TODO */
+	(void)m;
+	n_iter += 0;
 }
 
 void write2files(mcmc * m) {
+	(void)m;
 	/* TODO */
 }
 
 void setup(mcmc * m, const char * filename) {
+	(void)m;
+	(void)filename;
 	/* TODO */
 }
 
 gsl_vector * get_params_ar(mcmc * m) {
-	int i;
+	unsigned int i;
 	double sum = 0;
-	gsl_vector * r = gsl_vector_alloc(n_pars);
-	for (i=0; i < m->n_par; i++) {
-		sum += calc_sum(m->params_ar[i]);
+	gsl_vector * r = gsl_vector_alloc(m->n_par);
+	for (i = 0; i < m->n_par; i++) {
+		sum += calc_vector_sum(m->params_ar[i]);
 		gsl_vector_set(r, i, gsl_vector_get(m->params_ar[i], 0));
 	}
 	gsl_vector_scale(r, 1/sum);
@@ -87,35 +91,31 @@ gsl_vector * get_params_ar(mcmc * m) {
 }
 
 double get_params_ar_for(mcmc * m, int i) {
-	return gsl_vector_get(m->params_ar[i], 0) / calc_sum(m->params_ar[i]);
+	return gsl_vector_get(m->params_ar[i], 0) / calc_vector_sum(m->params_ar[i]);
 }
 
-gsl_histogram * get_hist(mcmc * m, int i, int nbins) {
-	return calc_hist(m->params_distr[i-1], index, nbins);
+gsl_histogram * get_hist(mcmc * m, int index, int nbins) {
+	return calc_hist(m->params_distr, index, nbins);
 }
 
 void set_params_ar(mcmc * m, gsl_vector ** new_params_ar) {
-	m->minmax = new_minmax;
+	m->params_ar = new_params_ar;
 }
 
 void set_params_ar_for(mcmc * m, gsl_vector * new_params_ar, int i) {
-	m->minmax[i] = new_minmax;
+	m->params_ar[i] = new_params_ar;
 }
 
-void set_prob_best(mcmc * m, gsl_vector * new_prob_best) {
+void set_prob_best(mcmc * m, double new_prob_best) {
 	m->prob_best = new_prob_best;
 }
 
 void set_minmax_for(mcmc * m, gsl_vector * new_minmax, int i) {
-	m->minmax[i] = new_minmax;
+	m->params_minmax[i] = new_minmax;
 }
 
 void set_minmax(mcmc * m, gsl_vector ** new_minmax) {
-	m->minmax = new_minmax;
-}
-
-void set_minmax_for(mcmc * m, gsl_vector * new_minmax, int i) {
-	m->minmax[i] = new_minmax;
+	m->params_minmax = new_minmax;
 }
 
 void set_model(mcmc * m, gsl_vector * new_model) {
@@ -150,8 +150,8 @@ void set_seed(mcmc * m, gsl_vector * new_seed) {
 	m->seed = new_seed;
 }
 
-void set_probability(mcmc * m, gsl_vector * new_probability) {
-	m->probability = new_probability;
+void set_probability(mcmc * m, double new_prob) {
+	m->prob = new_prob;
 }
 
 void set_x(mcmc * m, gsl_vector * new_x) {
@@ -176,9 +176,7 @@ void set_y_copy(mcmc * m, gsl_vector * new_y) {
 	gsl_vector_memcpy(m->y_dat, new_y);
 }*/
 
-void set_steps_for(mcmc * m, gsl_vector * new_steps, int i) {
-	if(m->params_step[i-1] != NULL)
-		gsl_vector_free(m->params_step[i-1]);
+void set_steps_for(mcmc * m, double new_steps, int i) {
 	m->params_step[i-1] = new_steps;
 }
 
@@ -190,6 +188,7 @@ void free_gsl_vector_array(gsl_vector ** arr) {
 	}
 }
 
+/*
 gsl_vector ** copy_gsl_vector_array(gsl_vector ** arr, const gsl_vector ** src, size_t n) {
 	int i = 0;
 	assert(src != NULL);
@@ -206,16 +205,12 @@ gsl_vector ** copy_gsl_vector_array(gsl_vector ** arr, const gsl_vector ** src, 
 			gsl_vector_memcpy(arr[i], src[i]);
 		}
 	}
-}
+}*/
 
-void set_steps_all(mcmc * m, gsl_vector ** new_steps) {
-	free_gsl_vector_array(m->params_step);
-	m->params_step = new_steps;
+void set_steps_all(mcmc * m, double * new_steps) {
+	unsigned int i;
+	for(i = 1; i < m->n_par + 1; i++) {
+		set_steps_for(m, new_steps[i+1], i);
+	}
 }
-
-void set_steps_all_copy(mcmc * m, gsl_vector ** new_steps) {
-	assert(new_steps != NULL);
-	m->params_step = copy_gsl_vector_array(m->params_step, new_steps);
-}
-
 

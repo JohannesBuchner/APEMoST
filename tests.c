@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mcmc.h"
+#include "gsl_helper.h"
 
 void dump(void* a) {
 	(void)a;
@@ -53,7 +54,7 @@ int test_hist(void){
 	gsl_vector_set (vs, 0, 3);
 	
 	ASSERTEQUALI((int)vs->size, 3, "setup");
-	h = get_hist(&vs, 1, 3);
+	h = calc_hist(&vs, 1, 3);
 	ASSERTEQUALD(gsl_histogram_min(h), 0.0, "lower bound");
 	ASSERTEQUALD(gsl_histogram_max(h), 3.0, "upper bound");
 	ASSERTEQUALI((int)gsl_histogram_bins(h), 3, "nbins");
@@ -63,6 +64,15 @@ int test_hist(void){
 	ASSERTEQUALD(gsl_histogram_get (h, 2), 0.333333, "bin:2 -> 2 elem");
 	gsl_histogram_free (h);
 
+	return 0;
+}
+
+
+int test_create(void){
+	mcmc m;
+	mcmc_init(m);
+	
+	
 	return 0;
 }
 
