@@ -23,7 +23,8 @@ tests.exe: Makefile mcmc.h mcmc.c run-tests.c tests.c gsl_helper.h gsl_helper.c
 # tests: run the tests
 tests: tests.exe
 	./tests.exe
-	
+
+# bla bla
 # clean: 
 clean:
 	rm -f *.exe
