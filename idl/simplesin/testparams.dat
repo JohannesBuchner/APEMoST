@@ -1,0 +1,9 @@
+Testparams:
+
+Model: y = a*sin(2*PI*f*x  + p)
++ Gaussian noise with sigma = 0.5
+
+
+amplitude 1.13
+frequency 15.2
+phase 1.4
