@@ -24,38 +24,38 @@ typedef struct {
 	/* pointer to 1D-array as seed for random number generators */
 	gsl_vector * seed;
 	/* pointer to 1D-array containing the parameter values */
-	gsl_vector * params;
+	gsl_vector * params; /* size = n_par */
 	/* pointer to 1D-array containing the best parameters yet */
-	gsl_vector * params_best;
+	gsl_vector * params_best;  /* size = n_par */
 	/* pointer to 2D-array containing the resulting values for each parameter */
-	gsl_vector ** params_distr;
+	gsl_vector ** params_distr; /* size = n_par, iter */
 	/* pointer to 2D-array which acts as a buffer for storing parameter values 
 	 * for quickly */
-	gsl_vector ** params_distr_buf;
+	gsl_vector ** params_distr_buf; /* size = n_par, iter */
 	/* pointer to 1D-array containing description of parameters in string 
 	 * format */
-	char ** params_descr;
+	char ** params_descr; /* size = n_par */
 	/* pointer to 1D-array containing the current value of the prior probability
 	 * for each parameter */
-	gsl_vector * params_priors;
+	gsl_vector * params_priors; /* size = n_par (not used atm) */
 	/* pointer to 2D-array containing the number of accepted/rejected steps for 
 	 * individual parameters*/
-	gsl_vector ** params_ar;
+	long ** params_ar; /* size = n_par, 2; TODO: 2 vars */
 	/* pointer to 1D-array containing the current step width for individual 
 	 * parameters */
-	double * params_step;
+	double * params_step; /* size = n_par; set by calibration */
 	/* pointer to 2D-array containing the lower and upper limits for each 
 	 * parameter */
-	gsl_vector ** params_minmax;
+	double ** params_minmax; /* size = n_par, 2; TODO: 2 vars: don't change */
 	/* pointer to 1D-array containing the abscissa of the observations (e.g., 
 	 * date, frequency, wavelength) */
-	gsl_vector * x_dat; 
+	gsl_vector * x_dat; /* size = x-size */
 	/* pointer to 1D-array containing the ordinate of the observations (e.g., 
 	 * intensity, power, radial vel.) */
-	gsl_vector * y_dat;
+	gsl_vector * y_dat; /* size = x-size */
 	/* pointer to 1D-array containing the model values corresponding to the 
 	 * observed abscissa values */
-	gsl_vector * model;
+	double * model; /* size = x-size; synthetic y_dat value */
 } mcmc;
 
 double get_random_number();
