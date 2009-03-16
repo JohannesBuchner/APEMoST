@@ -1,8 +1,9 @@
 # Makefile for mcmc
 # 
 
-CFLAGS=-O3 -Wall -Werror -Wextra -g -ansi -pedantic
+CFLAGS=-O3 -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
+DUMA=libduma.so.0.0.0
 # -DHAVE_INLINE 
 CC=gcc
 
@@ -22,7 +23,7 @@ tests.exe: Makefile mcmc.h mcmc.c mcmc_gettersetter.c mcmc_parser.c run-tests.c 
 
 # tests: run the tests
 tests: tests.exe
-	./tests.exe
+	LD_PRELOAD=${DUMA} ./tests.exe
 
 # bla bla
 # clean: 
