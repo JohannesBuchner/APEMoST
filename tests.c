@@ -2,12 +2,13 @@
 /* we do testing of the inner works */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "mcmc.h"
 #include "debug.h"
 #include "gsl_helper.h"
 
 #define DUMPONFAIL 1
-/*
+
 #define ASSERTDUMP(condition, text, a) { \
 		if(!(condition)) { \
 			printf("  ASSERT FAILED: %s\n",text); \
@@ -20,7 +21,7 @@
 			printf("  subtest ok: %s\n",text); \
 		} \
 	}
-*/
+
 #define ASSERT(condition, text) ASSERTDUMP(condition, text, NULL)
 #define ASSERTEQUALI(result, expected, text) { \
 		if(expected != result) { \
@@ -79,12 +80,49 @@ int test_create(void){
 }
 
 
+int test_load(void){
+	mcmc * m = mcmc_load("tests/testinput1");
+	ASSERT(m!=NULL, "loaded");
+	ASSERTEQUALI(m->n_par, 3, "number of parameters");
+	ASSERTEQUALD(gsl_vector_get(m->params, 0),      0.7,  "start");
+	ASSERTEQUALD(gsl_vector_get(m->params_min, 0),  0.4,  "min");
+	ASSERTEQUALD(gsl_vector_get(m->params_max, 0),  3.0,  "max");
+	ASSERTEQUALD(gsl_vector_get(m->params_step, 0), 0.01, "step");
+	ASSERT(strcmp(m->params_descr[0], "Amplitude")==0, "description");
+	ASSERTEQUALD(gsl_vector_get(m->params, 1),      5.2,  "start");
+	ASSERTEQUALD(gsl_vector_get(m->params_min, 1),  4.0,  "min");
+	ASSERTEQUALD(gsl_vector_get(m->params_max, 1),  24.0, "max");
+	ASSERTEQUALD(gsl_vector_get(m->params_step, 1), 0.01, "step");
+	ASSERT(strcmp(m->params_descr[1], "Frequenz")==0, "description");
+	ASSERTEQUALD(gsl_vector_get(m->params, 2),      5.4,  "start");
+	ASSERTEQUALD(gsl_vector_get(m->params_min, 2),  0.0,  "min");
+	ASSERTEQUALD(gsl_vector_get(m->params_max, 2),  6.1,  "max");
+	ASSERTEQUALD(gsl_vector_get(m->params_step, 2), 0.01, "step");
+	ASSERT(strcmp(m->params_descr[2], "Phase")==0, "description");
+
+	ASSERT(m->x_dat->size == 1522, "x_dat size");
+	ASSERT(m->y_dat->size == m->x_dat->size, "y_dat size");
+	ASSERT(m->model->size == m->x_dat->size, "model size");
+	ASSERTEQUALD(gsl_vector_get(m->x_dat, 0),       1.7355217099999998,  "x 0");
+	ASSERTEQUALD(gsl_vector_get(m->x_dat, 1),       1.7356002600000000,  "x 1");
+	ASSERTEQUALD(gsl_vector_get(m->x_dat, 1521),       46.8043750000000003,  "x last");
+	ASSERTEQUALD(gsl_vector_get(m->y_dat, 0),       0.4731745866773314,  "y 0");
+	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1),      -0.9900871130450772,  "y 1");
+	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1521),   -0.3527955490681067,  "y last");
+
+	mcmc_free(m);
+	return 0;
+}
+
+
+
 
 /* register of all tests */
 int (*tests_registration[])(void)  = {
-	test_tests, /* this is test 1 */
+	/*test_tests,*/ /* this is test 1 */
 	test_hist,
 	test_create,
+	test_load,
 	
 	/* register more tests before here */
 	NULL,

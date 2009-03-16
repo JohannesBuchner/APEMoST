@@ -1,9 +1,15 @@
+#include <string.h>
+#include <stdio.h>
+#include <libgen.h>
+
 #include "mcmc.h"
 #include "gsl_helper.h"
 #include <gsl/gsl_rng.h>
 #include "debug.h"
 
-#define free(p) { dump_p("about to free", (void*)p); free(p); }
+#define free(p) { IFSEGV dump_p("about to free", (void*)p); free(p); }
+#define NCOLUMNS 5
+#define MAX_LINE_LENGTH 256
 
 double get_random_number() {
 	gsl_rng * random;
@@ -72,9 +78,11 @@ void init_seed(mcmc * m) {
 
 mcmc * mcmc_init(unsigned int n_pars) {
 	mcmc * m;
-	debug("allocating mcmc struct");
+	IFSEGV debug("allocating mcmc struct");
 	m = (mcmc*)malloc(sizeof(mcmc));
 	assert(m != NULL);
+	m->iter = 0;
+	m->size = 0;
 	m->n_par = n_pars;
 	m->accept = 0;
 	m->reject = 0;
@@ -102,27 +110,35 @@ mcmc * mcmc_init(unsigned int n_pars) {
 	m->params_max    = gsl_vector_calloc(m->n_par);
 	assert(m->params_max != NULL);
 
-	m->params_descr = NULL;
+	m->params_descr = (char**)calloc(m->n_par, sizeof(char*));;
 	m->x_dat = NULL;
 	m->y_dat = NULL;
 	m->model = NULL;
+	IFSEGV debug("allocating mcmc struct done");
 	return m;
 }
 
 void mcmc_free(mcmc * m) {
+	unsigned int i;
+	
 	m->seed = NULL; /* TODO */
-	debug("freeing params");
+	IFSEGV debug("freeing params");
 	gsl_vector_free(m->params);
-	debug("freeing params_best");
+	IFSEGV debug("freeing params_best");
 	gsl_vector_free(m->params_best);
-	debug("freeing params_distr");
+	IFSEGV debug("freeing params_distr");
 	resize(m, 0);
-	debug("freeing params_descr");
+	
+	IFSEGV debug("freeing params_descr");
+	for (i = 0; i < m->n_par; i++) {
+		free(m->params_descr[i]);
+	}
 	free(m->params_descr);
-	debug("freeing accepts/rejects");
+	
+	IFSEGV debug("freeing accepts/rejects");
 	free(m->params_accepts);
 	free(m->params_rejects);
-	debug("freeing step/min/max");
+	IFSEGV debug("freeing step/min/max");
 	gsl_vector_free(m->params_step);
 	gsl_vector_free(m->params_min);
 	gsl_vector_free(m->params_max);
@@ -131,27 +147,159 @@ void mcmc_free(mcmc * m) {
 	free(m->model);
 	free(m);
 }
+#undef SKIP_DEBUG
+#define SKIP_DEBUG 0
 
-void mcmc_load_data(mcmc * m, char * filename) {
-	(void)filename;
-	m->params_descr = NULL;
-	m->x_dat = NULL;
-	m->y_dat = NULL;
-	m->model = NULL;
+FILE * openfile(const char * filename) {
+	FILE * input = fopen(filename, "r");
+	if(input == NULL) {
+		fprintf(stderr, "error opening file %s\n", filename);
+		perror("file could not be opened");
+		exit(1);
+	}
+	return input;
 }
 
-/* TODO: cleanup */
+unsigned int countlines(const char * filename) {
+	int nlines = 0;
+	int c;
+	FILE * input = openfile(filename);
+	while(1) {
+		c = fgetc(input);
+		if(c == '\n') {
+			nlines++;
+		}
+		if(c == EOF)
+			break;
+	}
+	fclose(input);
+	return nlines;
+}
 
-/* TODO: on setting the parameter length, preallocate all 2D arrays. It is a 
- *       slight coding issue when the 2D-arrays remain NULL-pointers.
+int strnlen(char * s, int maxlen) {
+	int i;
+	for(i=0;i<maxlen && s[i]!=0;i++);
+	return i;
+}
+
+/**
+ * returns 0 on success.
  */
+int load_parameter(mcmc * m, FILE * input, int i) {
+	int col = 0;
+	double start;
+	double min;
+	double max;
+	double step;
+	char * descr = (char*)calloc(MAX_LINE_LENGTH, sizeof(char));
+	dump_i("parsing line", i);
+	
+	col = fscanf(input, "%lf\t%lf\t%lf\t%s\t%lf\n", &start, &min, &max, descr, &step);
+	if(col != 5) {
+		fprintf(stderr, "only %d fields matched.\n", col);
+		return 1;
+	}
+	if(step < 0 || step > 1) {
+		fprintf(stderr, "start (column 1) must be between 0 and 1. currently: %f.\n", start);
+		return 1;
+	}
+	if(!(descr != NULL && 
+		strnlen(descr, MAX_LINE_LENGTH) > 0 && 
+		strnlen(descr, MAX_LINE_LENGTH) < MAX_LINE_LENGTH
+	)) {
+		fprintf(stderr, "description invalid: %s\n", descr);
+		return 1;
+	}
+	debug("setting values");
+	gsl_vector_set(m->params, i, start);
+	gsl_vector_set(m->params_min,  i, min);
+	gsl_vector_set(m->params_max,  i, max);
+	m->params_descr[i] = descr;
+	gsl_vector_set(m->params_step, i, min + start*(max-min));
+	debug("setting values done.");
+	return 0;
+}
 
-/* TODO: change from i-1 addressing to i */
+int load_datapoint(mcmc * m, FILE * input, int i) {
+	double x;
+	double y;
+	int col;
+	
+	col = fscanf(input, "%lf%lf", &x, &y);
+	if(col != 2) {
+		fprintf(stderr, "only %d fields matched.\n", col);
+		return 1;
+	}
+	gsl_vector_set(m->x_dat, i, x);
+	gsl_vector_set(m->y_dat, i, y);
+	return 0;
+}
 
-/* TODO: all setters seem to need copy functions, check if we really need those
- *       This can probably be done by the caller (using gsl_vector_alloc() and
- *       gsl_vector_memcpy())
- */
+void load_data(mcmc * m, const char * filename) {
+	FILE * input;
+	int i = 0;
+	int npoints = countlines(filename);
+	dump_i("lines", npoints);
+		
+	m->x_dat = gsl_vector_alloc(npoints);
+	m->y_dat = gsl_vector_alloc(npoints);
+	m->model = gsl_vector_alloc(npoints);
+	
+	input = openfile(filename);
+	for (i = 0; i < npoints; i++) {
+		if(load_datapoint(m, input, i) != 0) {
+			fprintf(stderr, "Line %d of %s is of incorrect format.", 
+				i + 1, filename);
+			exit(1);
+		}
+	}
+	dump_i("loaded data points", npoints);
+	
+	
+}
+
+char *strdup(const char *s) {
+	char *buf = calloc(strlen(s)+1, sizeof(char));
+	if (buf != NULL)
+		strcpy(buf, s);
+	return buf;
+}
+
+mcmc * mcmc_load(const char * filename) {
+	mcmc * m;
+	FILE * input;
+	char datafilename[MAX_LINE_LENGTH];
+	char datafilepath[MAX_LINE_LENGTH];
+	char * datadir;
+	int currentline = 0;
+	const int pretext = 1;
+	
+	int nlines;
+	nlines = countlines(filename);
+	dump_i("number of lines", nlines);
+	
+	m = mcmc_init(nlines - pretext);
+	input = openfile(filename);
+	fscanf(input, "%s\n", datafilename);
+	currentline++;
+	
+	while(currentline<nlines) {
+		if(load_parameter(m, input, currentline - pretext) != 0) {
+			fprintf(stderr, "Line %d of %s is of incorrect format.", 
+				currentline + 1, filename);
+			exit(1);
+		}
+		currentline++;
+	}
+	fclose(input);
+	
+	datadir = dirname(strdup(filename));
+	sprintf(datafilepath, "%s/%s", datadir, datafilename);
+	dump_s("looking for data in file", datafilepath);
+	
+	load_data(m, datafilepath);
+	return m;
+}
 
 /* TODO: check if we need getters. so far they look straight-forward, so 
  *       I'd let people access the struct directly.
@@ -170,12 +318,6 @@ void add_values(mcmc * m, int n_iter) {
 
 void write2files(mcmc * m) {
 	(void)m;
-	/* TODO */
-}
-
-void setup(mcmc * m, const char * filename) {
-	(void)m;
-	(void)filename;
 	/* TODO */
 }
 
@@ -252,7 +394,7 @@ void set_params_descr_all(mcmc * m, char ** new_par_descr) {
 }
 
 void set_params_descr_for(mcmc * m, char * new_par_descr, int i) {
-	m->params_descr[i-1] = new_par_descr;
+	m->params_descr[i] = new_par_descr;
 }
 
 void set_seed(mcmc * m, gsl_vector * new_seed) {

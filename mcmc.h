@@ -63,10 +63,10 @@ typedef struct {
 
 double get_random_number();
 mcmc * mcmc_init(unsigned int n_pars);
+mcmc * mcmc_load(const char * filename);
 void mcmc_free(mcmc * m);
 void add_values(mcmc * m, int n_iter);
 void write2files(mcmc * m);
-void setup(mcmc * m, const char * filename);
 long get_params_accepts(mcmc * m);
 long get_params_rejects(mcmc * m);
 long get_params_accepts_for(mcmc * m, int i);
