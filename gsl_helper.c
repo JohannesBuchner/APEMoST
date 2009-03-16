@@ -1,6 +1,7 @@
 
 
 #include "gsl_helper.h"
+#include "debug.h"
 
 /**
  * PTR_NEW: 
@@ -32,10 +33,6 @@
  *   usual arguments: nbins, min, max
  */
 
-#define IFDEBUG if(0)
-#define DEBUG(str)     IFDEBUG printf(str "\n");
-#define DEBUGD(str, v) IFDEBUG printf(str ": %f\n", v);
-
 gsl_histogram * calc_hist(gsl_vector ** param_distr, int index, int nbins) {
 	double max;
 	double min;
@@ -48,27 +45,27 @@ gsl_histogram * calc_hist(gsl_vector ** param_distr, int index, int nbins) {
 	
 	gsl_vector_minmax (dat, &min, &max);
 	binwidth = (max - min)/nbins;
-	DEBUGD("min", min);
-	DEBUGD("max", max);
+	dump_d("min", min);
+	dump_d("max", max);
 	
-	DEBUG("allocating the histogram");
+	debug("allocating the histogram");
 	h = gsl_histogram_alloc (dat->size);
-	DEBUG("setting range");
+	debug("setting range");
 	gsl_histogram_set_ranges_uniform (h, min, max);
 	
 	/* with out the following, the max element doesn't fall in the last bin */
 	h->range[h->n] += 1; 
 	
-	DEBUG("summing up");
+	debug("summing up");
 	for(i=0; i<dat->size; i++){ 
 		v = gsl_vector_get (dat, i);
 		sum += v;
 		gsl_histogram_increment (h, v);
 	}
-	DEBUG("scaling");
+	debug("scaling");
 	/* double gsl_histogram_sum (const gsl_histogram * h) */
 	gsl_histogram_scale (h, 1/sum);
-	DEBUG("done");
+	debug("done");
 	return h;
 }
 

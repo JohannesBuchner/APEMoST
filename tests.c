@@ -3,13 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mcmc.h"
+#include "debug.h"
 #include "gsl_helper.h"
 
-void dump(void* a) {
-	(void)a;
-}
-
 #define DUMPONFAIL 1
+/*
 #define ASSERTDUMP(condition, text, a) { \
 		if(!(condition)) { \
 			printf("  ASSERT FAILED: %s\n",text); \
@@ -22,6 +20,7 @@ void dump(void* a) {
 			printf("  subtest ok: %s\n",text); \
 		} \
 	}
+*/
 #define ASSERT(condition, text) ASSERTDUMP(condition, text, NULL)
 #define ASSERTEQUALI(result, expected, text) { \
 		if(expected != result) { \
@@ -69,10 +68,13 @@ int test_hist(void){
 
 
 int test_create(void){
-	mcmc m;
-	mcmc_init(m);
-	
-	
+	mcmc * m;
+	debug("test-create");
+	m = mcmc_init(3);
+	ASSERTEQUALI(m->n_par, 3, "number of parameters");
+	dump(m);
+	debug("freeing");
+	mcmc_free(m);
 	return 0;
 }
 
@@ -82,6 +84,7 @@ int test_create(void){
 int (*tests_registration[])(void)  = {
 	test_tests, /* this is test 1 */
 	test_hist,
+	test_create,
 	
 	/* register more tests before here */
 	NULL,
