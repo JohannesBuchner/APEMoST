@@ -118,8 +118,13 @@ int test_load(void){
 int test_resize(void){
 	mcmc * m = mcmc_init(3);
 	int i = 0;
-	for(i = 0; i < 1024; i++){
-		prepare_iter(m, i);
+	int j = 0;
+	for(j = 0; j < 5; j++) {
+		for(; i % 1024 != 1023; i++){
+			prepare_iter(m, i);
+		}
+		i++;
+		dump_i("tested iterations", i);
 	}
 	mcmc_free(m);
 	return 0;
@@ -138,12 +143,12 @@ int test_write(void){
 
 /* register of all tests */
 int (*tests_registration[])(void)  = {
-	/*test_tests,*/ /* this is test 1 */
-	/*test_hist,*/
+	/* this is test 1 */ /*test_tests, */
+	test_hist,
 	test_create,
-	/*test_load,*/
+	test_load,
 	test_resize,
-	/*test_write,*/
+	test_write,
 	
 	/* register more tests before here */
 	NULL,

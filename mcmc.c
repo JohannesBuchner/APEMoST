@@ -27,7 +27,10 @@ double get_random_number() {
 #define ALLOCATION_CHUNKS 1
 
 static unsigned long get_new_size(unsigned long new_iter) {
-	return ((new_iter+1)/ALLOCATION_CHUNKS + 1)*ALLOCATION_CHUNKS;
+	if (ALLOCATION_CHUNKS>1)
+		return ((new_iter+1)/ALLOCATION_CHUNKS + 1)*ALLOCATION_CHUNKS;
+	else
+		return new_iter + 1;
 }
 
 /**
@@ -40,32 +43,35 @@ static void resize(mcmc * m, unsigned long new_size) {
 	 * if we have more iterations than that, we need to move our data to the
 	 * disk.
 	 */
-	dump_i("resizing params_distr to", (int)new_size);
+	IFSEGV dump_i("resizing params_distr to", (int)new_size);
 	if(new_size < orig_size) {
-		debug("shrinking -> freeing vectors");
+		IFSEGV debug("shrinking -> freeing vectors");
 		for(i = orig_size; i > new_size; i--) {
-			dump_ul("freeing vector", i - 1);
+			IFSEGV dump_ul("freeing vector", i - 1);
 			gsl_vector_free(m->params_distr[i - 1]);
 		}
 	}
-	debug("reallocating space");
-	m->params_distr = realloc(m->params_distr, (int)new_size);
+	IFSEGV debug("reallocating space");
+	m->params_distr = (gsl_vector**)realloc(m->params_distr, (int)new_size*sizeof(gsl_vector*));
+	IFSEGV dump_p("params_distr", (void*)m->params_distr);
+	if(new_size != 0) {
+		assert(m->params_distr!=NULL);
+		IFSEGV dump_p("params_distr[0]", (void*)m->params_distr[0]);
+	}
 	
 	if(new_size > orig_size) {
-		debug("growing -> allocating vectors");
+		IFSEGV debug("growing -> allocating vectors");
 		for(i = orig_size; i < new_size; i++) {
-			dump_ul("allocating vector", i);
+			IFSEGV dump_ul("allocating vector", i);
 			m->params_distr[i] = gsl_vector_alloc(m->n_par);
 		}
 	}
 	m->size = new_size;
-	debug("done resizing");
+	IFSEGV debug("done resizing");
 }
 
 void prepare_iter(mcmc * m, unsigned long iter) {
 	unsigned long new_size = get_new_size(iter);
-	dump_ul("wanted to resize to", iter);
-	dump_ul("in fact resizing to", new_size);
 	if(m->size != new_size) {
 		resize(m, new_size);
 	}

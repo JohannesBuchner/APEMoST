@@ -3,7 +3,8 @@
 
 CFLAGS=-O3 -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
-DUMA=libduma.so.0.0.0
+# optional (ignore the warning)
+DUMA=libduma.so.0.0
 # -DHAVE_INLINE 
 CC=gcc
 
