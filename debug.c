@@ -1,8 +1,10 @@
 #include "debug.h"
 
+/**
+ * Dump the mcmc structure
+ */
 void dump(mcmc * m) {
 	unsigned int i;
-	printf("dump was called\n");
 	dump_p("dumping m", (void*)m);
 	dump_i("n_par", m->n_par);
 	dump_ul("accept", m->accept);

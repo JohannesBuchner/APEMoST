@@ -9,70 +9,137 @@
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_vector.h>
 
-
+/**
+ * The main class of operation.
+ */
 typedef struct {
-	/* number of parameters */
+	/** number of parameters */
 	unsigned int n_par; 
-	/* number of accepted steps for MCMC (after calibration) */
+	/** number of accepted steps for MCMC (after calibration) */
 	unsigned long accept;
-	/* number of rejected steps for MCMC (after calibration) */
+	/** number of rejected steps for MCMC (after calibration) */
 	unsigned long reject;
-	/* probability of the most recently evaluated parameter values */
+	/** probability of the most recently evaluated parameter values */
 	double prob;
-	/* probability of best parameter values yets */
+	/** probability of best parameter values yet */
 	double prob_best;
-	/* pointer to 1D-array as seed for random number generators */
+	/** 
+	 * seed for random number generators 
+	 */
 	gsl_vector * seed;
-	/* pointer to 1D-array containing the parameter values */
-	gsl_vector * params; /* size = n_par */
-	/* pointer to 1D-array containing the best parameters yet */
-	gsl_vector * params_best;  /* size = n_par */
-	/* pointer to 2D-array containing the resulting values for each parameter */
-	gsl_vector ** params_distr; /* size = iter, n_par */
-	/* pointer to 1D-array containing description of parameters in string 
-	 * format */
-	char ** params_descr; /* size = n_par */
-	/* pointer to 1D-array containing the number of accepted/rejected steps for 
-	 * individual parameters*/
-	long * params_accepts; /* size = n_par */
-	/* pointer to 1D-array containing the number of accepted/rejected steps for 
-	 * individual parameters*/
-	long * params_rejects; /* size = n_par */
-	/* pointer to 1D-array containing the current step width for individual 
-	 * parameters */
-	gsl_vector * params_step; /* size = n_par; set by calibration */
-	/* pointer to 1D-array containing the lower limit for each parameter */
-	gsl_vector * params_min; /* size = n_par */
-	/* pointer to 1D-array containing the upper limit for each parameter */
-	gsl_vector * params_max; /* size = n_par */
-	/* pointer to 1D-array containing the abscissa of the observations (e.g., 
-	 * date, frequency, wavelength) */
-	gsl_vector * x_dat; /* size = x-size */
-	/* pointer to 1D-array containing the ordinate of the observations (e.g., 
-	 * intensity, power, radial vel.) */
-	gsl_vector * y_dat; /* size = x-size */
-	/* pointer to 1D-array containing the model values corresponding to the 
-	 * observed abscissa values */
-	gsl_vector * model; /* size = x-size; synthetic y_dat value */
+	/** 
+	 * current parameters
+	 * size = n_par 
+	 */
+	gsl_vector * params;
+	/** 
+	 * best parameters yet
+	 * size = n_par 
+	 */
+	gsl_vector * params_best; 
+	/** 
+	 * pointer to 2D-array containing the resulting values for each parameter.
+	 * for each iteration, and parameter, the values of the calculation are 
+	 * kept.
+	 * size = iter, n_par
+	 */
+	gsl_vector ** params_distr;
+	/** 
+	 * descriptions of parameters
+	 * size = n_par
+	 */
+	char ** params_descr; 
+	/** 
+	 * number of accepted steps for individual parameters
+	 * size = n_par
+	 */
+	long * params_accepts; 
+	/** 
+	 * number of rejected steps for individual parameters
+	 * size = n_par
+	 */
+	long * params_rejects;
+	/** 
+	 * current step widths for individual parameters 
+	 * size = n_par; set by calibration
+	 */
+	gsl_vector * params_step;
+	/** 
+	 * lower limits for each parameter 
+	 * size = n_par
+	 */
+	gsl_vector * params_min; 
+	/** 
+	 * upper limits for each parameter 
+	 * size = n_par
+	 */
+	gsl_vector * params_max; 
+	/** 
+	 * pointer to 1D-array containing the abscissa of the observations (e.g., 
+	 * date, frequency, wavelength) 
+	 * size = x-size
+	 */
+	gsl_vector * x_dat;
+	/** 
+	 * pointer to 1D-array containing the ordinate of the observations (e.g., 
+	 * intensity, power, radial vel.).
+	 * size = x-size.
+	 */
+	gsl_vector * y_dat; 
+	/** pointer to 1D-array containing the model values corresponding to the 
+	 * observed abscissa values.
+	 * This is a synthetic (calculated) y_dat value for the current parameters.
+	 * size = x-size
+	 */
+	gsl_vector * model; 
 	
-	/* number of iterations for which space is allocated (params_distr) */
+	/** number of iterations for which space is allocated (params_distr) */
 	unsigned long size;
-	/* number of iterations calculated */
+	/** number of iterations calculated */
 	unsigned long iter;
 } mcmc;
 
+/**
+ * \private
+ */
 double get_random_number();
+/**
+ * create class
+ * \private
+ * @param n_pars parameters
+ */
 mcmc * mcmc_init(unsigned int n_pars);
+/**
+ * create and initialize a mcmc class using the configuration given in 
+ * @param filename
+ */
 mcmc * mcmc_load(const char * filename);
+/**
+ * frees the memory used by the class
+ */
 void mcmc_free(mcmc * m);
+
+/**
+ * prepare the calculation of (next) iteration, i.e., allocate space
+ * @param iter number of iteration
+ */
+void prepare_iter(mcmc * m, unsigned long iter);
+
 void add_values(mcmc * m, int n_iter);
+
 void write2files(mcmc * m);
+
+/**
+ * @see calc_hist
+ */
+gsl_histogram * get_hist(mcmc * m, int i, int nbins);
+
+/* getter + setter */
 long get_params_accepts(mcmc * m);
 long get_params_rejects(mcmc * m);
 long get_params_accepts_for(mcmc * m, int i);
 long get_params_rejects_for(mcmc * m, int i);
 double get_params_ar_for(mcmc * m, int i);
-gsl_histogram * get_hist(mcmc * m, int i, int nbins);
 void set_params_ar(mcmc * m, gsl_vector ** new_params_ar);
 void set_params_ar_for(mcmc * m, gsl_vector * new_params_ar, int i);
 void set_prob_best(mcmc * m, double new_prob_best);

@@ -13,6 +13,9 @@
 
 /**
  * calculate a histogram
+ * @param vs vector array to look at 
+ * @param index index in vector array to choose
+ * @param nbins number of bins to use for the histogram
  */
 gsl_histogram * calc_hist(gsl_vector ** vs, int index, int nbins);
 

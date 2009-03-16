@@ -10,7 +10,7 @@
 #define NCOLUMNS 5
 #define MAX_LINE_LENGTH 256
 
-FILE * openfile(const char * filename) {
+static FILE * openfile(const char * filename) {
 	FILE * input = fopen(filename, "r");
 	if(input == NULL) {
 		fprintf(stderr, "error opening file %s\n", filename);
@@ -20,7 +20,7 @@ FILE * openfile(const char * filename) {
 	return input;
 }
 
-unsigned int countlines(const char * filename) {
+static unsigned int countlines(const char * filename) {
 	int nlines = 0;
 	int c;
 	FILE * input = openfile(filename);
@@ -36,7 +36,7 @@ unsigned int countlines(const char * filename) {
 	return nlines;
 }
 
-int strnlen(char * s, int maxlen) {
+static int strnlen(char * s, int maxlen) {
 	int i;
 	for(i=0;i<maxlen && s[i]!=0;i++);
 	return i;
@@ -45,7 +45,7 @@ int strnlen(char * s, int maxlen) {
 /**
  * returns 0 on success.
  */
-int load_parameter(mcmc * m, FILE * input, int i) {
+static int load_parameter(mcmc * m, FILE * input, int i) {
 	int col = 0;
 	double start;
 	double min;
@@ -80,7 +80,7 @@ int load_parameter(mcmc * m, FILE * input, int i) {
 	return 0;
 }
 
-int load_datapoint(mcmc * m, FILE * input, int i) {
+static int load_datapoint(mcmc * m, FILE * input, int i) {
 	double x;
 	double y;
 	int col;
@@ -95,7 +95,7 @@ int load_datapoint(mcmc * m, FILE * input, int i) {
 	return 0;
 }
 
-void load_data(mcmc * m, const char * filename) {
+static void load_data(mcmc * m, const char * filename) {
 	FILE * input;
 	int i = 0;
 	int npoints = countlines(filename);
@@ -118,7 +118,7 @@ void load_data(mcmc * m, const char * filename) {
 	
 }
 
-char *strdup(const char *s) {
+static char *strdup(const char *s) {
 	char *buf = calloc(strlen(s)+1, sizeof(char));
 	if (buf != NULL)
 		strcpy(buf, s);

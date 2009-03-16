@@ -54,7 +54,7 @@ int test_hist(void){
 	gsl_vector_set (vs, 0, 3);
 	
 	ASSERTEQUALI((int)vs->size, 3, "setup");
-	h = calc_hist(&vs, 1, 3);
+	h = calc_hist(&vs, 0, 3);
 	ASSERTEQUALD(gsl_histogram_min(h), 0.0, "lower bound");
 	ASSERTEQUALD(gsl_histogram_max(h), 3.0, "upper bound");
 	ASSERTEQUALI((int)gsl_histogram_bins(h), 3, "nbins");
@@ -115,14 +115,35 @@ int test_load(void){
 }
 
 
+int test_resize(void){
+	mcmc * m = mcmc_init(3);
+	int i = 0;
+	for(i = 0; i < 1024; i++){
+		prepare_iter(m, i);
+	}
+	mcmc_free(m);
+	return 0;
+}
+
+
+int test_write(void){
+	mcmc * m = mcmc_load("tests/testinput1");
+	
+	mcmc_free(m);
+	return 0;
+}
+
+
 
 
 /* register of all tests */
 int (*tests_registration[])(void)  = {
 	/*test_tests,*/ /* this is test 1 */
-	test_hist,
+	/*test_hist,*/
 	test_create,
-	test_load,
+	/*test_load,*/
+	test_resize,
+	/*test_write,*/
 	
 	/* register more tests before here */
 	NULL,

@@ -3,7 +3,7 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
-/**
+/*
  * PTR_NEW: 
  *   creates a pointer to a heap variable
  *   argument is copied and a pointer is returned.
@@ -41,7 +41,7 @@ gsl_histogram * calc_hist(gsl_vector ** param_distr, int index, int nbins) {
 	double sum = 0;
 	double v;
 	gsl_histogram * h;
-	gsl_vector * dat = param_distr[index-1];
+	gsl_vector * dat = param_distr[index];
 	
 	gsl_vector_minmax (dat, &min, &max);
 	binwidth = (max - min)/nbins;

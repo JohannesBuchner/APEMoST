@@ -21,33 +21,35 @@ double get_random_number() {
 	return v;
 }
 
-#define ALLOCATION_CHUNKS 1
 /**
  * for allocation, we don't want to call alloc too often, rather grow in steps
  */
-unsigned long get_new_size(unsigned long new_iter) {
+#define ALLOCATION_CHUNKS 1
+
+static unsigned long get_new_size(unsigned long new_iter) {
 	return ((new_iter+1)/ALLOCATION_CHUNKS + 1)*ALLOCATION_CHUNKS;
 }
 
 /**
  * make space available as set in m->size
  */
-void resize(mcmc * m, unsigned long new_size) {
+static void resize(mcmc * m, unsigned long new_size) {
 	unsigned long orig_size = m->size;
 	unsigned long i;
 	/* TODO: we can not allocate more than the int-space
 	 * if we have more iterations than that, we need to move our data to the
 	 * disk.
 	 */
-	dump_ul("resizing params_distr to", new_size);
+	dump_i("resizing params_distr to", (int)new_size);
 	if(new_size < orig_size) {
 		debug("shrinking -> freeing vectors");
-		for(i = orig_size;i > new_size; i--) {
+		for(i = orig_size; i > new_size; i--) {
 			dump_ul("freeing vector", i - 1);
 			gsl_vector_free(m->params_distr[i - 1]);
 		}
 	}
-	m->params_distr = realloc(m->params_distr, new_size);
+	debug("reallocating space");
+	m->params_distr = realloc(m->params_distr, (int)new_size);
 	
 	if(new_size > orig_size) {
 		debug("growing -> allocating vectors");
@@ -62,6 +64,8 @@ void resize(mcmc * m, unsigned long new_size) {
 
 void prepare_iter(mcmc * m, unsigned long iter) {
 	unsigned long new_size = get_new_size(iter);
+	dump_ul("wanted to resize to", iter);
+	dump_ul("in fact resizing to", new_size);
 	if(m->size != new_size) {
 		resize(m, new_size);
 	}
@@ -146,6 +150,7 @@ void mcmc_free(mcmc * m) {
 	free(m);
 }
 
+/* calculations */
 
 extern void calc_model(mcmc * m);
 extern void calc_model_for(mcmc * m, int i);
