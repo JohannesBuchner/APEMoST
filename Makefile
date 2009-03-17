@@ -1,12 +1,17 @@
 # Makefile for mcmc
 # 
 
-CFLAGS=-O3 -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
+CFLAGS=-O2 -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
 # optional (ignore the warning)
 DUMA=libduma.so.0.0
 # -DHAVE_INLINE 
 CC=gcc
+MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_dump.c 
+TEST_SOURCES=run-tests.c tests.c
+HELPER_SOURCES=gsl_helper.c 
+DEBUG_SOURCE=debug.c
+HEADERS=*.h
 
 # help: this clutter
 help:
@@ -16,22 +21,23 @@ help:
 # all: 
 all: tests.exe
 
-run: main.exe
-	./main.exe
+%.o : %.c
+	$(CC) $(CFLAGS) -c $^
 
-tests.exe: Makefile mcmc.h mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_dump.c run-tests.c tests.c gsl_helper.h gsl_helper.c debug.c debug.h
-	$(CC) -DDEBUG $(CFLAGS) $(LDFLAGS) run-tests.c tests.c gsl_helper.c mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_dump.c debug.c -o $@
+tests.exe: $(HEADERS) tests.o run-tests.o $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 # tests: run the tests
 tests: tests.exe
 	LD_PRELOAD=${DUMA} ./tests.exe
 
-# bla bla
 # clean: 
 clean:
-	rm -f *.exe
-	
-%.exe: %.c Makefile mcmc.h
-	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+	rm -f *.exe *.o
 
-.PHONY: clean tests run all help
+# doc: build the documenttion
+doc: doxygen.config
+	doxygen doxygen.config
+
+
+.PHONY: clean tests run all help doc
