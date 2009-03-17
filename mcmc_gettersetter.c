@@ -2,7 +2,7 @@
 #include "gsl_helper.h"
 #include <gsl/gsl_rng.h>
 
-/* TODO: check if we need getters. so far they look straight-forward, so 
+/* TODO: check if we need getters. so far they look straight-forward, so
  *       I'd let people access the struct directly.
  */
 
@@ -91,26 +91,12 @@ void set_probability(mcmc * m, double new_prob) {
 }
 
 void set_x(mcmc * m, gsl_vector * new_x) {
-	/*if(m->x_dat != NULL)
-		gsl_vector_free(m->x_dat);*/
 	m->x_dat = new_x;
 }
 
-/* TODO: check if we need that
-void set_x_copy(mcmc * m, gsl_vector * new_x) {
-	gsl_vector_memcpy(m->x_dat, new_x);
-}*/
-
 void set_y(mcmc * m, gsl_vector * new_y) {
-	/*if(m->x_dat != NULL)
-		gsl_vector_free(m->x_dat);*/
 	m->y_dat = new_y;
 }
-
-/* TODO: check if we need that
-void set_y_copy(mcmc * m, gsl_vector * new_y) {
-	gsl_vector_memcpy(m->y_dat, new_y);
-}*/
 
 void free_gsl_vector_array(gsl_vector ** arr) {
 	int i = 0;
@@ -119,37 +105,6 @@ void free_gsl_vector_array(gsl_vector ** arr) {
 			gsl_vector_free(arr[i]);
 	}
 }
-
-/*
-gsl_vector * alloc_gsl_vector_array(unsigned int size) {
-	int i = 0;
-	arr = (gsl_vector *)calloc(size, sizeof(gsl_vector *));
-	assert(arr != NULL);
-	for(i = 0; i < size; i++) {
-		arr[i] = gsl_vector_alloc(n);
-		gsl_vector_memcpy(arr[i], src[i]);
-	}
-	return arr;
-}
-*/
-/*
-gsl_vector ** copy_gsl_vector_array(gsl_vector ** arr, const gsl_vector ** src, size_t n) {
-	int i = 0;
-	assert(src != NULL);
-	if(arr == NULL) {
-		arr = (gsl_vector *)calloc(n, sizeof(gsl_vector *));
-		assert(arr != NULL);
-		for(i = 0; i < n; i++) {
-			arr[i] = gsl_vector_alloc(n);
-			gsl_vector_memcpy(arr[i], src[i]);
-		}
-		return arr;
-	}else{
-		for(i = 0; i < n; i++) {
-			gsl_vector_memcpy(arr[i], src[i]);
-		}
-	}
-}*/
 
 void set_steps_all(mcmc * m, double * new_steps) {
 	unsigned int i;
