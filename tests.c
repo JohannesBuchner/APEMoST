@@ -134,11 +134,27 @@ int test_resize(void) {
 
 int test_write(void) {
 	mcmc * m = mcmc_load("tests/testinput1");
-	debug("lets cheat and say we got the y-data as model");
+	debug("lets cheat and say we got the sum x-data + y-data as model");
 	gsl_vector_memcpy(m->model, m->y_dat);
 	gsl_vector_add(m->model, m->x_dat);
 	mcmc_dump_model(m);
 	mcmc_free(m);
+	return 0;
+}
+
+int test_write_prob(void) {
+	mcmc * m = mcmc_load("tests/testinput1");
+	debug("add starting points, ...");
+	mcmc_append_current_parameters(m, 0);
+	debug("maxima ...");
+	require(gsl_vector_memcpy(m->params, m->params_max));
+	mcmc_append_current_parameters(m, 1);
+	debug("and minima as visited parameter values");
+	require(gsl_vector_memcpy(m->params, m->params_max));
+	mcmc_append_current_parameters(m, 2);
+	mcmc_dump_probabilities(m, 1);
+	mcmc_free(m);
+	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
 	return 0;
 }
 
@@ -153,6 +169,7 @@ int (*tests_registration[])(void)  = {
 	test_load,
 	test_resize,
 	test_write,
+	test_write_prob,
 
 	/* register more tests before here */
 	NULL,

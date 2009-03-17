@@ -85,6 +85,7 @@ void mcmc_prepare_iteration(mcmc * m, unsigned long iter) {
 	if (m->size != new_size) {
 		resize(m, new_size);
 	}
+	m->iter = iter;
 }
 
 void init_seed(mcmc * m) {

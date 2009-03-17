@@ -9,7 +9,7 @@
 CFLAGS=-O2 -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
-MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_dump.c 
+MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_calculate.c mcmc_dump.c 
 TEST_SOURCES=run-tests.c tests.c
 HELPER_SOURCES=gsl_helper.c 
 DEBUG_SOURCE=debug.c
@@ -32,7 +32,7 @@ tests.exe: $(HEADERS) tests.o run-tests.o $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELP
 
 ## tests: run the tests
 tests: tests.exe
-	./tests.exe
+	./tests.exe ${TESTNR}
 
 ## clean: 
 clean:

@@ -21,7 +21,7 @@ static FILE * openfile(const char * filename) {
 	return input;
 }
 
-static unsigned int countlines(const char * filename) {
+unsigned int countlines(const char * filename) {
 	int nlines = 0;
 	int c;
 	FILE * input = openfile(filename);

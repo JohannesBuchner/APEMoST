@@ -28,3 +28,10 @@
  *   return the number of elements in the bin for each bin.
  *   usual arguments: nbins, min, max
  */
+
+ Performance ideas:
+   Replace m->n_pars with N_PARS and set it fixed (recompile new for every number of 
+   parameters). This could greatly improved looping (unrolling). 
+ 
+ 
+ 

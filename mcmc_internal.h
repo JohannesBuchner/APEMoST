@@ -1,5 +1,5 @@
 /**
- * Here are the "private" methods of the class
+ * Here are the "private" methods of the class and helper functions
  */
 #ifndef MCMC_INTERNAL_H_
 #define MCMC_INTERNAL_H_
@@ -31,5 +31,10 @@ void mcmc_prepare_iteration(mcmc * m, unsigned long iter);
  */
 gsl_histogram * get_hist(mcmc * m, int i, int nbins);
 
+/**
+ * count the lines (\n) in the file
+ * @param filename
+ */
+unsigned int countlines(const char * filename);
 
 #endif /* MCMC_INTERNAL_H_ */

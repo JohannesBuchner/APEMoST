@@ -37,6 +37,18 @@ void mcmc_append_current_parameters(mcmc * m, int n_iter);
 void mcmc_dump_model(mcmc * m);
 void mcmc_dump_y_dat(mcmc * m);
 
+/**
+ * write probability/distribution (params_distr) out to files.
+ *
+ * The files are named after the parameter names, with .prob.dump appended.
+ * You can use those files to build a histogram of where the algorithm has been
+ * (and how often) to find out
+ *
+ * @param m
+ * @param n_values use the n last iterations. if negative, all are used.
+ */
+void mcmc_dump_probabilities(mcmc * m, int n_values);
+
 /* getter + setter */
 long get_params_accepts(mcmc * m);
 long get_params_rejects(mcmc * m);
@@ -62,8 +74,6 @@ void set_y(mcmc * m, gsl_vector * new_y);
 void set_y_copy(mcmc * m, gsl_vector * new_y);
 void set_steps_for(mcmc * m, double new_steps, int i);
 void set_steps_all(mcmc * m, double * new_steps);
-
-
 
 #endif
 

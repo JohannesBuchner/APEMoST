@@ -3,6 +3,7 @@
 #include <libgen.h>
 
 #include "mcmc.h"
+#include "mcmc_internal.h"
 #include "debug.h"
 
 /*#define m->n_par 5*/
@@ -13,4 +14,5 @@
 void mcmc_append_current_parameters(mcmc * m, int n_iter) {
 	mcmc_prepare_iteration(m, n_iter);
 	require(gsl_vector_memcpy(m->params_distr[n_iter], m->params));
+	m->iter = n_iter;
 }
