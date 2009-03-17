@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mcmc.h"
+#include "mcmc_internal.h"
 #include "debug.h"
 #include "gsl_helper.h"
 

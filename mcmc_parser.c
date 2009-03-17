@@ -3,6 +3,7 @@
 #include <libgen.h>
 
 #include "mcmc.h"
+#include "mcmc_internal.h"
 #include "gsl_helper.h"
 #include <gsl/gsl_rng.h>
 #include "debug.h"
