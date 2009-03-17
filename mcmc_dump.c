@@ -5,6 +5,11 @@
 #include "mcmc.h"
 #include "debug.h"
 
+/**
+ * if you find the precision too low, increase here.
+ * if you find the program too slow, decrease here.
+ */
+#define DUMP_PRECISION ".3"
 
 void mcmc_dump(const gsl_vector * x_dat, const gsl_vector * y_dat,
 		const char * filename) {
@@ -13,15 +18,14 @@ void mcmc_dump(const gsl_vector * x_dat, const gsl_vector * y_dat,
 	FILE * output;
 	assert(x_dat->size == y_dat->size);
 	output = fopen(filename, "w");
+	assert(output != NULL);
 	dump_s("writing dump to file", filename);
 	for (i = 0; i < x_dat->size; i++) {
 		x = gsl_vector_get(x_dat, i);
 		y = gsl_vector_get(y_dat, i);
-		fprintf(output, "%f\t%f\n", x, y);
+		fprintf(output, "%" DUMP_PRECISION "e\t%" DUMP_PRECISION "e\n", x, y);
 	}
-	if (fclose(output) != 0) {
-		assert(0);
-	}
+	assert (fclose(output) == 0);
 	debug("writing dump to file done");
 }
 

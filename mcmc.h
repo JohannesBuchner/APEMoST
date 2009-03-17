@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #ifdef NOASSERT
-#define assert(cond) 
+#define assert(cond)
 #else
 #include <assert.h>
 #endif
@@ -19,7 +19,7 @@
  */
 typedef struct {
 	/** number of parameters */
-	unsigned int n_par; 
+	unsigned int n_par;
 	/** number of accepted steps for MCMC (after calibration) */
 	unsigned long accept;
 	/** number of rejected steps for MCMC (after calibration) */
@@ -28,76 +28,76 @@ typedef struct {
 	double prob;
 	/** probability of best parameter values yet */
 	double prob_best;
-	/** 
-	 * seed for random number generators 
+	/**
+	 * seed for random number generators
 	 */
 	gsl_vector * seed;
-	/** 
+	/**
 	 * current parameters
-	 * size = n_par 
+	 * size = n_par
 	 */
 	gsl_vector * params;
-	/** 
+	/**
 	 * best parameters yet
-	 * size = n_par 
+	 * size = n_par
 	 */
-	gsl_vector * params_best; 
-	/** 
+	gsl_vector * params_best;
+	/**
 	 * pointer to 2D-array containing the resulting values for each parameter.
-	 * for each iteration, and parameter, the values of the calculation are 
+	 * for each iteration, and parameter, the values of the calculation are
 	 * kept.
 	 * size = iter, n_par
 	 */
 	gsl_vector ** params_distr;
-	/** 
+	/**
 	 * descriptions of parameters
 	 * size = n_par
 	 */
-	char ** params_descr; 
-	/** 
+	char ** params_descr;
+	/**
 	 * number of accepted steps for individual parameters
 	 * size = n_par
 	 */
-	long * params_accepts; 
-	/** 
+	long * params_accepts;
+	/**
 	 * number of rejected steps for individual parameters
 	 * size = n_par
 	 */
 	long * params_rejects;
-	/** 
-	 * current step widths for individual parameters 
+	/**
+	 * current step widths for individual parameters
 	 * size = n_par; set by calibration
 	 */
 	gsl_vector * params_step;
-	/** 
-	 * lower limits for each parameter 
+	/**
+	 * lower limits for each parameter
 	 * size = n_par
 	 */
-	gsl_vector * params_min; 
-	/** 
-	 * upper limits for each parameter 
+	gsl_vector * params_min;
+	/**
+	 * upper limits for each parameter
 	 * size = n_par
 	 */
-	gsl_vector * params_max; 
-	/** 
-	 * pointer to 1D-array containing the abscissa of the observations (e.g., 
-	 * date, frequency, wavelength) 
+	gsl_vector * params_max;
+	/**
+	 * pointer to 1D-array containing the abscissa of the observations (e.g.,
+	 * date, frequency, wavelength)
 	 * size = x-size
 	 */
 	gsl_vector * x_dat;
-	/** 
-	 * pointer to 1D-array containing the ordinate of the observations (e.g., 
+	/**
+	 * pointer to 1D-array containing the ordinate of the observations (e.g.,
 	 * intensity, power, radial vel.).
 	 * size = x-size.
 	 */
-	gsl_vector * y_dat; 
-	/** pointer to 1D-array containing the model values corresponding to the 
+	gsl_vector * y_dat;
+	/** pointer to 1D-array containing the model values corresponding to the
 	 * observed abscissa values.
 	 * This is a synthetic (calculated) y_dat value for the current parameters.
 	 * size = x-size
 	 */
-	gsl_vector * model; 
-	
+	gsl_vector * model;
+
 	/** number of iterations for which space is allocated (params_distr) */
 	unsigned long size;
 	/** number of iterations calculated */
@@ -115,7 +115,7 @@ double get_random_number();
  */
 mcmc * mcmc_init(unsigned int n_pars);
 /**
- * create and initialize a mcmc class using the configuration given in 
+ * create and initialize a mcmc class using the configuration given in
  * @param filename
  */
 mcmc * mcmc_load(const char * filename);
@@ -128,11 +128,15 @@ void mcmc_free(mcmc * m);
  * prepare the calculation of (next) iteration, i.e., allocate space
  * @param iter number of iteration
  */
-void prepare_iter(mcmc * m, unsigned long iter);
+void mcmc_prepare_iteration(mcmc * m, unsigned long iter);
 
-void add_values(mcmc * m, int n_iter);
+/**
+ * was: add_values
+ */
+void mcmc_append_current_parameters(mcmc * m, int n_iter);
 
-void write2files(mcmc * m);
+void mcmc_dump_model(mcmc * m);
+void mcmc_dump_y_dat(mcmc * m);
 
 /**
  * @see calc_hist

@@ -42,17 +42,17 @@
 int count_tests();
 
 /* example test function. return value is 0 iff succeeded.*/
-int test_tests(void){
-	return (count_tests()>0 ? 0 : 1);
+int test_tests(void) {
+	return (count_tests() > 0 ? 0 : 1);
 }
 
-int test_hist(void){
+int test_hist(void) {
 	gsl_histogram * h;
-	
+
 	/*gsl_histogram * get_hist(gsl_vector * vs, int index, int nbins);*/
-	gsl_vector * vs = gsl_vector_calloc (3);
-	gsl_vector_set (vs, 0, 3);
-	
+	gsl_vector * vs = gsl_vector_calloc(3);
+	gsl_vector_set(vs, 0, 3);
+
 	ASSERTEQUALI((int)vs->size, 3, "setup");
 	h = calc_hist(&vs, 0, 3);
 	ASSERTEQUALD(gsl_histogram_min(h), 0.0, "lower bound");
@@ -62,13 +62,13 @@ int test_hist(void){
 	ASSERTEQUALD(gsl_histogram_get (h, 0), 0.666667, "bin:0 -> 1 elem");
 	ASSERTEQUALD(gsl_histogram_get (h, 1), 0.0, "bin:1 -> 0 elem");
 	ASSERTEQUALD(gsl_histogram_get (h, 2), 0.333333, "bin:2 -> 2 elem");
-	gsl_histogram_free (h);
+	gsl_histogram_free(h);
 
 	return 0;
 }
 
 
-int test_create(void){
+int test_create(void) {
 	mcmc * m;
 	debug("test-create");
 	m = mcmc_init(3);
@@ -80,7 +80,7 @@ int test_create(void){
 }
 
 
-int test_load(void){
+int test_load(void) {
 	mcmc * m = mcmc_load("tests/testinput1");
 	ASSERT(m!=NULL, "loaded");
 	ASSERTEQUALI(m->n_par, 3, "number of parameters");
@@ -115,13 +115,13 @@ int test_load(void){
 }
 
 
-int test_resize(void){
+int test_resize(void) {
 	mcmc * m = mcmc_init(3);
 	int i = 0;
 	int j = 0;
-	for(j = 0; j < 5; j++) {
-		for(; i % 1024 != 1023; i++){
-			prepare_iter(m, i);
+	for (j = 0; j < 5; j++) {
+		for (; i % 1024 != 1023; i++) {
+			mcmc_prepare_iteration(m, i);
 		}
 		i++;
 		dump_i("tested iterations", i);
@@ -131,9 +131,12 @@ int test_resize(void){
 }
 
 
-int test_write(void){
+int test_write(void) {
 	mcmc * m = mcmc_load("tests/testinput1");
-	
+	debug("lets cheat and say we got the y-data as model");
+	gsl_vector_memcpy(m->model, m->y_dat);
+	gsl_vector_add(m->model, m->x_dat);
+	mcmc_dump_model(m);
 	mcmc_free(m);
 	return 0;
 }
@@ -149,7 +152,7 @@ int (*tests_registration[])(void)  = {
 	test_load,
 	test_resize,
 	test_write,
-	
+
 	/* register more tests before here */
 	NULL,
 };

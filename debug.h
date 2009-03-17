@@ -16,7 +16,7 @@
 #define IFSEGV if(0)
 #endif
 
- 
+
 
 /* http://www.decompile.com/cpp/faq/file_and_line_error_string.htm */
 #define STRINGIFY(x) #x
@@ -36,7 +36,8 @@
 #define dump_p(str, var)  IFDEBUG printf("\tDEBUG[%s]: %s: %p\n", AT, str, var);
 #define dump_m(str, m)    IFDEBUG dump(m);
 
-void dump(mcmc * m); 
+void dump(mcmc * m);
+void require(const int returncode);
 
 #endif
 

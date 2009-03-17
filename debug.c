@@ -33,4 +33,8 @@ void dump(mcmc * m) {
 	debug("dumping m done ---- ");
 }
 
-
+void require(const int returncode) {
+	if(returncode != 0) {
+		fprintf(stderr, "a gsl call returned with an error: %s\n", gsl_strerror(returncode));
+	}
+}

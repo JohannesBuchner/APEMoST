@@ -4,7 +4,7 @@
 #include "debug.h"
 
 /*
- * PTR_NEW: 
+ * PTR_NEW:
  *   creates a pointer to a heap variable
  *   argument is copied and a pointer is returned.
  **
@@ -13,7 +13,7 @@
  *   *bar = foo changes the values of bar to the same ones as foo (copy)
  *   * does dereferencing
  **
- * DBLARR: 
+ * DBLARR:
  *   creates a double/float array/vectro
  *   argument: dimension, up to 8
  **
@@ -21,11 +21,11 @@
  *   dereferences pointer, accesses index a of var, and of that accesses index b
  * (*var)[a,*]
  *   full vector of 2D array (*var), var being a pointer to the 2D-array
- ** 
+ **
  * ?INDGEN:
  *   generates a array where each entry has the value of its subscript.
  *   examples: findgen (float), dindgen (double)
- * 
+ *
  **
  * Histograms:
  *   count stuff that falls into bins.
@@ -42,29 +42,29 @@ gsl_histogram * calc_hist(gsl_vector ** param_distr, int index, int nbins) {
 	double v;
 	gsl_histogram * h;
 	gsl_vector * dat = param_distr[index];
-	
+
 	gsl_vector_minmax (dat, &min, &max);
 	binwidth = (max - min)/nbins;
 	dump_d("min", min);
 	dump_d("max", max);
-	
+
 	debug("allocating the histogram");
 	h = gsl_histogram_alloc (dat->size);
 	debug("setting range");
-	gsl_histogram_set_ranges_uniform (h, min, max);
-	
+	require(gsl_histogram_set_ranges_uniform (h, min, max));
+
 	/* with out the following, the max element doesn't fall in the last bin */
-	h->range[h->n] += 1; 
-	
+	h->range[h->n] += 1;
+
 	debug("summing up");
-	for(i=0; i<dat->size; i++){ 
+	for(i=0; i<dat->size; i++){
 		v = gsl_vector_get (dat, i);
 		sum += v;
-		gsl_histogram_increment (h, v);
+		require(gsl_histogram_increment (h, v));
 	}
 	debug("scaling");
 	/* double gsl_histogram_sum (const gsl_histogram * h) */
-	gsl_histogram_scale (h, 1/sum);
+	require(gsl_histogram_scale (h, 1/sum));
 	debug("done");
 	return h;
 }
@@ -80,14 +80,14 @@ double calc_vector_sum(gsl_vector * v) {
 
 gsl_vector * dup_vector(gsl_vector * v) {
 	gsl_vector * r = gsl_vector_alloc(v->size);
-	gsl_vector_memcpy(r, v);
+	require(gsl_vector_memcpy(r, v));
 	return r;
 }
 
 gsl_vector * calc_normalized(gsl_vector * v) {
 	double sum = calc_vector_sum(v);
 	gsl_vector * r = dup_vector(v);
-	gsl_vector_scale(r, 1/sum);
+	require(gsl_vector_scale(r, 1/sum));
 	return r;
 }
 

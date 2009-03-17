@@ -14,13 +14,13 @@ help:
 	@grep -E '^# [.a-z]{2,}:' Makefile|sed 's,^# *,\t,g' |sed 's,: ,\t,g'
 
 # all: 
-all: main.exe
+all: tests.exe
 
 run: main.exe
 	./main.exe
 
-tests.exe: Makefile mcmc.h mcmc.c mcmc_gettersetter.c mcmc_parser.c run-tests.c tests.c gsl_helper.h gsl_helper.c debug.c debug.h
-	$(CC) -DDEBUG $(CFLAGS) $(LDFLAGS) run-tests.c tests.c gsl_helper.c mcmc.c mcmc_gettersetter.c mcmc_parser.c debug.c -o $@
+tests.exe: Makefile mcmc.h mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_dump.c run-tests.c tests.c gsl_helper.h gsl_helper.c debug.c debug.h
+	$(CC) -DDEBUG $(CFLAGS) $(LDFLAGS) run-tests.c tests.c gsl_helper.c mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_dump.c debug.c -o $@
 
 # tests: run the tests
 tests: tests.exe
