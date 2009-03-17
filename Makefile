@@ -38,7 +38,7 @@ tests: tests.exe
 clean:
 	rm -f *.exe *.o
 
-## doc: build the documenttion
+## doc: build the documentation
 doc: doxygen.config
 	doxygen doxygen.config
 
