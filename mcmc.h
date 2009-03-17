@@ -29,6 +29,7 @@ void mcmc_free(mcmc * m);
 /**
  * adds the current parameter values to params_distr as nth iteration
  * was: add_values
+ * @param m
  * @param n_iter
  */
 void mcmc_append_current_parameters(mcmc * m, int n_iter);

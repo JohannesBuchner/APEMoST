@@ -55,7 +55,7 @@ int test_hist(void) {
 	gsl_vector_set(vs, 0, 3);
 
 	ASSERTEQUALI((int)vs->size, 3, "setup");
-	h = calc_hist(&vs, 0, 3);
+	h = calc_hist(vs, 3);
 	ASSERTEQUALD(gsl_histogram_min(h), 0.0, "lower bound");
 	ASSERTEQUALD(gsl_histogram_max(h), 3.0, "upper bound");
 	ASSERTEQUALI((int)gsl_histogram_bins(h), 3, "nbins");

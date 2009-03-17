@@ -30,7 +30,7 @@ long get_params_rejects_for(mcmc * m, int i) {
 }
 
 gsl_histogram * get_hist(mcmc * m, int index, int nbins) {
-	return calc_hist(m->params_distr, index, nbins);
+	return calc_hist(m->params_distr[index], nbins);
 }
 
 

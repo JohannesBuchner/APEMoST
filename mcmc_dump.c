@@ -37,3 +37,10 @@ void mcmc_dump_model(mcmc * m) {
 void mcmc_dump_y_dat(mcmc * m) {
 	mcmc_dump(m->x_dat, m->y_dat, "y_dat.dat.dump");
 }
+
+void mcmc_dump_probabilities(mcmc * m, unsigned int n_values) {
+	(void)m;
+	(void)n_values;
+	/*get_hist(m, 0, 0);*/
+}
+

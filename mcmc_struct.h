@@ -1,7 +1,3 @@
-/*
- * class structure
- */
-
 #ifndef MCMC_STRUCT_H_
 #define MCMC_STRUCT_H_
 
