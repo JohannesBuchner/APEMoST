@@ -26,6 +26,10 @@ double get_random_number() {
  */
 #define ALLOCATION_CHUNKS 1
 
+/**
+ * we have to provide at leas new_iter + 1 space.
+ * @param new_iter iteration
+ */
 static unsigned long get_new_size(unsigned long new_iter) {
 	if (ALLOCATION_CHUNKS > 1)
 		return ((new_iter + 1) / ALLOCATION_CHUNKS + 1) * ALLOCATION_CHUNKS;
@@ -85,7 +89,6 @@ void mcmc_prepare_iteration(mcmc * m, unsigned long iter) {
 	if (m->size != new_size) {
 		resize(m, new_size);
 	}
-	m->iter = iter;
 }
 
 void init_seed(mcmc * m) {
@@ -101,7 +104,7 @@ mcmc * mcmc_init(unsigned int n_pars) {
 		debug("allocating mcmc struct");
 	m = (mcmc*) malloc(sizeof(mcmc));
 	assert(m != NULL);
-	m->iter = 0;
+	m->n_iter = 0;
 	m->size = 0;
 	m->n_par = n_pars;
 	m->accept = 0;

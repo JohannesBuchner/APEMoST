@@ -29,7 +29,7 @@ void dump(mcmc * m) {
 	dump_p("y_dat",  (void*)m->y_dat);
 	dump_p("model",  (void*)m->model);
 	dump_ul("size", m->size);
-	dump_ul("iter", m->iter);
+	dump_ul("iter", m->n_iter);
 	debug("dumping m done ---- ");
 }
 

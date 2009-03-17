@@ -51,11 +51,11 @@ void mcmc_dump_probabilities(mcmc * m, int n_values) {
 	}
 
 	j = 0;
-	if (n_values > 0 && (unsigned int)n_values < m->iter)
-		j = m->iter - n_values;
+	if (n_values > 0 && (unsigned int)n_values < m->n_iter)
+		j = m->n_iter - n_values;
 	dump_i("starting at iteration", j);
-	dump_ul("until iteration", m->iter);
-	for (; j < m->iter; j++) {
+	dump_ul("until iteration", m->n_iter);
+	for (; j < m->n_iter; j++) {
 		dump_i("iteration", j)
 		for (i = 0; i < m->n_par; i++) {
 			dump_s("variable", m->params_descr[i]);

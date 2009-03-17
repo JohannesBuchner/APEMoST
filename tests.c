@@ -121,11 +121,22 @@ int test_resize(void) {
 	int i = 0;
 	int j = 0;
 	for (j = 0; j < 5; j++) {
-		for (; i % 1024 != 1023; i++) {
+		for (; i % 64 != 63; i++) {
 			mcmc_prepare_iteration(m, i);
 		}
 		i++;
 		dump_i("tested iterations", i);
+	}
+	mcmc_free(m);
+	return 0;
+}
+
+int test_append(void) {
+	mcmc * m = mcmc_init(3);
+	int i = 0;
+	for (; i % 10 != 9; i++) {
+		mcmc_append_current_parameters(m, i);
+		ASSERTEQUALI(i + 1, (int)m->n_iter, "number of iterations");
 	}
 	mcmc_free(m);
 	return 0;
@@ -153,8 +164,12 @@ int test_write_prob(void) {
 	require(gsl_vector_memcpy(m->params, m->params_max));
 	mcmc_append_current_parameters(m, 2);
 	mcmc_dump_probabilities(m, 1);
-	mcmc_free(m);
+	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 1, "" );
+	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  1, "" );
+	mcmc_dump_probabilities(m, -1);
 	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
+	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  3, "" );
+	mcmc_free(m);
 	return 0;
 }
 
@@ -168,6 +183,7 @@ int (*tests_registration[])(void)  = {
 	test_create,
 	test_load,
 	test_resize,
+	test_append,
 	test_write,
 	test_write_prob,
 

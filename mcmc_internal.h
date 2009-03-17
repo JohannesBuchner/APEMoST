@@ -22,7 +22,7 @@ double get_random_number();
 /**
  * prepare the calculation of (next) iteration, i.e., allocate space
  * @param m
- * @param iter number of iteration
+ * @param iter number of new iteration
  */
 void mcmc_prepare_iteration(mcmc * m, unsigned long iter);
 

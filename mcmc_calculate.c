@@ -14,5 +14,5 @@
 void mcmc_append_current_parameters(mcmc * m, int n_iter) {
 	mcmc_prepare_iteration(m, n_iter);
 	require(gsl_vector_memcpy(m->params_distr[n_iter], m->params));
-	m->iter = n_iter;
+	m->n_iter++;
 }

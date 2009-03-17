@@ -91,7 +91,7 @@ typedef struct {
 	/** number of iterations for which space is allocated (params_distr) */
 	unsigned long size;
 	/** number of iterations calculated */
-	unsigned long iter;
+	unsigned long n_iter;
 } mcmc;
 
 #endif /* MCMC_STRUCT_H_ */
