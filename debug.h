@@ -34,9 +34,11 @@
                           IFDEBUG printf("\tDEBUG[%s]: %s[%i]: %s\n", AT, str, index, var);
 #define dump_s(str, var)  IFDEBUG printf("\tDEBUG[%s]: %s: %s\n", AT, str, var);
 #define dump_p(str, var)  IFDEBUG printf("\tDEBUG[%s]: %s: %p\n", AT, str, var);
-#define dump_m(str, m)    IFDEBUG dump(m);
+#define dump_v(str, v)    IFDEBUG { printf("\tDEBUG[%s]: %s\n", AT, str); dump_vector(v); }
+#define dump_m(str, m)    IFDEBUG { printf("\tDEBUG[%s]: %s\n", AT, str); dump(m); }
 
 void dump(mcmc * m);
+void dump_vector(gsl_vector * v);
 void require(const int returncode);
 
 #endif

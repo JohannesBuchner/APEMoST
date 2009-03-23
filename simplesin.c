@@ -77,7 +77,7 @@ void simplesin(const char * filename) {
 	}
 	debug("Starting markov chain calibration");
 
-	markov_chain_calibrate(sinmod[0]->m, 0.5, 10000, 20000, 0.85);
+	markov_chain_calibrate(sinmod[0]->m, 10000, 0.5, 20000, 0.85, DEFAULT_ADJUST_STEP);
 
 	debug("Setting startingpoint for the calibration of all hotter distribution to the")
 	debug("best parameter values of the (beta=1)-distribution")
@@ -87,7 +87,7 @@ void simplesin(const char * filename) {
 		calc_prob(sinmod[i]->m);
 		sinmod[i]->m->prob *= sinmod[i]->beta;
 
-		markov_chain_calibrate(sinmod[i]->m, 0.5, 10000, 20000, 0.85);
+		markov_chain_calibrate(sinmod[i]->m, 10000, 0.5, 20000, 0.85, DEFAULT_ADJUST_STEP);
 	}
 	signal(SIGINT, ctrl_c_handler);
 	analyse(sinmod, n_beta);
@@ -134,7 +134,7 @@ void parallel_tempering_swap(parallel_tempering_mcmc ** sinmod, int n_beta, int 
 void analyse(parallel_tempering_mcmc ** sinmod, int n_beta) {
 	int i;
 	int n_swap = 30;
-	int iter = 0;
+	unsigned long iter = sinmod[0]->m->n_iter;
 	run = 1;
 	debug("starting the analysis");
 
@@ -150,9 +150,9 @@ void analyse(parallel_tempering_mcmc ** sinmod, int n_beta) {
 
 		if (iter % DUMP_PROB_INTERVAL == DUMP_PROB_INTERVAL - 1) {
 			debug("dumping distribution");
-			dump_i("iteration", iter);
-			dump_ul("acceptance rate: accepts", get_params_accepts(sinmod[0]->m));
-			dump_ul("acceptance rate: rejects", get_params_rejects(sinmod[0]->m));
+			dump_ul("iteration", iter);
+			dump_ul("acceptance rate: accepts", get_params_accepts_sum(sinmod[0]->m));
+			dump_ul("acceptance rate: rejects", get_params_rejects_sum(sinmod[0]->m));
 			mcmc_dump_probabilities(sinmod[0]->m, DUMP_PROB_INTERVAL);
 			dump(sinmod[0]->m);
 		}

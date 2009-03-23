@@ -6,7 +6,7 @@
  *       I'd let people access the struct directly.
  */
 
-long get_params_accepts(mcmc * m) {
+long get_params_accepts_sum(mcmc * m) {
 	unsigned int i;
 	long sum = 0;
 	for (i = 0; i < m->n_par; i++) {
@@ -15,7 +15,7 @@ long get_params_accepts(mcmc * m) {
 	return sum;
 }
 
-long get_params_rejects(mcmc * m) {
+long get_params_rejects_sum(mcmc * m) {
 	unsigned int i;
 	long sum = 0;
 	for (i = 0; i < m->n_par; i++) {
@@ -30,6 +30,28 @@ long get_params_accepts_for(mcmc * m, int i) {
 
 long get_params_rejects_for(mcmc * m, int i) {
 	return m->params_rejects[i];
+}
+
+gsl_vector * get_vector_from_array(long * array, unsigned int size) {
+	unsigned int i;
+	gsl_vector * v = gsl_vector_alloc(size);
+	assert(v != NULL);
+	for (i = 0; i < size; i++) {
+		gsl_vector_set(v, i, array[i]);
+	}
+	return v;
+}
+
+gsl_vector * get_accept_rate(mcmc * m) {
+	gsl_vector * v = get_vector_from_array(m->params_accepts, m->n_par);
+	gsl_vector_scale(v, 1.0/get_params_accepts_sum(m));
+	return v;
+}
+
+gsl_vector * get_reject_rate(mcmc * m) {
+	gsl_vector * v = get_vector_from_array(m->params_rejects, m->n_par);
+	gsl_vector_scale(v, 1.0/get_params_rejects_sum(m));
+	return v;
 }
 
 const char ** get_params_descr(mcmc * m) {
@@ -128,6 +150,11 @@ void set_x(mcmc * m, gsl_vector * new_x) {
 void set_y(mcmc * m, gsl_vector * new_y) {
 	m->y_dat = new_y;
 }
+
+gsl_vector * get_steps(mcmc * m) {
+	return m->params_step;
+}
+
 
 void free_gsl_vector_array(gsl_vector ** arr) {
 	int i = 0;
