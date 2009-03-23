@@ -1,12 +1,19 @@
 
 
+#include <signal.h>
 #include "mcmc.h"
 #include "gsl_helper.h"
 #include "simplesin.h"
 #include "debug.h"
 #include <gsl/gsl_sf.h>
 
+#define DUMP_PROB_INTERVAL 2000
+#define MAX_ITERATIONS 10000
+
 double sigma;
+int run;
+
+void ctrl_c_handler(int signal);
 
 void calc_model(mcmc * m) {
 	unsigned int i;
@@ -40,9 +47,11 @@ void simplesin(const char * filename) {
 	const char ** params_descr;
 	parallel_tempering_mcmc ** sinmod;
 
+	/* TODO: load these from config */
 	sigma = 0.5;
 	n_beta = 12;
 	beta_0 = 0.001;
+
 	delta_beta = (1.0 - beta_0) / (n_beta - 1);
 	sinmod = (parallel_tempering_mcmc**)calloc(n_beta, sizeof(parallel_tempering_mcmc*));
 
@@ -80,6 +89,7 @@ void simplesin(const char * filename) {
 
 		markov_chain_calibrate(sinmod[i]->m, 0.5, 10000, 20000, 0.85);
 	}
+	signal(SIGINT, ctrl_c_handler);
 	analyse(sinmod, n_beta);
 }
 
@@ -114,6 +124,7 @@ void parallel_tempering_swap(parallel_tempering_mcmc ** sinmod, int n_beta, int 
 			temp = get_params(sinmod[a]->m);
 			set_params(sinmod[a]->m, get_params(sinmod[b]->m));
 			set_params(sinmod[b]->m, temp);
+			/* TODO: update best? */
 		}else{
 			dump_d("not swapping", c);
 		}
@@ -124,33 +135,39 @@ void analyse(parallel_tempering_mcmc ** sinmod, int n_beta) {
 	int i;
 	int n_swap = 30;
 	int iter = 0;
-	int run = 1;
+	run = 1;
 	debug("starting the analysis");
 
-	while (iter < 10000) {
+	while (run && iter < MAX_ITERATIONS) {
+		/* TODO: maybe we can do 100 operations off these in threads using OpenMP ? */
 		for (i = 0; i < n_beta; i++) {
 			dump_i("one markov-chain step for ", i);
 			markov_chain_step(sinmod[i]->m);
 		}
+		/* TODO: what happens if a different one (!=0) finds a really good solution? */
+		mcmc_check_best(sinmod[0]->m);
+		mcmc_append_current_parameters(sinmod[0]->m, iter);
 
-		if (iter % 2000 == 2000 - 1) {
+		if (iter % DUMP_PROB_INTERVAL == DUMP_PROB_INTERVAL - 1) {
 			debug("dumping distribution");
 			dump_i("iteration", iter);
 			dump_ul("acceptance rate: accepts", get_params_accepts(sinmod[0]->m));
 			dump_ul("acceptance rate: rejects", get_params_rejects(sinmod[0]->m));
-			mcmc_dump_probabilities(sinmod[0]->m, 2000);
+			mcmc_dump_probabilities(sinmod[0]->m, DUMP_PROB_INTERVAL);
 			dump(sinmod[0]->m);
 		}
+
 		parallel_tempering_swap(sinmod, n_beta, n_swap);
-
-		mcmc_check_best(sinmod[0]->m);
-
-		mcmc_append_current_parameters(sinmod[0]->m, iter);
-
 		iter++;
 	}
 }
 #undef randumu
+
+/* TODO: add ctrl-c handler */
+void ctrl_c_handler(int signal) {
+	printf("received Ctrl-C (%d). Stopping ... (please be patient)\n", signal);
+	run = 0;
+}
 
 int main(void) {
 	simplesin("simplesin/input");
