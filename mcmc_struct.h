@@ -3,6 +3,7 @@
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
+#include <gsl/gsl_rng.h>
 
 /**
  * The main class of operation.
@@ -19,9 +20,9 @@ typedef struct {
 	/** probability of best parameter values yet */
 	double prob_best;
 	/**
-	 * seed for random number generators
+	 * random number generator
 	 */
-	gsl_vector * seed;
+	gsl_rng * random;
 	/**
 	 * current parameters
 	 * size = n_par
@@ -43,7 +44,7 @@ typedef struct {
 	 * descriptions of parameters
 	 * size = n_par
 	 */
-	char ** params_descr;
+	const char ** params_descr;
 	/**
 	 * number of accepted steps for individual parameters
 	 * size = n_par

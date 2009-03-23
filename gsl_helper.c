@@ -47,6 +47,18 @@ double calc_vector_sum(gsl_vector * v) {
 	return sum;
 }
 
+double calc_vector_squaresum(gsl_vector * v) {
+	double sum = 0;
+	double x;
+	unsigned int i;
+	for(i = 0; i < v->size; i++) {
+		x = gsl_vector_get(v, i);
+		sum += x*x;
+	}
+	return sum;
+}
+
+
 gsl_vector * dup_vector(gsl_vector * v) {
 	gsl_vector * r = gsl_vector_alloc(v->size);
 	require(gsl_vector_memcpy(r, v));

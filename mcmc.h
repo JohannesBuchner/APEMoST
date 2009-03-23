@@ -49,14 +49,41 @@ void mcmc_dump_y_dat(mcmc * m);
  */
 void mcmc_dump_probabilities(mcmc * m, int n_values);
 
+/**
+ * check if a new best value has been found
+ */
+void mcmc_check_best(mcmc * m);
+
+
+/**
+ * create/calibrate the markov-chain
+ */
+void markov_chain_calibrate(mcmc * m, double rat_limit, unsigned int burn_in_iterations,
+		unsigned int iter_limit, double mul);
+/**
+ * take a step using the markov-chain
+ */
+void markov_chain_step(mcmc * m);
+
+
+
+
 /* getter + setter */
+const char ** get_params_descr(mcmc * m);
 long get_params_accepts(mcmc * m);
 long get_params_rejects(mcmc * m);
 long get_params_accepts_for(mcmc * m, int i);
 long get_params_rejects_for(mcmc * m, int i);
-double get_params_ar_for(mcmc * m, int i);
-void set_params_ar(mcmc * m, gsl_vector ** new_params_ar);
-void set_params_ar_for(mcmc * m, gsl_vector * new_params_ar, int i);
+gsl_vector * get_params(mcmc * m);
+gsl_vector * get_params_best(mcmc * m);
+gsl_vector * get_x(mcmc * m);
+gsl_vector * get_y(mcmc * m);
+int get_n_par(mcmc * m);
+gsl_rng * get_random(mcmc * m);
+double get_prob(mcmc * m);
+double get_prob_best(mcmc * m);
+
+void set_prob(mcmc * m, double new_prob);
 void set_prob_best(mcmc * m, double new_prob_best);
 void set_minmax_for(mcmc * m, double new_min, double new_max, int i);
 void set_model(mcmc * m, gsl_vector * new_model);
@@ -64,10 +91,10 @@ void set_n_par(mcmc * m, int new_n_par);
 void set_params_best(mcmc * m, gsl_vector * new_params_best);
 void set_params_for(mcmc * m, double new_param, int i);
 void set_params(mcmc * m, gsl_vector * new_params);
-void set_params_descr_all(mcmc * m, char ** new_par_descr);
-void set_params_descr_for(mcmc * m, char * new_par_descr, int i);
-void set_seed(mcmc * m, gsl_vector * new_seed);
-void set_probability(mcmc * m, double new_prob);
+void set_params_descr_all(mcmc * m, const char ** new_par_descr);
+void set_params_descr_for(mcmc * m, const char * new_par_descr, int i);
+void set_random(mcmc * m, gsl_rng * newrandom);
+void set_prob(mcmc * m, double new_prob);
 void set_x(mcmc * m, gsl_vector * new_x);
 void set_x_copy(mcmc * m, gsl_vector * new_x);
 void set_y(mcmc * m, gsl_vector * new_y);

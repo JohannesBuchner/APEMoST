@@ -11,7 +11,7 @@
  */
 #define DUMP_FORMAT "%.3e"
 
-void mcmc_dump(const gsl_vector * x_dat, const gsl_vector * y_dat,
+static void mcmc_dump(const gsl_vector * x_dat, const gsl_vector * y_dat,
 		const char * filename) {
 	unsigned long i;
 	double x, y;

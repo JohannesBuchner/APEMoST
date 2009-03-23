@@ -29,6 +29,10 @@ gsl_histogram * calc_hist(gsl_vector * v, int nbins);
 double calc_vector_sum(gsl_vector * v);
 
 /**
+ * sums the squared values
+ */
+double calc_vector_squaresum(gsl_vector * v);
+/**
  * returns a duplicate
  */
 gsl_vector * dup_vector(gsl_vector * v);

@@ -4,22 +4,9 @@
 
 #include "mcmc.h"
 #include "gsl_helper.h"
-#include <gsl/gsl_rng.h>
 #include "debug.h"
 
 #define free(p) { IFSEGV dump_p("about to free", (void*)p); free(p); }
-
-double get_random_number() {
-	gsl_rng * random;
-	double v;
-
-	gsl_rng_env_setup();
-	random = gsl_rng_alloc(gsl_rng_default);
-	v = gsl_rng_uniform(random);
-	gsl_rng_free(random);
-
-	return v;
-}
 
 /**
  * for allocation, we don't want to call alloc too often, rather grow in steps
@@ -92,10 +79,8 @@ void mcmc_prepare_iteration(mcmc * m, unsigned long iter) {
 }
 
 void init_seed(mcmc * m) {
-	/* TODO: find right type and initialization for random generator */
-	/* TODO: fill arrays with initial values */
-	get_random_number();
-	m->seed = NULL;
+	gsl_rng_env_setup();
+	m->random = gsl_rng_alloc(gsl_rng_default);
 }
 
 mcmc * mcmc_init(unsigned int n_pars) {
@@ -133,7 +118,7 @@ mcmc * mcmc_init(unsigned int n_pars) {
 	m->params_max = gsl_vector_calloc(m->n_par);
 	assert(m->params_max != NULL);
 
-	m->params_descr = (char**) calloc(m->n_par, sizeof(char*));
+	m->params_descr = (const char**) calloc(m->n_par, sizeof(char*));
 	;
 	m->x_dat = NULL;
 	m->y_dat = NULL;
@@ -146,7 +131,7 @@ mcmc * mcmc_init(unsigned int n_pars) {
 void mcmc_free(mcmc * m) {
 	unsigned int i;
 
-	m->seed = NULL; /* TODO */
+	gsl_rng_free(m->random);
 	IFSEGV
 		debug("freeing params");
 	gsl_vector_free(m->params);
@@ -160,7 +145,7 @@ void mcmc_free(mcmc * m) {
 	IFSEGV
 		debug("freeing params_descr");
 	for (i = 0; i < m->n_par; i++) {
-		free(m->params_descr[i]);
+		free((char**)m->params_descr[i]);
 	}
 	free(m->params_descr);
 
@@ -186,9 +171,4 @@ extern void calc_model_for(mcmc * m, int i);
 
 extern double calc_prob(mcmc * m);
 
-void add_values(mcmc * m, int n_iter) {
-	/* TODO */
-	(void) m;
-	n_iter += 0;
-}
 
