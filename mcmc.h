@@ -59,5 +59,22 @@ void mcmc_check_best(mcmc * m);
 
 #include "mcmc_gettersetter.h"
 
+/* calculations done by the application */
+
+/**
+ * update the model according to the new parameter values
+ */
+void calc_model(mcmc * m);
+/**
+ * update the model as the new parameter value i changed
+ * @param i index of the parameter value that changed
+ */
+void calc_model_for(mcmc * m, unsigned int i);
+/**
+ * recalculate the probability for the model
+ */
+void calc_prob(mcmc * m);
+
+
 #endif
 

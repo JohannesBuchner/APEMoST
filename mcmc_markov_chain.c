@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "gsl_helper.h"
 #include <math.h>
+#include <gsl/gsl_sf.h>
 
 void restart_from_best(mcmc * m) {
     set_params(m, dup_vector(get_params_best(m)));
@@ -59,7 +60,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 
 	debug("Starting burn-in ...");
 	for(iter = 0; iter < burn_in_iterations; iter++) {
-		markov_chain_step(m);
+		markov_chain_step(m, 0);
 		if(iter % 200 == 200 - 1) {
 			dump_ul("\tBurn-in Iteration", iter);
 		}
@@ -78,7 +79,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 
 	while(iter < iter_limit) {
 		for (i = 0; i < m->n_par; i++) {
-			markov_chain_step(m); /* TODO:, i+1, calc_index=1); */
+			markov_chain_step_for(m, i, 1);
 			mcmc_check_best(m);
 		}
 		if (iter % 200 == 200 - 1) {
@@ -115,7 +116,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 			restart_from_best(m);
 			reset_accept_rejects(m);
 			for(subiter = 0; subiter < 200; subiter++) {
-				markov_chain_step(m);
+				markov_chain_step(m, 0);
 				mcmc_check_best(m);
 			}
 			dump_v("Global acceptance rate", get_accept_rate(m));
@@ -133,7 +134,97 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 		iter++;
 	}
 }
-void markov_chain_step(mcmc * m) {
-	(void)m;
 
+double mod_double(double x, double div) {
+	while(1) {
+		if(x >= div)
+			x -= div;
+		else if(x < 0)
+			x += div;
+		else
+			return x;
+	}
+}
+
+void do_step_for(mcmc * m, unsigned int i) {
+	double step = gsl_vector_get(m->params_step, i);
+	double old_value = gsl_vector_get(m->params, i);
+	double new_value = old_value + gsl_rng_uniform(m->random)*step;
+	double max = gsl_vector_get(m->params_max, i);
+	double min = gsl_vector_get(m->params_min, i);
+	if(new_value > max)
+		new_value = max - mod_double(new_value - max, max - min);
+	else if(new_value < min)
+		new_value = min + mod_double(min - new_value, max - min);
+	set_params_for(m, new_value, i);
+}
+void do_step(mcmc * m) {
+	unsigned int i;
+	for(i = 0; i < m->n_par; i++) {
+		do_step_for(m, i);
+	}
+}
+
+/**
+ * @returns 1 if accept, 0 if rejecting
+ */
+int check_accept(mcmc * m, double prob_old) {
+	double prob_new = get_prob(m);
+	double prob_still_accept;
+
+	if(prob_new > prob_old) {
+		return 1;
+	} else {
+		prob_still_accept = gsl_rng_uniform(m->random);
+		if(gsl_sf_log(prob_still_accept) < (prob_new - prob_old)) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
+
+void revert(mcmc * m, gsl_vector * old_model, double prob_old) {
+	set_model(m, old_model);
+	set_prob(m, prob_old);
+}
+
+void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
+	double prob_old = get_prob(m);
+	gsl_vector * old_model = dup_vector(m->model);
+	double old_value = gsl_vector_get(m->params, index);
+
+	do_step_for(m, index);
+
+	if(calc_index == 1)
+		calc_model_for(m, index);
+
+	calc_prob(m);
+
+	if(check_accept(m, prob_old) == 1) {
+		inc_params_accepts_for(m, index);
+	}else{
+		revert(m, old_model, prob_old);
+		set_params_for(m, old_value, index);
+		inc_params_rejects_for(m, index);
+	}
+}
+
+void markov_chain_step(mcmc * m, int calc_index) {
+	double prob_old = get_prob(m);
+	gsl_vector * old_model = dup_vector(m->model);
+	gsl_vector * old_values = dup_vector(m->params);
+
+	if(calc_index == 1)
+		calc_model(m);
+
+	calc_prob(m);
+
+	if(check_accept(m, prob_old) == 1) {
+		inc_params_accepts(m);
+	}else{
+		revert(m, old_model, prob_old);
+		set_params(m, old_values);
+		inc_params_rejects(m);
+	}
 }

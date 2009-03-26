@@ -62,6 +62,23 @@ gsl_histogram * get_hist(mcmc * m, int index, int nbins) {
 	return calc_hist(m->params_distr[index], nbins);
 }
 
+void inc_params_accepts_for(mcmc * m, int i) {
+	m->params_accepts[i]++;
+}
+void inc_params_rejects_for(mcmc * m, int i) {
+	m->params_rejects[i]++;
+}
+void inc_params_accepts(mcmc * m) {
+	unsigned int i;
+	for (i = 0; i < m->n_par; i++)
+		inc_params_accepts_for(m, i);
+}
+void inc_params_rejects(mcmc * m) {
+	unsigned int i;
+	for (i = 0; i < m->n_par; i++)
+		inc_params_rejects_for(m, i);
+}
+
 void set_params_accepts_for(mcmc * m, long new_params_accept, int i) {
 	m->params_accepts[i] = new_params_accept;
 }

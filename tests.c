@@ -174,11 +174,36 @@ int test_write_prob(void) {
 }
 
 
+int test_random(void) {
+	mcmc * m = mcmc_load("tests/testinput1");
+	double v = 0, last_v;
+	int i;
+	for (i = 0; i < 10; i++) {
+		last_v = v;
+		v = gsl_rng_uniform(get_random(m));
+		ASSERT( v != last_v, "v != last_v");
+		ASSERT( v >= 0, "v >= 0");
+		ASSERT( v <= 1, "v <= 1");
+	}
+	return 0;
+}
+
+void calc_prob(mcmc * m) {
+	(void)m;
+}
+void calc_model(mcmc * m) {
+	(void)m;
+}
+void calc_model_for(mcmc * m, unsigned int index) {
+	(void)m;
+	(void)index;
+}
 
 
 /* register of all tests */
 int (*tests_registration[])(void)  = {
 	/* this is test 1 */ /*test_tests, */
+	test_random,
 	test_hist,
 	test_create,
 	test_load,

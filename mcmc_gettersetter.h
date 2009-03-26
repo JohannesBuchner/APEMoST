@@ -42,4 +42,9 @@ void set_steps_all(mcmc * m, double * new_steps);
 void set_params_accepts_for(mcmc * m, long new_params_accept, int i);
 void set_params_rejects_for(mcmc * m, long new_params_reject, int i);
 
+void inc_params_accepts_for(mcmc * m, int i);
+void inc_params_rejects_for(mcmc * m, int i);
+void inc_params_accepts(mcmc * m);
+void inc_params_rejects(mcmc * m);
+
 #endif /* MCMC_GETTERSETTER_H_ */

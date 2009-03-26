@@ -164,11 +164,3 @@ void mcmc_free(mcmc * m) {
 	free(m);
 }
 
-/* calculations */
-
-extern void calc_model(mcmc * m);
-extern void calc_model_for(mcmc * m, int i);
-
-extern double calc_prob(mcmc * m);
-
-

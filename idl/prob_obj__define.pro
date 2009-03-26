@@ -668,6 +668,7 @@ end
 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ;-------------------------------------------------------------------------------------------
 
+; TODO: rename to increment_ar
 pro prob_obj::set_ar, new_ar, ind=ind, all=all, clear=clear
 ; sets the acceptance for specific parameters or the complete model 
 ; new_ar : the state of acceptance to be stored (0 : rejected, 1 : accepted)

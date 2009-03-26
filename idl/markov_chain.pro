@@ -37,6 +37,7 @@ endif else begin
    prob_obj->set_param, temp, /all 
 endelse
 
+; bug? shouldn't you check if index is set here too?
 if keyword_set(calc_index) then prob_obj->calc_model,ind=index $
 else prob_obj->calc_model
 

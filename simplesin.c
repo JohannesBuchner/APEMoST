@@ -15,20 +15,29 @@ int run;
 
 void ctrl_c_handler(int signal);
 
+void apply_formula(mcmc * m, unsigned int i, double param0, double param1, double param2) {
+	double x = gsl_vector_get(m->x_dat, i);
+	double y = param0 * gsl_sf_sin(2.0 * M_PI * param1 * x + param2);
+	gsl_vector_set(m->model, i, y);
+}
+
 void calc_model(mcmc * m) {
 	unsigned int i;
-	double x;
-	double y;
 	double param0 = gsl_vector_get(m->params, 0);
 	double param1 = gsl_vector_get(m->params, 1);
 	double param2 = gsl_vector_get(m->params, 2);
 
 	for(i = 0; i < m->x_dat->size; i++) {
-		x = gsl_vector_get(m->x_dat, i);
-		y = param0 * gsl_sf_sin(2.0 * M_PI * param1 * x + param2);
-		gsl_vector_set(m->model, i, y);
+		apply_formula(m, i, param0, param1, param2);
 	}
 }
+void calc_model_for(mcmc * m, unsigned int i) {
+	double param0 = gsl_vector_get(m->params, 0);
+	double param1 = gsl_vector_get(m->params, 1);
+	double param2 = gsl_vector_get(m->params, 2);
+	apply_formula(m, i, param0, param1, param2);
+}
+
 
 void calc_prob(mcmc * m) {
 	gsl_vector * diff = dup_vector(m->model);
@@ -142,7 +151,7 @@ void analyse(parallel_tempering_mcmc ** sinmod, int n_beta) {
 		/* TODO: maybe we can do 100 operations off these in threads using OpenMP ? */
 		for (i = 0; i < n_beta; i++) {
 			dump_i("one markov-chain step for ", i);
-			markov_chain_step(sinmod[i]->m);
+			markov_chain_step(sinmod[i]->m, 0);
 		}
 		/* TODO: what happens if a different one (!=0) finds a really good solution? */
 		mcmc_check_best(sinmod[0]->m);
