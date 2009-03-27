@@ -163,3 +163,13 @@ void mcmc_free(mcmc * m) {
 	free(m);
 }
 
+void mcmc_check(mcmc * m) {
+	assert(m != NULL);
+	assert(m->model != NULL);
+	assert(m->model->size > 0);
+	assert(m->x_dat->size == m->model->size);
+	assert(m->y_dat->size == m->x_dat->size);
+	assert(m->params->size == m->n_par);
+	assert(m->params->size == m->n_par);
+}
+

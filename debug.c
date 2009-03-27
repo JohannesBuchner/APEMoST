@@ -34,10 +34,10 @@ void dump(mcmc * m) {
 	}
 	dump_p("x_dat",  (void*) m->x_dat);
 	if(m->x_dat != NULL)
-		dump_ul("x-size", m->x_dat->size);
+		dump_size("x-size", m->x_dat->size);
 	dump_p("y_dat",  (void*)m->y_dat);
 	dump_p("model",  (void*)m->model);
-	dump_ul("size", m->size);
+	dump_size("size", m->size);
 	dump_ul("iter", m->n_iter);
 	debug("dumping m done ---- ");
 }

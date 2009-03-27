@@ -35,6 +35,7 @@
 #define dump_d(str, var)  IFDEBUG { printf("\tDEBUG[%s]: %s: %f\n", AT, str, var); fflush(NULL); }
 #define dump_l(str, var)  IFDEBUG { printf("\tDEBUG[%s]: %s: %l\n", AT, str, var); fflush(NULL); }
 #define dump_ul(str, var) IFDEBUG { printf("\tDEBUG[%s]: %s: %lu\n", AT, str, var); fflush(NULL); }
+#define dump_size(str, var) IFDEBUG { printf("\tDEBUG[%s]: %s: %lu\n", AT, str, (unsigned long)var); fflush(NULL); }
 #define dump_i_s(str, index, var) \
                           IFDEBUG { printf("\tDEBUG[%s]: %s[%i]: %s\n", AT, str, index, var); fflush(NULL); }
 #define dump_s(str, var)  IFDEBUG { printf("\tDEBUG[%s]: %s: %s\n", AT, str, var); fflush(NULL); }

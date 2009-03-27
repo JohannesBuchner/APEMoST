@@ -27,6 +27,11 @@ mcmc * mcmc_load(const char * filename);
 void mcmc_free(mcmc * m);
 
 /**
+ * checks the pointers and dimensions
+ */
+void mcmc_check(mcmc * m);
+
+/**
  * adds the current parameter values to params_distr as nth iteration
  * was: add_values
  * @param m
