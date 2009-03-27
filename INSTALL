@@ -1,0 +1,24 @@
+
+dependencies:
+
+gsl (GNU Scientific Library)
+boehmgc (Garbage Collector)
+duma (optional)
+	install them using your package manager. 
+
+Compile:
+	make clean all tests
+
+
+Alternative way to install the dependencies:
+	Only if you can't install with a package (no root rights or no package)!
+	download+extract each tar and run 
+		./configure --prefix=/home/buchner/bin/
+		make; make install
+	to install it locally
+	To run with the locally installed libraries and headers, you have to 
+	set
+	CCFLAGS="-I /home/buchner/bin/include/ -L /home/buchner/bin/lib/" 
+	LD_LIBRARY_PATH=/home/buchner/bin/lib/
+	
+
