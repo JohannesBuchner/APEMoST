@@ -188,6 +188,13 @@ int test_random(void) {
 	return 0;
 }
 
+int test_mod(void) {
+	ASSERTEQUALD(mod_double(3.14, 3.00), 0.14, "mod ints");
+	ASSERTEQUALD(mod_double(3.14, 1.30), 0.54, "mod doubles");
+	ASSERTEQUALD(mod_double(-3.14, 1.30), 0.76, "mod doubles");
+	return 0;
+}
+
 void calc_prob(mcmc * m) {
 	(void)m;
 }
@@ -204,6 +211,7 @@ void calc_model_for(mcmc * m, unsigned int index) {
 int (*tests_registration[])(void)  = {
 	/* this is test 1 */ /*test_tests, */
 	test_random,
+	test_mod,
 	test_hist,
 	test_create,
 	test_load,

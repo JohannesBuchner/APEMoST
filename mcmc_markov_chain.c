@@ -43,22 +43,24 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 
 	int flag;
 	int cont = 0;
-	gsl_vector * old_accepts;
-	gsl_vector * old_rejects;
-	gsl_vector * accept_rate;
-	gsl_vector * reject_rate;
-	gsl_vector * old_steps;
+	gsl_vector * old_accepts = NULL;
+	gsl_vector * old_rejects = NULL;
+	gsl_vector * accept_rate = NULL;
+	gsl_vector * reject_rate = NULL;
+	gsl_vector * old_steps = NULL;
 	double delta_reject_accept_t;
 
 	unsigned long iter;
 	unsigned long subiter;
 
 	debug("Beginning calibration of MCMC ...");
+	mcmc_check(m);
 
 	if(rat_limit < 0)
 		rat_limit = pow(0.25, 1.0 / m->n_par);
 
 	debug("Starting burn-in ...");
+	wait();
 	for(iter = 0; iter < burn_in_iterations; iter++) {
 		markov_chain_step(m, 0);
 		if(iter % 200 == 200 - 1) {
@@ -70,11 +72,13 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 			restart_from_best(m);
 		}
 	}
+	assert(m->params_step != NULL);
 	gsl_vector_scale(m->params_step, adjust_step);
 	set_params(m, dup_vector(get_params_best(m)));
 	debug("Burn-in done.");
 
 	debug("Calibrating step widths ...(set cont=1 to abort)");
+	wait();
 	reset_accept_rejects(m);
 
 	while(iter < iter_limit) {
@@ -91,17 +95,21 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 				flag = 1;
 				old_accepts = accept_rate;
 				old_rejects = get_reject_rate(m);
+				gsl_vector_free(old_steps);
 				old_steps = dup_vector(get_steps(m));
 			}
+			dump_ul("----------------------------------------- iteration", iter);
 			for(i = 0; i < m->n_par; i++) {
-				dump_ul("----------------------------------------- iteration", iter);
 				dump_s("Acceptance rates for", m->params_descr[i]);
 				dump_v("acceptance rate: accepts", get_accept_rate(m));
 				dump_v("acceptance rate: rejects", get_reject_rate(m));
 				/* TODO: print diff to old_* variables */
 			}
+			/*gsl_vector_free(old_accepts);*/
 			old_accepts = accept_rate;
+			/*gsl_vector_free(old_rejects);*/
 			old_rejects = reject_rate;
+			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
 			for(i = 0; i < m->n_par; i++) {
@@ -120,7 +128,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 				mcmc_check_best(m);
 			}
 			dump_v("Global acceptance rate", get_accept_rate(m));
-			delta_reject_accept_t = m->accept/(m->accept + m->reject) - 0.23;
+			delta_reject_accept_t = m->accept*1.0/(m->accept + m->reject) - 0.23;
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				cont = 1;
 			} else {
@@ -133,6 +141,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 		}
 		iter++;
 	}
+	debug("calibration of markov-chain done.");
+	wait();
 }
 
 double mod_double(double x, double div) {
@@ -152,10 +162,12 @@ void do_step_for(mcmc * m, unsigned int i) {
 	double new_value = old_value + gsl_rng_uniform(m->random)*step;
 	double max = gsl_vector_get(m->params_max, i);
 	double min = gsl_vector_get(m->params_min, i);
+	/* dump_d("Jumping from", old_value); */
 	if(new_value > max)
 		new_value = max - mod_double(new_value - max, max - min);
 	else if(new_value < min)
 		new_value = min + mod_double(min - new_value, max - min);
+	/* dump_d("To", new_value); */
 	set_params_for(m, new_value, i);
 }
 void do_step(mcmc * m) {
@@ -173,10 +185,12 @@ int check_accept(mcmc * m, double prob_old) {
 	double prob_still_accept;
 
 	if(prob_new > prob_old) {
+		debug("accepting because we got better");
 		return 1;
 	} else {
 		prob_still_accept = gsl_rng_uniform(m->random);
 		if(gsl_sf_log(prob_still_accept) < (prob_new - prob_old)) {
+			/* debug("accepting even when we got worse"); */
 			return 1;
 		} else {
 			return 0;
@@ -196,13 +210,19 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 
 	do_step_for(m, index);
 
-	if(calc_index == 1)
+	if(calc_index == 1) {
 		calc_model_for(m, index);
+	} else {
+		/* TODO: I added this, because how are you going to calculate a probability
+		 * without a up-to-date model */
+		calc_model_for(m, index);
+	}
 
 	calc_prob(m);
 
 	if(check_accept(m, prob_old) == 1) {
 		inc_params_accepts_for(m, index);
+		gsl_vector_free(old_model);
 	}else{
 		revert(m, old_model, prob_old);
 		set_params_for(m, old_value, index);
@@ -217,11 +237,18 @@ void markov_chain_step(mcmc * m, int calc_index) {
 
 	if(calc_index == 1)
 		calc_model(m);
+	else {
+		/* TODO: I added this, because how are you going to calculate a probability
+		 * without a up-to-date model */
+		calc_model(m);
+	}
 
 	calc_prob(m);
 
 	if(check_accept(m, prob_old) == 1) {
 		inc_params_accepts(m);
+		gsl_vector_free(old_model);
+		gsl_vector_free(old_values);
 	}else{
 		revert(m, old_model, prob_old);
 		set_params(m, old_values);

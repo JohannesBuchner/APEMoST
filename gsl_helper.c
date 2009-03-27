@@ -60,7 +60,11 @@ double calc_vector_squaresum(gsl_vector * v) {
 
 
 gsl_vector * dup_vector(gsl_vector * v) {
-	gsl_vector * r = gsl_vector_alloc(v->size);
+	gsl_vector * r;
+	assert(v != NULL);
+	assert(v->size > 0);
+	r = gsl_vector_alloc(v->size);
+	assert(r != NULL);
 	require(gsl_vector_memcpy(r, v));
 	return r;
 }

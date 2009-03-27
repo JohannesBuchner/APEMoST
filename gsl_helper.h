@@ -33,13 +33,17 @@ double calc_vector_sum(gsl_vector * v);
  */
 double calc_vector_squaresum(gsl_vector * v);
 /**
- * returns a duplicate
+ * returns a duplicate.
+ *
+ * The caller has to free the returned vector.
  */
 gsl_vector * dup_vector(gsl_vector * v);
 
 /**
  * normalizes the vector, i.e. the values are scaled so that the sum of
  * all values is 1
+
+ * The caller has to free the returned vector.
  */
 gsl_vector * calc_normalized(gsl_vector * v);
 

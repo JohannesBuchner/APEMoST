@@ -2,10 +2,6 @@
 #include "gsl_helper.h"
 #include <gsl/gsl_rng.h>
 
-/* TODO: check if we need getters. so far they look straight-forward, so
- *       I'd let people access the struct directly.
- */
-
 long get_params_accepts_sum(mcmc * m) {
 	unsigned int i;
 	long sum = 0;
@@ -108,6 +104,7 @@ void set_steps_for(mcmc * m, double new_step, int i) {
 }
 
 void set_model(mcmc * m, gsl_vector * new_model) {
+	gsl_vector_free(m->model);
 	m->model = new_model;
 }
 
@@ -132,6 +129,7 @@ gsl_vector * get_params_best(mcmc * m) {
 }
 
 void set_params(mcmc * m, gsl_vector * new_params) {
+	gsl_vector_free(m->params);
 	m->params = new_params;
 }
 

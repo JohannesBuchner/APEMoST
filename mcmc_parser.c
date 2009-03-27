@@ -75,6 +75,7 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	}
 	debug("setting values");
 	gsl_vector_set(m->params, i, start);
+	gsl_vector_set(m->params_best, i, start);
 	gsl_vector_set(m->params_min, i, min);
 	gsl_vector_set(m->params_max, i, max);
 	m->params_descr[i] = descr;

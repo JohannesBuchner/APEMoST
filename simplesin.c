@@ -27,22 +27,26 @@ void calc_model(mcmc * m) {
 	double param1 = gsl_vector_get(m->params, 1);
 	double param2 = gsl_vector_get(m->params, 2);
 
+	/*dump_v("recalculating model for parameter values", m->params);*/
 	for(i = 0; i < m->x_dat->size; i++) {
 		apply_formula(m, i, param0, param1, param2);
 	}
+	/*debug("model done");*/
 }
 void calc_model_for(mcmc * m, unsigned int i) {
-	double param0 = gsl_vector_get(m->params, 0);
-	double param1 = gsl_vector_get(m->params, 1);
-	double param2 = gsl_vector_get(m->params, 2);
-	apply_formula(m, i, param0, param1, param2);
+	(void)i;
+	calc_model(m);
 }
 
 
 void calc_prob(mcmc * m) {
 	gsl_vector * diff = dup_vector(m->model);
+	/* debug("calculating probability by squaring residue"); */
 	require(gsl_vector_sub(diff, m->y_dat));
+	/* dump_d("old probability", m->prob); */
 	m->prob = calc_vector_squaresum(diff) / (2 * sigma*sigma);
+	/* dump_d("new probability", m->prob); */
+	gsl_vector_free(diff);
 }
 
 void analyse(parallel_tempering_mcmc ** sinmod, int n_beta);
@@ -54,23 +58,34 @@ void simplesin(const char * filename) {
 	double delta_beta;
 	int i;
 	const char ** params_descr;
+	long burn_in_iterations;
+	double rat_limit;
+	long iter_limit;
+	double mul;
 	parallel_tempering_mcmc ** sinmod;
 
 	/* TODO: load these from config */
 	sigma = 0.5;
 	n_beta = 12;
 	beta_0 = 0.001;
+	burn_in_iterations = 10000 / 10;
+	rat_limit = 0.5;
+	iter_limit = 20000 / 10;
+	mul = 0.85;
 
 	delta_beta = (1.0 - beta_0) / (n_beta - 1);
 	sinmod = (parallel_tempering_mcmc**)calloc(n_beta, sizeof(parallel_tempering_mcmc*));
+	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
 	for(i = 0; i < n_beta; i++) {
 		printf("\tChain %d - beta = %f\n", i+1, 1.0 - i * delta_beta);
-
-		/* That is kind of stupid and could be optimized. not critical though. */
+		sinmod[i] = (parallel_tempering_mcmc*)malloc(sizeof(parallel_tempering_mcmc));
+		assert(sinmod[i] != NULL);
+		/* That is kind of stupid (doublicate execution) and could be optimized.
+		 * not critical though. */
 		sinmod[i]->m = mcmc_load(filename);
-
+		assert(sinmod[i]->m->y_dat->size == sinmod[i]->m->x_dat->size);
 		set_beta(sinmod[i], 1.0 - i * delta_beta);
 	}
 	params_descr = get_params_descr(sinmod[0]->m);
@@ -82,24 +97,34 @@ void simplesin(const char * filename) {
 	debug("Initializing models");
 	for(i = 0; i < n_beta; i++) {
 		calc_model(sinmod[i]->m);
+		assert(sinmod[i]->m->model != NULL);
+		assert(sinmod[i]->m->model->size == sinmod[i]->m->x_dat->size);
 		calc_prob(sinmod[i]->m);
 	}
 	debug("Starting markov chain calibration");
-
-	markov_chain_calibrate(sinmod[0]->m, 10000, 0.5, 20000, 0.85, DEFAULT_ADJUST_STEP);
+	wait();
+	markov_chain_calibrate(sinmod[0]->m, burn_in_iterations, rat_limit, iter_limit, mul, DEFAULT_ADJUST_STEP);
 
 	debug("Setting startingpoint for the calibration of all hotter distribution to the")
 	debug("best parameter values of the (beta=1)-distribution")
+	wait();
 	for(i = 0 + 1; i < n_beta; i++) {
 		set_params(sinmod[i]->m, get_params_best(sinmod[i]->m));
 		calc_model(sinmod[i]->m);
 		calc_prob(sinmod[i]->m);
 		sinmod[i]->m->prob *= sinmod[i]->beta;
 
-		markov_chain_calibrate(sinmod[i]->m, 10000, 0.5, 20000, 0.85, DEFAULT_ADJUST_STEP);
+		markov_chain_calibrate(sinmod[i]->m, burn_in_iterations, rat_limit, iter_limit, mul, DEFAULT_ADJUST_STEP);
 	}
+	debug("all chains calibrated.");
+	wait();
 	signal(SIGINT, ctrl_c_handler);
 	analyse(sinmod, n_beta);
+	for(i = 0; i < n_beta; i++) {
+		mcmc_free(sinmod[i]->m);
+		free(sinmod[i]);
+	}
+	free(sinmod);
 }
 
 #define randomu() gsl_rng_uniform(get_random(sinmod[0]->m))
@@ -146,6 +171,7 @@ void analyse(parallel_tempering_mcmc ** sinmod, int n_beta) {
 	unsigned long iter = sinmod[0]->m->n_iter;
 	run = 1;
 	debug("starting the analysis");
+	wait();
 
 	while (run && iter < MAX_ITERATIONS) {
 		/* TODO: maybe we can do 100 operations off these in threads using OpenMP ? */
@@ -172,7 +198,6 @@ void analyse(parallel_tempering_mcmc ** sinmod, int n_beta) {
 }
 #undef randumu
 
-/* TODO: add ctrl-c handler */
 void ctrl_c_handler(int signal) {
 	printf("received Ctrl-C (%d). Stopping ... (please be patient)\n", signal);
 	run = 0;

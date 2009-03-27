@@ -6,8 +6,6 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
-#define free(p) { IFSEGV dump_p("about to free", (void*)p); free(p); }
-
 /**
  * for allocation, we don't want to call alloc too often, rather grow in steps
  */
@@ -52,7 +50,7 @@ static void resize(mcmc * m, unsigned long new_size) {
 	IFSEGV
 		dump_p("params_distr", (void*)m->params_distr);
 	if (new_size != 0) {
-		assert(m->params_distr!=NULL);
+		assert(m->params_distr != NULL);
 		IFSEGV
 			dump_p("params_distr[0]", (void*)m->params_distr[0]);
 	}
@@ -64,6 +62,7 @@ static void resize(mcmc * m, unsigned long new_size) {
 			IFSEGV
 				dump_ul("allocating vector", i);
 			m->params_distr[i] = gsl_vector_alloc(m->n_par);
+			assert(m->params_distr[i] != NULL);
 		}
 	}
 	m->size = new_size;
@@ -119,7 +118,7 @@ mcmc * mcmc_init(unsigned int n_pars) {
 	assert(m->params_max != NULL);
 
 	m->params_descr = (const char**) calloc(m->n_par, sizeof(char*));
-	;
+
 	m->x_dat = NULL;
 	m->y_dat = NULL;
 	m->model = NULL;
@@ -145,7 +144,7 @@ void mcmc_free(mcmc * m) {
 	IFSEGV
 		debug("freeing params_descr");
 	for (i = 0; i < m->n_par; i++) {
-		free((char**)m->params_descr[i]);
+		free((char*)m->params_descr[i]);
 	}
 	free(m->params_descr);
 

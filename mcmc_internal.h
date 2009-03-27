@@ -32,4 +32,9 @@ gsl_histogram * get_hist(mcmc * m, int i, int nbins);
  */
 unsigned int countlines(const char * filename);
 
+/**
+ * a modulo operator for double values
+ */
+double mod_double(double x, double div);
+
 #endif /* MCMC_INTERNAL_H_ */
