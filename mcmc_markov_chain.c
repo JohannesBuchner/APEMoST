@@ -16,7 +16,7 @@ void restart_from_best(mcmc * m) {
 
 void reset_accept_rejects(mcmc * m) {
 	unsigned int i;
-	for (i = 0; i < m->n_par; i++) {
+	for (i = 0; i < get_n_par(m); i++) {
 		set_params_accepts_for(m, 0, i);
 		set_params_rejects_for(m, 0, i);
 	}
@@ -41,7 +41,9 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 		unsigned int iter_limit, double mul, double adjust_step) {
 	unsigned int i;
 
+	/* TODO: this variable is not used? */
 	int flag;
+	/* TODO: this variable is not used? */
 	int cont = 0;
 	gsl_vector * old_accepts = NULL;
 	gsl_vector * old_rejects = NULL;
@@ -50,27 +52,32 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 	gsl_vector * old_steps = NULL;
 	double delta_reject_accept_t;
 
-	unsigned long iter;
+	unsigned long iter = 0;
 	unsigned long subiter;
 
-	debug("Beginning calibration of MCMC ...");
-	mcmc_check(m);
-
 	if(rat_limit < 0)
-		rat_limit = pow(0.25, 1.0 / m->n_par);
+		rat_limit = pow(0.25, 1.0 / get_n_par(m));
 
+	debug("Beginning calibration of MCMC ...");
 	debug("Starting burn-in ...");
-	wait();
-	for(iter = 0; iter < burn_in_iterations; iter++) {
-		markov_chain_step(m, 0);
-		if(iter % 200 == 200 - 1) {
-			dump_ul("\tBurn-in Iteration", iter);
+	mcmc_check(m);
+	for(iter = 0; iter < burn_in_iterations/2; iter++) {
+		for(subiter = 0; subiter < 200; subiter++) {
+			markov_chain_step(m, 0);
 		}
+		iter += subiter;
+		dump_ul("\tBurn-in Iteration", iter);
 		mcmc_check_best(m);
-		if (iter == burn_in_iterations/2) {
-			debug("Re-initializing burn-in ...");
-			restart_from_best(m);
+	}
+	debug("Re-initializing burn-in ...");
+	restart_from_best(m);
+	for(;iter < burn_in_iterations; iter++) {
+		for(subiter = 0; subiter < 200; subiter++) {
+			markov_chain_step(m, 0);
 		}
+		iter += subiter;
+		dump_ul("\tBurn-in Iteration", iter);
+		mcmc_check_best(m);
 	}
 	debug("Burn-in done, adjusting steps ...");
 	mcmc_check(m);
@@ -79,15 +86,17 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 	debug("Burn-in done.");
 
 	debug("Calibrating step widths ...(set cont=1 to abort)");
-	wait();
 	reset_accept_rejects(m);
 
 	while(iter < iter_limit) {
-		for (i = 0; i < m->n_par; i++) {
-			markov_chain_step_for(m, i, 1);
-			mcmc_check_best(m);
+		for(subiter = 0; subiter < 200; subiter++) {
+			for (i = 0; i < get_n_par(m); i++) {
+				markov_chain_step_for(m, i, 1);
+				mcmc_check_best(m);
+			}
 		}
-		if (iter % 200 == 200 - 1) {
+		iter += subiter;
+		{
 			accept_rate = get_accept_rate(m);
 			reject_rate = get_reject_rate(m);
 
@@ -100,7 +109,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 				old_steps = dup_vector(get_steps(m));
 			}
 			dump_ul("----------------------------------------- iteration", iter);
-			for(i = 0; i < m->n_par; i++) {
+			for(i = 0; i < get_n_par(m); i++) {
 				dump_i_s("Acceptance rates for", i, m->params_descr[i]);
 				dump_v("acceptance rate: accepts", get_accept_rate(m));
 				dump_v("acceptance rate: rejects", get_reject_rate(m));
@@ -113,7 +122,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
-			for(i = 0; i < m->n_par; i++) {
+			for(i = 0; i < get_n_par(m); i++) {
 				if(gsl_vector_get(accept_rate, i) > rat_limit + 0.05) {
 					gsl_vector_scale(m->params_step, 1.0/mul);
 				}
@@ -141,7 +150,6 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 				}
 			}
 		}
-		iter++;
 	}
 	debug("calibration of markov-chain done.");
 	wait();
@@ -174,7 +182,7 @@ void do_step_for(mcmc * m, unsigned int i) {
 }
 void do_step(mcmc * m) {
 	unsigned int i;
-	for(i = 0; i < m->n_par; i++) {
+	for(i = 0; i < get_n_par(m); i++) {
 		do_step_for(m, i);
 	}
 }

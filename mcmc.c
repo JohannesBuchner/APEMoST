@@ -62,7 +62,7 @@ static void resize(mcmc * m, unsigned long new_size) {
 		for (i = orig_size; i < new_size; i++) {
 			IFSEGV
 				dump_ul("allocating vector", i);
-			m->params_distr[i] = gsl_vector_alloc(m->n_par);
+			m->params_distr[i] = gsl_vector_alloc(get_n_par(m));
 			assert(m->params_distr[i] != NULL);
 		}
 	}
@@ -144,7 +144,7 @@ mcmc * mcmc_free(mcmc * m) {
 
 	IFSEGV
 		debug("freeing params_descr");
-	for (i = 0; i < m->n_par; i++) {
+	for (i = 0; i < get_n_par(m); i++) {
 		free((char*)m->params_descr[i]);
 	}
 	free(m->params_descr);

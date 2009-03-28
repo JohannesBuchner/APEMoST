@@ -203,10 +203,10 @@ int test_mod(void) {
 }
 
 int test_alloc(void) {
-	unsigned int amount = 100000;
+	unsigned int amount = 1000;
 	unsigned int i;
 	mcmc * m = mcmc_init(3);
-	printf("allocating a lot\n");
+	debug("allocating a lot\n");
 
 	for(i = 0; i < amount; i++) {
 		mcmc_prepare_iteration(m, i);

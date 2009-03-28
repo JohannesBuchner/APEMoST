@@ -6,7 +6,7 @@
 long get_params_accepts_sum(const mcmc * m) {
 	unsigned int i;
 	long sum = 0;
-	for (i = 0; i < m->n_par; i++) {
+	for (i = 0; i < get_n_par(m); i++) {
 		sum += m->params_accepts[i];
 	}
 	return sum;
@@ -15,7 +15,7 @@ long get_params_accepts_sum(const mcmc * m) {
 long get_params_rejects_sum(const mcmc * m) {
 	unsigned int i;
 	long sum = 0;
-	for (i = 0; i < m->n_par; i++) {
+	for (i = 0; i < get_n_par(m); i++) {
 		sum += m->params_rejects[i];
 	}
 	return sum;
@@ -40,13 +40,13 @@ gsl_vector * get_vector_from_array(const long * array, const unsigned int size) 
 }
 
 gsl_vector * get_accept_rate(const mcmc * m) {
-	gsl_vector * v = get_vector_from_array(m->params_accepts, m->n_par);
+	gsl_vector * v = get_vector_from_array(m->params_accepts, get_n_par(m));
 	gsl_vector_scale(v, 1.0/get_params_accepts_sum(m));
 	return v;
 }
 
 gsl_vector * get_reject_rate(const mcmc * m) {
-	gsl_vector * v = get_vector_from_array(m->params_rejects, m->n_par);
+	gsl_vector * v = get_vector_from_array(m->params_rejects, get_n_par(m));
 	gsl_vector_scale(v, 1.0/get_params_rejects_sum(m));
 	return v;
 }
@@ -68,13 +68,13 @@ void inc_params_rejects_for(mcmc * m, const unsigned int i) {
 void inc_params_accepts(mcmc * m) {
 	unsigned int i;
 	m->accept++;
-	for (i = 0; i < m->n_par; i++)
+	for (i = 0; i < get_n_par(m); i++)
 		inc_params_accepts_for(m, i);
 }
 void inc_params_rejects(mcmc * m) {
 	unsigned int i;
 	m->reject++;
-	for (i = 0; i < m->n_par; i++)
+	for (i = 0; i < get_n_par(m); i++)
 		inc_params_rejects_for(m, i);
 }
 
@@ -111,8 +111,12 @@ void set_model(mcmc * m, gsl_vector * new_model) {
 	m->model = new_model;
 }
 
-int get_n_par(const mcmc * m) {
+unsigned int get_n_par(const mcmc * m) {
+#ifdef N_PARAMETERS
+	return N_PARAMETERS
+#else
 	return m->n_par;
+#endif
 }
 
 void set_params_best(mcmc * m, gsl_vector * new_params_best) {
@@ -186,8 +190,8 @@ void free_gsl_vector_array(gsl_vector ** arr) {
 
 void set_steps_all(mcmc * m, const double * new_steps) {
 	unsigned int i;
-	for (i = 1; i < m->n_par + 1; i++) {
-		set_steps_for(m, new_steps[i + 1], i);
+	for (i = 0; i < get_n_par(m); i++) {
+		set_steps_for(m, new_steps[i], i);
 	}
 }
 

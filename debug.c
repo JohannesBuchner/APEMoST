@@ -15,12 +15,12 @@ void dump_vector(gsl_vector * v) {
 void dump(mcmc * m) {
 	unsigned int i;
 	dump_p("dumping m", (void*)m);
-	dump_i("n_par", m->n_par);
+	dump_i("n_par", get_n_par(m));
 	dump_ul("accept", m->accept);
 	dump_ul("reject", m->reject);
 	dump_d("prob", m->prob);
 	dump_d("prob_best", m->prob_best);
-	for(i = 0; i < m->n_par; i++) {
+	for(i = 0; i < get_n_par(m); i++) {
 		dump_i("parameter", i);
 		if(m->params_descr != NULL)
 			dump_i_s("\tparameter name", i, m->params_descr[i]);

@@ -1,11 +1,14 @@
 
 
 #include <signal.h>
+#include <gsl/gsl_sf.h>
+
+#define N_PARAMETERS 3
+
 #include "mcmc.h"
 #include "gsl_helper.h"
 #include "simplesin.h"
 #include "debug.h"
-#include <gsl/gsl_sf.h>
 
 #define DUMP_PROB_INTERVAL  1000
 #define PRINT_PROB_INTERVAL 1000
@@ -75,9 +78,9 @@ void simplesin(const char * filename) {
 	sigma = 0.5;
 	n_beta = 12 / 3;
 	beta_0 = 0.001;
-	burn_in_iterations = 10000;
+	burn_in_iterations = 10000 / 10;
 	rat_limit = 0.5;
-	iter_limit = 20000;
+	iter_limit = 20000 / 10;
 	mul = 0.85;
 
 	delta_beta = (1.0 - beta_0) / (n_beta - 1);
@@ -86,7 +89,7 @@ void simplesin(const char * filename) {
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
 	for(i = 0; i < n_beta; i++) {
-		printf("\tChain %d - beta = %f\n", i, 1.0 - i * delta_beta);
+		printf("\tChain %2d - beta = %f\n", i, 1.0 - i * delta_beta);
 		sinmod[i] = (parallel_tempering_mcmc*)malloc(sizeof(parallel_tempering_mcmc));
 		assert(sinmod[i] != NULL);
 		/* That is kind of stupid (doublicate execution) and could be optimized.
