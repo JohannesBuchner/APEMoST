@@ -2,9 +2,9 @@
 
 void dump_vector(gsl_vector * v) {
 	unsigned int i;
-	printf("Vector (%ud) = [", (unsigned int)v->size);
+	printf("Vector%ud[", (unsigned int)v->size);
 	for(i = 0; i < v->size - 1; i++) {
-		printf("%f, ", gsl_vector_get(v, i));
+		printf("%f;", gsl_vector_get(v, i));
 	}
 	printf("%f]\n", gsl_vector_get(v, v->size - 1));
 }
@@ -42,8 +42,10 @@ void dump(mcmc * m) {
 	debug("dumping m done ---- ");
 }
 
+#ifndef require
 void require(const int returncode) {
 	if(returncode != 0) {
 		fprintf(stderr, "a gsl call returned with an error: %s\n", gsl_strerror(returncode));
 	}
 }
+#endif

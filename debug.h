@@ -20,6 +20,12 @@
 #define IFWAIT if(0)
 #endif
 
+#ifdef VERBOSE
+#define IFVERBOSE if(1)
+#else
+#define IFVERBOSE if(0)
+#endif
+
 #include "memory.h"
 #include "mcmc.h"
 
@@ -47,7 +53,11 @@
 
 void dump(mcmc * m);
 void dump_vector(gsl_vector * v);
+
+#define require(x) (x) /* there is a gsl handler so we don't need that */
+#ifndef require
 void require(const int returncode);
+#endif
 
 #endif
 

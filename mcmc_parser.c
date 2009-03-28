@@ -24,6 +24,7 @@ static FILE * openfile(const char * filename) {
 unsigned int countlines(const char * filename) {
 	int nlines = 0;
 	int c;
+	int r;
 	FILE * input = openfile(filename);
 	while (1) {
 		c = fgetc(input);
@@ -33,7 +34,8 @@ unsigned int countlines(const char * filename) {
 		if (c == EOF)
 			break;
 	}
-	assert (fclose(input) == 0);
+	r = fclose(input);
+	assert (r == 0);
 	return nlines;
 }
 
@@ -94,8 +96,8 @@ static int load_datapoint(mcmc * m, FILE * input, int i) {
 		fprintf(stderr, "only %d fields matched.\n", col);
 		return 1;
 	}
-	gsl_vector_set(m->x_dat, i, x);
-	gsl_vector_set(m->y_dat, i, y);
+	gsl_vector_set((gsl_vector *)m->x_dat, i, x);
+	gsl_vector_set((gsl_vector *)m->y_dat, i, y);
 	return 0;
 }
 
@@ -124,7 +126,7 @@ static void load_data(mcmc * m, const char * filename) {
 
 }
 
-char * strdup(const char * s) {
+char * my_strdup(const char * s) {
 	char *buf = calloc(strlen(s) + 1, sizeof(char));
 	if (buf != NULL)
 		strcpy(buf, s);
@@ -139,6 +141,7 @@ mcmc * mcmc_load(const char * filename) {
 	char * datadir;
 	int currentline = 0;
 	const int pretext = 1;
+	int r;
 
 	int nlines;
 	nlines = countlines(filename);
@@ -157,13 +160,15 @@ mcmc * mcmc_load(const char * filename) {
 		}
 		currentline++;
 	}
-	assert (fclose(input) == 0);
+	r = fclose(input);
+	assert (r == 0);
 
-	datadir = dirname(strdup(filename));
+	datadir = dirname(my_strdup(filename));
 	sprintf(datafilepath, "%s/%s", datadir, datafilename);
 	dump_s("looking for data in file", datafilepath);
 
 	load_data(m, datafilepath);
+	mcmc_check(m);
 	return m;
 }
 

@@ -37,6 +37,7 @@ static void resize(mcmc * m, unsigned long new_size) {
 	if (new_size < orig_size) {
 		IFSEGV
 			debug("shrinking -> freeing vectors");
+
 		for (i = orig_size; i > new_size; i--) {
 			IFSEGV
 				dump_ul("freeing vector", i - 1);
@@ -70,7 +71,7 @@ static void resize(mcmc * m, unsigned long new_size) {
 		debug("done resizing");
 }
 
-void mcmc_prepare_iteration(mcmc * m, unsigned long iter) {
+void mcmc_prepare_iteration(mcmc * m, const unsigned long iter) {
 	unsigned long new_size = get_new_size(iter);
 	if (m->size != new_size) {
 		resize(m, new_size);
@@ -82,7 +83,7 @@ void init_seed(mcmc * m) {
 	m->random = gsl_rng_alloc(gsl_rng_default);
 }
 
-mcmc * mcmc_init(unsigned int n_pars) {
+mcmc * mcmc_init(const unsigned int n_pars) {
 	mcmc * m;
 	IFSEGV
 		debug("allocating mcmc struct");
@@ -127,7 +128,7 @@ mcmc * mcmc_init(unsigned int n_pars) {
 	return m;
 }
 
-void mcmc_free(mcmc * m) {
+mcmc * mcmc_free(mcmc * m) {
 	unsigned int i;
 
 	gsl_rng_free(m->random);
@@ -157,19 +158,29 @@ void mcmc_free(mcmc * m) {
 	gsl_vector_free(m->params_step);
 	gsl_vector_free(m->params_min);
 	gsl_vector_free(m->params_max);
-	free(m->x_dat);
-	free(m->y_dat);
+	free((gsl_vector *)m->x_dat);
+	free((gsl_vector *)m->y_dat);
 	free(m->model);
 	free(m);
+	m = NULL;
+	return NULL;
 }
 
-void mcmc_check(mcmc * m) {
+void mcmc_check(const mcmc * m) {
+	(void)m;
 	assert(m != NULL);
+	assert(m->n_par > 0);
 	assert(m->model != NULL);
 	assert(m->model->size > 0);
+	assert(m->x_dat != NULL);
 	assert(m->x_dat->size == m->model->size);
+	assert(m->y_dat != NULL);
 	assert(m->y_dat->size == m->x_dat->size);
+	assert(m->params != NULL);
 	assert(m->params->size == m->n_par);
-	assert(m->params->size == m->n_par);
+	assert(m->params_best != NULL);
+	assert(m->params_best->size == m->n_par);
+	assert(m->size >= m->n_iter);
+	assert(m->params_step != NULL);
 }
 

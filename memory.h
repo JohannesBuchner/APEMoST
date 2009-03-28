@@ -29,6 +29,8 @@
 
 #endif
 
-/*#define gsl_vector_free(v)*/
+#ifdef NOFREE
+#define gsl_vector_free(v)
+#endif
 
 #endif /* MEMORY_H_ */

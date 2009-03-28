@@ -75,13 +75,13 @@ typedef struct {
 	 * date, frequency, wavelength)
 	 * size = x-size
 	 */
-	gsl_vector * x_dat;
+	const gsl_vector * x_dat;
 	/**
 	 * pointer to 1D-array containing the ordinate of the observations (e.g.,
 	 * intensity, power, radial vel.).
 	 * size = x-size.
 	 */
-	gsl_vector * y_dat;
+	const gsl_vector * y_dat;
 	/** pointer to 1D-array containing the model values corresponding to the
 	 * observed abscissa values.
 	 * This is a synthetic (calculated) y_dat value for the current parameters.

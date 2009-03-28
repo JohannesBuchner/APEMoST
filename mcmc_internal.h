@@ -6,20 +6,21 @@
 
 #include "mcmc.h"
 #include <gsl/gsl_histogram.h>
+#include <gsl/gsl_sf.h>
 
 /**
  * create class
  * \private
  * @param n_pars parameters
  */
-mcmc * mcmc_init(unsigned int n_pars);
+mcmc * mcmc_init(const unsigned int n_pars);
 
 /**
  * prepare the calculation of (next) iteration, i.e., allocate space
  * @param m
- * @param iter number of new iteration
+ * @param iter index of new iteration
  */
-void mcmc_prepare_iteration(mcmc * m, unsigned long iter);
+void mcmc_prepare_iteration(mcmc * m, const unsigned long iter);
 
 /**
  * @see calc_hist

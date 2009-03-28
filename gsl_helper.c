@@ -3,7 +3,7 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
-gsl_histogram * calc_hist(gsl_vector * v, int nbins) {
+gsl_histogram * calc_hist(const gsl_vector * v, int nbins) {
 	double max;
 	double min;
 	unsigned int i;
@@ -38,7 +38,7 @@ gsl_histogram * calc_hist(gsl_vector * v, int nbins) {
 	return h;
 }
 
-double calc_vector_sum(gsl_vector * v) {
+double calc_vector_sum(const gsl_vector * v) {
 	double sum = 0;
 	unsigned int i;
 	for(i = 0; i < v->size; i++) {
@@ -47,10 +47,11 @@ double calc_vector_sum(gsl_vector * v) {
 	return sum;
 }
 
-double calc_vector_squaresum(gsl_vector * v) {
-	double sum = 0;
-	double x;
-	unsigned int i;
+double calc_vector_squaresum(const gsl_vector * v) {
+	static double sum = 0;
+	static double x;
+	static unsigned int i;
+	sum = 0;
 	for(i = 0; i < v->size; i++) {
 		x = gsl_vector_get(v, i);
 		sum += x*x;
@@ -59,7 +60,7 @@ double calc_vector_squaresum(gsl_vector * v) {
 }
 
 
-gsl_vector * dup_vector(gsl_vector * v) {
+gsl_vector * dup_vector(const gsl_vector * v) {
 	gsl_vector * r;
 	assert(v != NULL);
 	assert(v->size > 0);
@@ -69,7 +70,7 @@ gsl_vector * dup_vector(gsl_vector * v) {
 	return r;
 }
 
-gsl_vector * calc_normalized(gsl_vector * v) {
+gsl_vector * calc_normalized(const gsl_vector * v) {
 	double sum = calc_vector_sum(v);
 	gsl_vector * r = dup_vector(v);
 	require(gsl_vector_scale(r, 1/sum));
@@ -77,3 +78,16 @@ gsl_vector * calc_normalized(gsl_vector * v) {
 }
 
 
+int calc_same(const gsl_vector * a, const gsl_vector * b) {
+	unsigned int i;
+	assert(a->size == b->size);
+
+	if(a == b)
+		return 1;
+
+	for(i = 0; i < a->size; i++) {
+		if(gsl_vector_get(a, i) != gsl_vector_get(b, i))
+			return 0;
+	}
+	return 1;
+}

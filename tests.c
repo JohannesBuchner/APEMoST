@@ -76,14 +76,14 @@ int test_create(void) {
 	ASSERTEQUALI(m->n_par, 3, "number of parameters");
 	dump(m);
 	debug("freeing");
-	mcmc_free(m);
+	m = mcmc_free(m);
 	return 0;
 }
 
 
 int test_load(void) {
 	mcmc * m = mcmc_load("tests/testinput1");
-	ASSERT(m!=NULL, "loaded");
+	ASSERT(m != NULL, "loaded");
 	ASSERTEQUALI(m->n_par, 3, "number of parameters");
 	ASSERTEQUALD(gsl_vector_get(m->params, 0),      0.7,  "start");
 	ASSERTEQUALD(gsl_vector_get(m->params_min, 0),  0.4,  "min");
@@ -111,7 +111,7 @@ int test_load(void) {
 	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1),      -0.9900871130450772,  "y 1");
 	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1521),   -0.3527955490681067,  "y last");
 
-	mcmc_free(m);
+	m = mcmc_free(m);
 	return 0;
 }
 
@@ -127,18 +127,18 @@ int test_resize(void) {
 		i++;
 		dump_i("tested iterations", i);
 	}
-	mcmc_free(m);
+	m = mcmc_free(m);
 	return 0;
 }
 
 int test_append(void) {
 	mcmc * m = mcmc_init(3);
-	int i = 0;
-	for (; i % 10 != 9; i++) {
-		mcmc_append_current_parameters(m, i);
+	int i;
+	for (i = 0; i < 10; i++) {
+		mcmc_append_current_parameters(m);
 		ASSERTEQUALI(i + 1, (int)m->n_iter, "number of iterations");
 	}
-	mcmc_free(m);
+	m = mcmc_free(m);
 	return 0;
 }
 
@@ -149,27 +149,30 @@ int test_write(void) {
 	gsl_vector_memcpy(m->model, m->y_dat);
 	gsl_vector_add(m->model, m->x_dat);
 	mcmc_dump_model(m);
-	mcmc_free(m);
+	m = mcmc_free(m);
 	return 0;
 }
 
 int test_write_prob(void) {
 	mcmc * m = mcmc_load("tests/testinput1");
 	debug("add starting points, ...");
-	mcmc_append_current_parameters(m, 0);
+	mcmc_append_current_parameters(m);
+	mcmc_check(m);
 	debug("maxima ...");
 	require(gsl_vector_memcpy(m->params, m->params_max));
-	mcmc_append_current_parameters(m, 1);
+	mcmc_append_current_parameters(m);
+	mcmc_check(m);
 	debug("and minima as visited parameter values");
 	require(gsl_vector_memcpy(m->params, m->params_max));
-	mcmc_append_current_parameters(m, 2);
+	mcmc_append_current_parameters(m);
+	mcmc_check(m);
 	mcmc_dump_probabilities(m, 1);
 	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 1, "" );
 	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  1, "" );
 	mcmc_dump_probabilities(m, -1);
 	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
 	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  3, "" );
-	mcmc_free(m);
+	m = mcmc_free(m);
 	return 0;
 }
 
@@ -180,11 +183,15 @@ int test_random(void) {
 	int i;
 	for (i = 0; i < 10; i++) {
 		last_v = v;
-		v = gsl_rng_uniform(get_random(m));
+		v = get_next_urandom(m);
 		ASSERT( v != last_v, "v != last_v");
 		ASSERT( v >= 0, "v >= 0");
 		ASSERT( v <= 1, "v <= 1");
 	}
+	ASSERTEQUALD(gsl_sf_log(1E-100), -1E100, "ln 0");
+	ASSERTEQUALD(gsl_sf_log(1.0), 0.0, "ln 1");
+	ASSERT(get_next_alog_urandom(m) <= 0.0, "ln 1");
+
 	return 0;
 }
 
@@ -195,15 +202,32 @@ int test_mod(void) {
 	return 0;
 }
 
+int test_alloc(void) {
+	unsigned int amount = 100000;
+	unsigned int i;
+	mcmc * m = mcmc_init(3);
+	printf("allocating a lot\n");
+
+	for(i = 0; i < amount; i++) {
+		mcmc_prepare_iteration(m, i);
+	}
+	wait();
+	m = mcmc_free(m);
+	wait();
+	return 0;
+}
+
 void calc_prob(mcmc * m) {
 	(void)m;
 }
-void calc_model(mcmc * m) {
+void calc_model(mcmc * m, const gsl_vector * old_values) {
 	(void)m;
+	(void)old_values;
 }
-void calc_model_for(mcmc * m, unsigned int index) {
+void calc_model_for(mcmc * m, const unsigned int index, const double old_value) {
 	(void)m;
 	(void)index;
+	(void)old_value;
 }
 
 
@@ -213,6 +237,7 @@ int (*tests_registration[])(void)  = {
 	test_random,
 	test_mod,
 	test_hist,
+	test_alloc,
 	test_create,
 	test_load,
 	test_resize,
