@@ -3,7 +3,6 @@
 #include "mcmc.h"
 
 typedef struct {
-	mcmc * m;
 	/**
 	 * likelihood of acceptance (TODO: yes?)
 	 */
@@ -11,11 +10,11 @@ typedef struct {
 
 } parallel_tempering_mcmc;
 
-void set_beta(parallel_tempering_mcmc * m, double newbeta) {
-	m->beta = newbeta;
+void set_beta(mcmc * m, double newbeta) {
+	((parallel_tempering_mcmc *)m->additional_data)->beta = newbeta;
 }
-double get_beta(parallel_tempering_mcmc * m) {
-	return m->beta;
+double get_beta(mcmc * m) {
+	return ((parallel_tempering_mcmc *)m->additional_data)->beta;
 }
 
 

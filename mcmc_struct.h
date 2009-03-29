@@ -93,6 +93,9 @@ typedef struct {
 	unsigned long size;
 	/** number of iterations calculated */
 	unsigned long n_iter;
+
+	/** any extensions can be stored here **/
+	void * additional_data;
 } mcmc;
 
 #endif /* MCMC_STRUCT_H_ */

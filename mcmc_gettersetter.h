@@ -8,7 +8,6 @@ const char ** get_params_descr(const mcmc * m);
 long get_params_accepts_sum(const mcmc * m);
 long get_params_rejects_sum(const mcmc * m);
 gsl_vector * get_accept_rate(const mcmc * m);
-gsl_vector * get_reject_rate(const mcmc * m);
 long get_params_accepts_for(const mcmc * m, int i);
 long get_params_rejects_for(const mcmc * m, int i);
 gsl_vector * get_params(const mcmc * m);

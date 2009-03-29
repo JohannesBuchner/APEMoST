@@ -55,7 +55,7 @@ void mcmc_dump_probabilities(const mcmc * m, int n_values) {
 	FILE ** files = (FILE**) calloc(m->n_par, sizeof(FILE*));
 	char ** filenames = (char**) calloc(m->n_par, sizeof(char*));
 	ASSURE_DUMP_ENABLED;
-	for (i = 0; i < m->n_par; i++) {
+	for (i = 0; i < get_n_par(m); i++) {
 		filenames[i] = (char*) calloc(strlen(m->params_descr[i]) + strlen(
 				".prob.dump") + 1, sizeof(char));
 		sprintf(filenames[i], "%s.prob.dump", m->params_descr[i]);
@@ -75,7 +75,7 @@ void mcmc_dump_probabilities(const mcmc * m, int n_values) {
 	for (; j < m->n_iter; j++) {
 		IFVERBOSE
 			dump_i("iteration", j)
-		for (i = 0; i < m->n_par; i++) {
+		for (i = 0; i < get_n_par(m); i++) {
 			IFVERBOSE
 				dump_s("variable", m->params_descr[i]);
 			fprintf(files[i], DUMP_FORMAT "\n", gsl_vector_get(
@@ -84,7 +84,7 @@ void mcmc_dump_probabilities(const mcmc * m, int n_values) {
 	}
 	IFVERBOSE
 		debug("done writing. closing ...");
-	for (i = 0; i < m->n_par; i++) {
+	for (i = 0; i < get_n_par(m); i++) {
 		free(filenames[i]);
 		r = fclose(files[i]);
 		assert(r == 0);

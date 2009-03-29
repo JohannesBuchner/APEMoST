@@ -19,6 +19,7 @@
 /**
  * create and initialize a mcmc class using the configuration given in
  * @param filename
+ * @return the created mcmc class
  */
 mcmc * mcmc_load(const char * filename);
 /**
@@ -57,6 +58,7 @@ void mcmc_dump_probabilities(const mcmc * m, int n_values);
 
 /**
  * check if a new best value has been found
+ * @param m
  */
 void mcmc_check_best(mcmc * m);
 
@@ -71,6 +73,7 @@ void mcmc_check_best(mcmc * m);
  * update the model according to the new parameter values and
  * recalculate the probability for the model
  *
+ * @param m
  * @param old_values previous values, or NULL
  */
 void calc_model(mcmc * m, const gsl_vector * old_values);
@@ -78,6 +81,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values);
  * update the model as the new parameter value i changed and
  * recalculate the probability for the model
  *
+ * @param m
  * @param i index of the parameter value that changed
  * @param old_value previous value of the parameter
  */

@@ -29,16 +29,9 @@ double abs_double(double x) {
 		return x;
 }
 
-/**
- * aim a acceptance rate between 20 and 30%
- * @param rat_limit average acceptance rates for individual parameters to be achieved
- * @param burn_in_iterations number of burn-in iterations
- * @param iter_limit number of iterations for step width calibration
- * @param mul factor for adjusting the step width during calibration
- * @param adjust_step gives the factor with which to adjust the stepwidths after burn-in
- */
 void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double rat_limit,
 		unsigned int iter_limit, double mul, double adjust_step) {
+	/* we aim a acceptance rate between 20 and 30% */
 	unsigned int i;
 
 	/* TODO: this variable is not used? */
@@ -89,30 +82,26 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 	reset_accept_rejects(m);
 
 	while(iter < iter_limit) {
-		for(subiter = 0; subiter < 200; subiter++) {
-			for (i = 0; i < get_n_par(m); i++) {
-				markov_chain_step_for(m, i, 1);
-				mcmc_check_best(m);
-			}
+		for (i = 0; i < get_n_par(m); i++) {
+			markov_chain_step_for(m, i, 1);
+			mcmc_check_best(m);
 		}
-		iter += subiter;
-		{
+		iter++;
+		if(iter % 200 == 0) {
 			accept_rate = get_accept_rate(m);
-			reject_rate = get_reject_rate(m);
 
-			dump_v("steps", get_params(m));
 			if(flag == 0) {
 				flag = 1;
 				old_accepts = accept_rate;
-				old_rejects = get_reject_rate(m);
 				gsl_vector_free(old_steps);
 				old_steps = dup_vector(get_steps(m));
 			}
-			dump_ul("----------------------------------------- iteration", iter);
+			dump_ul("------------------------------------------------ iteration", iter);
+			dump_v("params", get_params(m));
+			dump_v("acceptance rate: ", get_accept_rate(m));
+			dump_v("steps", get_steps(m));
 			for(i = 0; i < get_n_par(m); i++) {
-				dump_i_s("Acceptance rates for", i, m->params_descr[i]);
-				dump_v("acceptance rate: accepts", get_accept_rate(m));
-				dump_v("acceptance rate: rejects", get_reject_rate(m));
+				/*dump_i_s("Acceptance rates for", i, m->params_descr[i]);*/
 				/* TODO: print diff to old_* variables */
 			}
 			/*gsl_vector_free(old_accepts);*/
@@ -122,13 +111,23 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
-			for(i = 0; i < get_n_par(m); i++) {
-				if(gsl_vector_get(accept_rate, i) > rat_limit + 0.05) {
-					gsl_vector_scale(m->params_step, 1.0/mul);
+			for (i = 0; i < get_n_par(m); i++) {
+				IFDEBUG
+					printf(
+							"\t\tneeded acceptance rate: <%f, >%f; got %f for %i",
+							rat_limit + 0.05, rat_limit - 0.05, gsl_vector_get(
+									accept_rate, i), i);
+				if (gsl_vector_get(accept_rate, i) > rat_limit + 0.05) {
+					gsl_vector_set(m->params_step, i, gsl_vector_get(
+							m->params_step, i) / mul);
+					printf("\t scaling up   ^");
 				}
-				if(gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
-					gsl_vector_scale(m->params_step, mul);
+				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
+					gsl_vector_set(m->params_step, i, gsl_vector_get(
+							m->params_step, i) * mul);
+					printf("\t scaling down v");
 				}
+				IFDEBUG printf("\n");
 				dump_v("steps", m->params_step);
 			}
 			restart_from_best(m);
@@ -137,8 +136,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double ra
 				markov_chain_step(m, 0);
 				mcmc_check_best(m);
 			}
-			dump_v("Overall accept rate", get_accept_rate(m));
-			dump_v("Overall reject rate", get_reject_rate(m));
+			dump_v("New overall accept rate after reset", get_accept_rate(m));
 			delta_reject_accept_t = m->accept*1.0/(m->accept + m->reject) - 0.23;
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				cont = 1;
@@ -169,7 +167,7 @@ double mod_double(double x, double div) {
 void do_step_for(mcmc * m, unsigned int i) {
 	double step = gsl_vector_get(m->params_step, i);
 	double old_value = gsl_vector_get(m->params, i);
-	double new_value = old_value + get_next_urandom(m)*step;
+	double new_value = old_value + (2*get_next_urandom(m)-1)*step;
 	double max = gsl_vector_get(m->params_max, i);
 	double min = gsl_vector_get(m->params_min, i);
 	/* dump_d("Jumping from", old_value); */
@@ -200,7 +198,8 @@ int check_accept(mcmc * m, double prob_old) {
 	}
 
 	if (prob_new > prob_old) {
-		dump_d("accepting improvement of", prob_new - prob_old);
+		IFVERBOSE
+			dump_d("accepting improvement of", prob_new - prob_old);
 		return 1;
 	} else {
 		prob_still_accept = get_next_alog_urandom(m);

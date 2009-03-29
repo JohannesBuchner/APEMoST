@@ -40,15 +40,13 @@ gsl_vector * get_vector_from_array(const long * array, const unsigned int size) 
 }
 
 gsl_vector * get_accept_rate(const mcmc * m) {
-	gsl_vector * v = get_vector_from_array(m->params_accepts, get_n_par(m));
-	gsl_vector_scale(v, 1.0/get_params_accepts_sum(m));
-	return v;
-}
-
-gsl_vector * get_reject_rate(const mcmc * m) {
-	gsl_vector * v = get_vector_from_array(m->params_rejects, get_n_par(m));
-	gsl_vector_scale(v, 1.0/get_params_rejects_sum(m));
-	return v;
+	gsl_vector * a = get_vector_from_array(m->params_accepts, get_n_par(m));
+	gsl_vector * r = get_vector_from_array(m->params_rejects, get_n_par(m));
+	gsl_vector * sum = r;
+	gsl_vector_add(sum, a);
+	gsl_vector_div(a, sum);
+	gsl_vector_free(sum);
+	return a;
 }
 
 const char ** get_params_descr(const mcmc * m) {
@@ -113,7 +111,8 @@ void set_model(mcmc * m, gsl_vector * new_model) {
 
 unsigned int get_n_par(const mcmc * m) {
 #ifdef N_PARAMETERS
-	return N_PARAMETERS
+	(void)m;
+	return N_PARAMETERS;
 #else
 	return m->n_par;
 #endif
