@@ -9,9 +9,14 @@
 
 #define FREEMSG(x) IFSEGV dump_p("about to free", (void*)x);
 
-#define WITH_GARBAGE_COLLECTOR
+#ifdef WITHOUT_GARBAGE_COLLECTOR
 
-#ifdef WITH_GARBAGE_COLLECTOR
+#define mem_malloc(x) malloc(x)
+#define mem_calloc(n,x) calloc(n, x)
+#define mem_realloc(p,x) realloc(p,x)
+#define mem_free(x) { FREEMSG(x); free(x); (x) = NULL; }
+
+#else
 
 #include <gc.h>
 
@@ -19,13 +24,6 @@
 #define mem_calloc(n,x) GC_malloc((n)*(x))
 #define mem_realloc(p,x) GC_realloc((p),(x))
 #define mem_free(x) { FREEMSG(x); (x) = NULL; }
-
-#else
-
-#define mem_malloc(x) malloc(x)
-#define mem_calloc(n,x) calloc(n, x)
-#define mem_realloc(p,x) realloc(p,x)
-#define mem_free(x) { FREEMSG(x); free(x); (x) = NULL; }
 
 #endif
 

@@ -20,30 +20,33 @@ void dump_vectorln(gsl_vector * v) {
 void dump(mcmc * m) {
 	unsigned int i;
 	IFDEBUG {
-		dump_p("dumping m", (void*)m);
-		dump_i("n_par", get_n_par(m));
-		dump_ul("accept", m->accept);
-		dump_ul("reject", m->reject);
-		dump_d("prob", m->prob);
-		dump_d("prob_best", m->prob_best);
+		debug("dumping m      ---- ");
+		IFSEGV
+			dump_p("dumping m@%p\n", (void*)m);
+		printf("\t\tn_par=%d; a/r=%lu/%lu prob/best=%f/%f\n", get_n_par(m),
+				m->accept, m->reject, m->prob, m->prob_best);
 		for (i = 0; i < get_n_par(m); i++) {
-			dump_i("parameter", i);
 			if (m->params_descr != NULL)
-				dump_i_s("\tparameter name", i, m->params_descr[i]);
-			dump_d("\tvalue", gsl_vector_get(m->params, i));
-			dump_d("\tbest", gsl_vector_get(m->params_best, i));
+				dump_i_s("parameter", i, m->params_descr[i]);
 			dump_ul("\taccepts", m->params_accepts[i]);
 			dump_ul("\trejects", m->params_rejects[i]);
-			dump_d("\tstep-size", gsl_vector_get(m->params_step, i));
-			dump_d("\tmin", gsl_vector_get(m->params_min, i));
-			dump_d("\tmax", gsl_vector_get(m->params_max, i));
 		}
-		dump_p("x_dat", (void*) m->x_dat);
+		dump_v("values", m->params);
+		dump_v("best", m->params_best);
+		dump_v("min", m->params_min);
+		dump_v("max", m->params_max);
+		dump_v("step-size", m->params_step);
+
+		IFSEGV
+			dump_p("x_dat", (void*) m->x_dat);
 		if (m->x_dat != NULL)
 			dump_size("x-size", m->x_dat->size);
-		dump_p("y_dat", (void*)m->y_dat);
-		dump_p("model", (void*)m->model);
-		dump_size("size", m->size);
+		IFSEGV
+			dump_p("y_dat", (void*)m->y_dat);
+		IFSEGV
+			dump_p("model", (void*)m->model);
+		IFVERBOSE
+			dump_size("size", m->size);
 		dump_ul("iter", m->n_iter);
 		debug("dumping m done ---- ");
 	}

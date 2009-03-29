@@ -35,14 +35,9 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	/* we aim a acceptance rate between 20 and 30% */
 	unsigned int i;
 
-	/* TODO: this variable is not used? */
-	int flag;
-	/* TODO: this variable is not used? */
-	int cont = 0;
+	int reached_perfection = 0;
 	gsl_vector * old_accepts = NULL;
-	gsl_vector * old_rejects = NULL;
 	gsl_vector * accept_rate = NULL;
-	gsl_vector * reject_rate = NULL;
 	gsl_vector * old_steps = NULL;
 	double delta_reject_accept_t;
 
@@ -82,7 +77,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("Calibrating step widths ...(set cont=1 to abort)");
 	reset_accept_rejects(m);
 
-	while (iter < iter_limit) {
+	while (iter < iter_limit && reached_perfection == 0) {
 		for (i = 0; i < get_n_par(m); i++) {
 			markov_chain_step_for(m, i, 1);
 			mcmc_check_best(m);
@@ -91,24 +86,21 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		if (iter % 200 == 0) {
 			accept_rate = get_accept_rate(m);
 
-			if (flag == 0) {
-				flag = 1;
+			if (old_accepts == NULL) {
 				old_accepts = accept_rate;
-				gsl_vector_free(old_steps);
 				old_steps = dup_vector(get_steps(m));
 			}
 			dump_ul("------------------------------------------------ iteration", iter);
 			dump_v("params", get_params(m));
 			dump_v("acceptance rate: ", get_accept_rate(m));
 			dump_v("steps", get_steps(m));
+
 			for (i = 0; i < get_n_par(m); i++) {
 				/*dump_i_s("Acceptance rates for", i, m->params_descr[i]);*/
 				/* TODO: print diff to old_* variables */
 			}
-			/*gsl_vector_free(old_accepts);*/
+			/*gsl_vector_free(accept_rate);*/
 			old_accepts = accept_rate;
-			/*gsl_vector_free(old_rejects);*/
-			old_rejects = reject_rate;
 			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
@@ -144,7 +136,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
 					- 0.23;
 			if (abs_double(delta_reject_accept_t) < 0.01) {
-				cont = 1;
+				reached_perfection = 1;
 			} else {
 				if (delta_reject_accept_t < 0) {
 					rat_limit /= 0.99;

@@ -64,7 +64,7 @@ int test_hist(void) {
 	ASSERTEQUALD(gsl_histogram_get (h, 1), 0.0, "bin:1 -> 0 elem");
 	ASSERTEQUALD(gsl_histogram_get (h, 2), 0.333333, "bin:2 -> 2 elem");
 	gsl_histogram_free(h);
-
+	gsl_vector_free(vs);
 	return 0;
 }
 
@@ -191,7 +191,7 @@ int test_random(void) {
 	ASSERTEQUALD(gsl_sf_log(1E-100), -1E100, "ln 0");
 	ASSERTEQUALD(gsl_sf_log(1.0), 0.0, "ln 1");
 	ASSERT(get_next_alog_urandom(m) <= 0.0, "ln 1");
-
+	mcmc_free(m);
 	return 0;
 }
 
@@ -211,9 +211,7 @@ int test_alloc(void) {
 	for(i = 0; i < amount; i++) {
 		mcmc_prepare_iteration(m, i);
 	}
-	wait();
 	m = mcmc_free(m);
-	wait();
 	return 0;
 }
 

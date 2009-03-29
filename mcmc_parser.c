@@ -165,6 +165,7 @@ mcmc * mcmc_load(const char * filename) {
 
 	datadir = dirname(my_strdup(filename));
 	sprintf(datafilepath, "%s/%s", datadir, datafilename);
+	free(datadir);
 	dump_s("looking for data in file", datafilepath);
 
 	load_data(m, datafilepath);

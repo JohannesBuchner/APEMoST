@@ -158,9 +158,12 @@ mcmc * mcmc_free(mcmc * m) {
 	gsl_vector_free(m->params_step);
 	gsl_vector_free(m->params_min);
 	gsl_vector_free(m->params_max);
-	free((gsl_vector *) m->x_dat);
-	free((gsl_vector *) m->y_dat);
-	free(m->model);
+	if (m->x_dat != NULL)
+		gsl_vector_free((gsl_vector*) m->x_dat);
+	if (m->y_dat != NULL)
+		gsl_vector_free((gsl_vector*) m->y_dat);
+	if (m->model != NULL)
+		gsl_vector_free(m->model);
 	free(m);
 	m = NULL;
 	return NULL;

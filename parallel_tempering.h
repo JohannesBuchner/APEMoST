@@ -3,7 +3,7 @@
 
 #include "mcmc.h"
 
-#define DUMP_PROB_LENGTH  -1
+#define DUMP_PROB_LENGTH  1000*3
 #define PRINT_PROB_INTERVAL 1000
 
 

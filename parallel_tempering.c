@@ -87,6 +87,8 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 			"Setting startingpoint for the calibration of all hotter distribution to \n");
 	printf("  the best parameter values of the (beta=1)-distribution\n");
 	wait();
+
+	/* this could be parallelized */
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
@@ -131,9 +133,10 @@ void parallel_tempering_swap(mcmc ** sinmod, int n_beta, int n_swap) {
 		debug("checking if we do a swap");
 	swap_probability = get_next_urandom(sinmod[0]);
 	if (swap_probability < 1.0 / 10000) {
-		/* reset chain */
 		a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
+		dump_i("resetting to best value for chain", a);
 		set_params(sinmod[a], dup_vector(get_params_best(sinmod[a])));
+		set_prob(sinmod[a], get_prob_best(sinmod[a]));
 	} else if (swap_probability < 1.0 / n_swap) {
 		a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
 		b = (a + 1) % n_beta;
@@ -160,6 +163,10 @@ void parallel_tempering_swap(mcmc ** sinmod, int n_beta, int n_swap) {
 			set_params_best(sinmod[a], dup_vector(get_params_best(sinmod[b])));
 			set_params_best(sinmod[b], temp);
 
+			r = get_prob_best(sinmod[a]);
+			set_prob_best(sinmod[a], get_prob_best(sinmod[b]));
+			set_prob_best(sinmod[b], r);
+
 			mcmc_check(sinmod[a]);
 			mcmc_check(sinmod[b]);
 			/* TODO: update best? */
@@ -185,11 +192,16 @@ void print_current_positions(mcmc ** sinmod, int n_beta) {
 	printf("printing chain parameters: \n");
 	for (i = 0; i < n_beta; i++) {
 		printf("\tchain %d: current: ", i);
-		dump_vector(get_params(sinmod[i]));
+		dump_vectorln(get_params(sinmod[i]));
 		printf("\tchain %d: best: ", i);
-		dump_vector(get_params_best(sinmod[i]));
+		dump_vectorln(get_params_best(sinmod[i]));
 	}
 	fflush(stdout);
+}
+
+void report(mcmc ** sinmod, int n_beta) {
+	print_current_positions(sinmod, n_beta);
+	mcmc_dump_probabilities(sinmod[0], -1);
 }
 
 void analyse(mcmc ** sinmod, int n_beta) {
@@ -238,5 +250,6 @@ void analyse(mcmc ** sinmod, int n_beta) {
 			}
 		}
 	}
+	report(sinmod, n_beta);
 }
 
