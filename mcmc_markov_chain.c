@@ -121,12 +121,14 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 				if (gsl_vector_get(accept_rate, i) > rat_limit + 0.05) {
 					gsl_vector_set(m->params_step, i, gsl_vector_get(
 							m->params_step, i) / mul);
-					printf("\t scaling up   ^");
+					IFDEBUG
+						printf("\t scaling up   ^");
 				}
 				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
 					gsl_vector_set(m->params_step, i, gsl_vector_get(
 							m->params_step, i) * mul);
-					printf("\t scaling down v");
+					IFDEBUG
+						printf("\t scaling down v");
 				}
 				IFDEBUG
 					printf("\n");
