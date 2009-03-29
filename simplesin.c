@@ -1,5 +1,3 @@
-
-
 #include <signal.h>
 #include <gsl/gsl_sf.h>
 
@@ -23,7 +21,8 @@ int dumpflag;
 void ctrl_c_handler(int signal);
 void sigusr_handler(int signal);
 
-double apply_formula(mcmc * m, unsigned int i, double param0, double param1, double param2) {
+double apply_formula(mcmc * m, unsigned int i, double param0, double param1,
+		double param2) {
 	double x = gsl_vector_get(m->x_dat, i);
 	double y = param0 * gsl_sf_sin(2.0 * M_PI * param1 * x + param2);
 	gsl_vector_set(m->model, i, y);
@@ -46,13 +45,13 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 				m->y_dat, i);
 		square_sum += y * y;
 	}
-	set_prob(m, get_beta(m)* square_sum / (-2 * sigma*sigma));
+	set_prob(m, get_beta(m) * square_sum / (-2 * sigma * sigma));
 	/*debug("model done");*/
 }
 
 void calc_model_for(mcmc * m, const unsigned int i, const double old_value) {
-	(void)i;
-	(void)old_value;
+	(void) i;
+	(void) old_value;
 
 	calc_model(m, NULL);
 }
@@ -82,11 +81,11 @@ void simplesin(const char * filename) {
 	mul = 0.85;
 
 	delta_beta = (1.0 - beta_0) / (n_beta - 1);
-	sinmod = (mcmc**)calloc(n_beta, sizeof(mcmc*));
+	sinmod = (mcmc**) calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
-	for(i = 0; i < n_beta; i++) {
+	for (i = 0; i < n_beta; i++) {
 		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
 		/* That is kind of stupid (duplicate execution) and could be optimized.
 		 * not critical though. */
@@ -94,8 +93,8 @@ void simplesin(const char * filename) {
 		mcmc_check(sinmod[i]);
 		sinmod[i]->additional_data = malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], 1.0 - i * delta_beta);
-		/*gsl_vector_scale(sinmod[i]->params_step, 2000);*/
-		printf("\tsteps: "); dump_vector(get_steps(sinmod[i]));
+		printf("\tsteps: ");
+		dump_vector(get_steps(sinmod[i]));
 		mcmc_check(sinmod[i]);
 	}
 	params_descr = get_params_descr(sinmod[0]);
@@ -105,29 +104,33 @@ void simplesin(const char * filename) {
 	 * this should be done externally before calling the program. */
 
 	printf("Initializing models\n");
-	for(i = 0; i < n_beta; i++) {
+	for (i = 0; i < n_beta; i++) {
 		calc_model(sinmod[i], NULL);
 		mcmc_check(sinmod[i]);
 	}
 	printf("Starting markov chain calibration\n");
 	wait();
-	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit, iter_limit, mul, DEFAULT_ADJUST_STEP);
+	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
+			iter_limit, mul, DEFAULT_ADJUST_STEP);
 
-	printf("Setting startingpoint for the calibration of all hotter distribution to \n");
+	printf(
+			"Setting startingpoint for the calibration of all hotter distribution to \n");
 	printf("  the best parameter values of the (beta=1)-distribution\n");
 	wait();
-	for(i = 0 + 1; i < n_beta; i++) {
+	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 		sinmod[i]->prob *= get_beta(sinmod[i]);
 
-		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit, iter_limit, mul, DEFAULT_ADJUST_STEP);
+		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
+				iter_limit, mul, DEFAULT_ADJUST_STEP);
 	}
 	printf("all chains calibrated.\n");
-	for(i = 0; i < n_beta; i++) {
+	for (i = 0; i < n_beta; i++) {
 		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
-		printf("\tsteps: "); dump_vector(get_steps(sinmod[i]));
+		printf("\tsteps: ");
+		dump_vector(get_steps(sinmod[i]));
 	}
 	wait();
 
@@ -136,7 +139,7 @@ void simplesin(const char * filename) {
 	signal(SIGUSR1, sigusr_handler);
 
 	analyse(sinmod, n_beta);
-	for(i = 0; i < n_beta; i++) {
+	for (i = 0; i < n_beta; i++) {
 		sinmod[i] = mcmc_free(sinmod[i]);
 		free(sinmod[i]);
 	}
@@ -151,7 +154,7 @@ void parallel_tempering_swap(mcmc ** sinmod, int n_beta, int n_swap) {
 	int a, b;
 	gsl_vector * temp;
 	assert(n_beta > 0);
-	if(n_beta == 1)
+	if (n_beta == 1)
 		return;
 	(void) n_swap;
 	IFVERBOSE
@@ -159,10 +162,10 @@ void parallel_tempering_swap(mcmc ** sinmod, int n_beta, int n_swap) {
 	swap_probability = get_next_urandom(sinmod[0]);
 	if (swap_probability < 1.0 / 10000) {
 		/* reset chain */
-		a = (int)(n_beta*1000 * get_next_urandom(sinmod[0])) % n_beta;
+		a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
 		set_params(sinmod[a], dup_vector(get_params_best(sinmod[a])));
-	}else if (swap_probability < 1.0 / n_swap) {
-		a = (int)(n_beta*1000 * get_next_urandom(sinmod[0])) % n_beta;
+	} else if (swap_probability < 1.0 / n_swap) {
+		a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
 		b = (a + 1) % n_beta;
 		assert(a >= 0 && a < n_beta);
 		assert(b >= 0 && b < n_beta);
@@ -176,7 +179,8 @@ void parallel_tempering_swap(mcmc ** sinmod, int n_beta, int n_swap) {
 				+ b_prob);
 		c = get_next_alog_urandom(sinmod[0]);
 		if (r > c) {
-			IFDEBUG printf("swapping %d with %d with probability %f\n", a, b, r);
+			IFDEBUG
+				printf("swapping %d with %d with probability %f\n", a, b, r);
 			dump_d("we are really swapping", c);
 			temp = dup_vector(get_params(sinmod[a]));
 			set_params(sinmod[a], dup_vector(get_params(sinmod[b])));
@@ -190,9 +194,9 @@ void parallel_tempering_swap(mcmc ** sinmod, int n_beta, int n_swap) {
 			mcmc_check(sinmod[b]);
 			/* TODO: update best? */
 
-
-		}else{
-			IFVERBOSE dump_d("not swapping", c);
+		} else {
+			IFVERBOSE
+				dump_d("not swapping", c);
 		}
 	}
 }
@@ -206,12 +210,14 @@ int get_duration() {
 	return stored - new;
 }
 
-void print_current_positions(mcmc ** sinmod, int n_beta){
+void print_current_positions(mcmc ** sinmod, int n_beta) {
 	int i;
 	printf("printing chain parameters: \n");
-	for(i = 0; i < n_beta; i++) {
-		printf("\tchain %d: current: ", i); dump_vector(get_params(sinmod[i]));
-		printf("\tchain %d: best: ", i);    dump_vector(get_params_best(sinmod[i]));
+	for (i = 0; i < n_beta; i++) {
+		printf("\tchain %d: current: ", i);
+		dump_vector(get_params(sinmod[i]));
+		printf("\tchain %d: best: ", i);
+		dump_vector(get_params_best(sinmod[i]));
 	}
 	fflush(stdout);
 }
@@ -268,11 +274,13 @@ void analyse(mcmc ** sinmod, int n_beta) {
 }
 
 void ctrl_c_handler(int signalnr) {
-	printf("\nreceived Ctrl-C (%d). Stopping ... (please be patient)\n\n", signalnr);
+	printf("\nreceived Ctrl-C (%d). Stopping ... (please be patient)\n\n",
+			signalnr);
 	run = 0;
 }
 void sigusr_handler(int signalnr) {
-	printf("\nreceived SIGUSR (%d). Will dump at next opportunity.\n\n", signalnr);
+	printf("\nreceived SIGUSR (%d). Will dump at next opportunity.\n\n",
+			signalnr);
 	signal(SIGUSR2, sigusr_handler);
 	signal(SIGUSR1, sigusr_handler);
 	dumpflag = 1;

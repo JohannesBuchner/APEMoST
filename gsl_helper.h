@@ -8,13 +8,11 @@
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_vector.h>
 
-
 #ifdef NOASSERT
 #define assert(cond)
 #else
 #include <assert.h>
 #endif
-
 
 /**
  * calculate a histogram
@@ -51,6 +49,5 @@ gsl_vector * calc_normalized(const gsl_vector * v);
  * @return 1 if vectors contain the same entries
  */
 int calc_same(const gsl_vector * a, const gsl_vector * b);
-
 
 #endif

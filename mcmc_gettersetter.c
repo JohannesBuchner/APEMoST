@@ -76,10 +76,12 @@ void inc_params_rejects(mcmc * m) {
 		inc_params_rejects_for(m, i);
 }
 
-void set_params_accepts_for(mcmc * m, const long new_params_accept, const unsigned int i) {
+void set_params_accepts_for(mcmc * m, const long new_params_accept,
+		const unsigned int i) {
 	m->params_accepts[i] = new_params_accept;
 }
-void set_params_rejects_for(mcmc * m, const long new_params_reject, const unsigned int i) {
+void set_params_rejects_for(mcmc * m, const long new_params_reject,
+		const unsigned int i) {
 	m->params_rejects[i] = new_params_reject;
 }
 
@@ -95,7 +97,8 @@ double get_prob_best(const mcmc * m) {
 	return m->prob_best;
 }
 
-void set_minmax_for(mcmc * m, const double new_min, const double new_max, const unsigned int i) {
+void set_minmax_for(mcmc * m, const double new_min, const double new_max,
+		const unsigned int i) {
 	gsl_vector_set(m->params_min, i, new_min);
 	gsl_vector_set(m->params_max, i, new_max);
 }
@@ -145,7 +148,8 @@ void set_params_descr_all(mcmc * m, const char ** new_par_descr) {
 	m->params_descr = new_par_descr;
 }
 
-void set_params_descr_for(mcmc * m, const char * new_par_descr, const unsigned int i) {
+void set_params_descr_for(mcmc * m, const char * new_par_descr,
+		const unsigned int i) {
 	m->params_descr[i] = new_par_descr;
 }
 
@@ -177,7 +181,6 @@ void set_y(mcmc * m, const gsl_vector * new_y) {
 gsl_vector * get_steps(const mcmc * m) {
 	return m->params_step;
 }
-
 
 void free_gsl_vector_array(gsl_vector ** arr) {
 	int i = 0;

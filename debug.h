@@ -34,7 +34,6 @@
 #define TOSTRING(x) STRINGIFY(x)
 #define AT __FILE__ ":" TOSTRING(__LINE__)
 
-
 #define debug(str)        IFDEBUG { printf("\tDEBUG[%s]: %s\n", AT, str); fflush(NULL); }
 #define dump_i(str, var)  IFDEBUG { printf("\tDEBUG[%s]: %s: %i\n", AT, str, var); fflush(NULL); }
 #define dump_ui(str, var) IFDEBUG { printf("\tDEBUG[%s]: %s: %u\n", AT, str, var); fflush(NULL); }

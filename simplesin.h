@@ -11,11 +11,10 @@ typedef struct {
 } parallel_tempering_mcmc;
 
 void set_beta(mcmc * m, double newbeta) {
-	((parallel_tempering_mcmc *)m->additional_data)->beta = newbeta;
+	((parallel_tempering_mcmc *) m->additional_data)->beta = newbeta;
 }
 double get_beta(mcmc * m) {
-	return ((parallel_tempering_mcmc *)m->additional_data)->beta;
+	return ((parallel_tempering_mcmc *) m->additional_data)->beta;
 }
-
 
 #endif /* SIMPLESIN_H_ */

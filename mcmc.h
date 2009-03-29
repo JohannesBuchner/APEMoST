@@ -62,7 +62,6 @@ void mcmc_dump_probabilities(const mcmc * m, int n_values);
  */
 void mcmc_check_best(mcmc * m);
 
-
 #include "mcmc_markov_chain.h"
 
 #include "mcmc_gettersetter.h"
@@ -86,7 +85,6 @@ void calc_model(mcmc * m, const gsl_vector * old_values);
  * @param old_value previous value of the parameter
  */
 void calc_model_for(mcmc * m, const unsigned int i, const double old_value);
-
 
 #endif
 

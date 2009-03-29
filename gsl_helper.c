@@ -1,5 +1,4 @@
 
-
 #include "gsl_helper.h"
 #include "debug.h"
 
@@ -12,13 +11,13 @@ gsl_histogram * calc_hist(const gsl_vector * v, int nbins) {
 	double val;
 	gsl_histogram * h;
 
-	gsl_vector_minmax (v, &min, &max);
-	binwidth = (max - min)/nbins;
+	gsl_vector_minmax(v, &min, &max);
+	binwidth = (max - min) / nbins;
 	dump_d("min", min);
 	dump_d("max", max);
 
 	debug("allocating the histogram");
-	h = gsl_histogram_alloc (v->size);
+	h = gsl_histogram_alloc(v->size);
 	debug("setting range");
 	require(gsl_histogram_set_ranges_uniform (h, min, max));
 
@@ -26,8 +25,8 @@ gsl_histogram * calc_hist(const gsl_vector * v, int nbins) {
 	h->range[h->n] += 1;
 
 	debug("summing up");
-	for(i=0; i<v->size; i++){
-		val = gsl_vector_get (v, i);
+	for (i = 0; i < v->size; i++) {
+		val = gsl_vector_get(v, i);
 		sum += val;
 		require(gsl_histogram_increment (h, val));
 	}
@@ -41,7 +40,7 @@ gsl_histogram * calc_hist(const gsl_vector * v, int nbins) {
 double calc_vector_sum(const gsl_vector * v) {
 	double sum = 0;
 	unsigned int i;
-	for(i = 0; i < v->size; i++) {
+	for (i = 0; i < v->size; i++) {
 		sum += gsl_vector_get(v, i);
 	}
 	return sum;
@@ -52,13 +51,12 @@ double calc_vector_squaresum(const gsl_vector * v) {
 	static double x;
 	static unsigned int i;
 	sum = 0;
-	for(i = 0; i < v->size; i++) {
+	for (i = 0; i < v->size; i++) {
 		x = gsl_vector_get(v, i);
-		sum += x*x;
+		sum += x * x;
 	}
 	return sum;
 }
-
 
 gsl_vector * dup_vector(const gsl_vector * v) {
 	gsl_vector * r;
@@ -77,16 +75,15 @@ gsl_vector * calc_normalized(const gsl_vector * v) {
 	return r;
 }
 
-
 int calc_same(const gsl_vector * a, const gsl_vector * b) {
 	unsigned int i;
 	assert(a->size == b->size);
 
-	if(a == b)
+	if (a == b)
 		return 1;
 
-	for(i = 0; i < a->size; i++) {
-		if(gsl_vector_get(a, i) != gsl_vector_get(b, i))
+	for (i = 0; i < a->size; i++) {
+		if (gsl_vector_get(a, i) != gsl_vector_get(b, i))
 			return 0;
 	}
 	return 1;

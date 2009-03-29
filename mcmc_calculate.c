@@ -25,7 +25,7 @@ void mcmc_append_current_parameters(mcmc * m) {
 }
 
 void mcmc_check_best(mcmc * m) {
-	if(m->prob > m->prob_best) {
+	if (m->prob > m->prob_best) {
 		dump_v("found a better solution", m->params);
 		m->prob_best = m->prob;
 		gsl_vector_free(m->params_best);

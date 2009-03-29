@@ -145,7 +145,7 @@ mcmc * mcmc_free(mcmc * m) {
 	IFSEGV
 		debug("freeing params_descr");
 	for (i = 0; i < get_n_par(m); i++) {
-		free((char*)m->params_descr[i]);
+		free((char*) m->params_descr[i]);
 	}
 	free(m->params_descr);
 
@@ -158,8 +158,8 @@ mcmc * mcmc_free(mcmc * m) {
 	gsl_vector_free(m->params_step);
 	gsl_vector_free(m->params_min);
 	gsl_vector_free(m->params_max);
-	free((gsl_vector *)m->x_dat);
-	free((gsl_vector *)m->y_dat);
+	free((gsl_vector *) m->x_dat);
+	free((gsl_vector *) m->y_dat);
 	free(m->model);
 	free(m);
 	m = NULL;
@@ -167,7 +167,7 @@ mcmc * mcmc_free(mcmc * m) {
 }
 
 void mcmc_check(const mcmc * m) {
-	(void)m;
+	(void) m;
 	assert(m != NULL);
 	assert(m->n_par > 0);
 	assert(m->model != NULL);

@@ -96,8 +96,8 @@ static int load_datapoint(mcmc * m, FILE * input, int i) {
 		fprintf(stderr, "only %d fields matched.\n", col);
 		return 1;
 	}
-	gsl_vector_set((gsl_vector *)m->x_dat, i, x);
-	gsl_vector_set((gsl_vector *)m->y_dat, i, y);
+	gsl_vector_set((gsl_vector *) m->x_dat, i, x);
+	gsl_vector_set((gsl_vector *) m->y_dat, i, y);
 	return 0;
 }
 

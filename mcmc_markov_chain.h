@@ -17,8 +17,9 @@
  * @param mul factor for adjusting the step width during calibration
  * @param adjust_step gives the factor with which to adjust the stepwidths after burn-in
  */
-void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations, double rat_limit,
-		unsigned int iter_limit, double mul, double adjust_step);
+void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
+		double rat_limit, unsigned int iter_limit, double mul,
+		double adjust_step);
 /**
  * take a step using the markov-chain
  * @param m
