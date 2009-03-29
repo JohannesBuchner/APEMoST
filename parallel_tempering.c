@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <gsl/gsl_sf.h>
+#include <omp.h>
 
 #include "mcmc.h"
 #include "gsl_helper.h"
@@ -55,6 +56,7 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
+	#pragma omp parallel for
 	for (i = 0; i < n_beta; i++) {
 		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
 		/* That is kind of stupid (duplicate execution) and could be optimized.
@@ -89,6 +91,7 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 	wait();
 
 	/* this could be parallelized */
+	#pragma omp parallel for
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
@@ -217,14 +220,15 @@ void analyse(mcmc ** sinmod, int n_beta) {
 
 	while (run && iter < MAX_ITERATIONS) {
 		/* TODO: maybe we can do 100 operations off these in threads using OpenMP ? */
+		#pragma omp parallel for
 		for (i = 0; i < n_beta; i++) {
-			/*dump_i("one markov-chain step for ", i);*/
-			markov_chain_step(sinmod[i], 0);
+			/*for (subiter = 0; subiter < 200; subiter++) {*/
+				/*dump_i("one markov-chain step for ", i);*/
+				markov_chain_step(sinmod[i], 0);
+				mcmc_check_best(sinmod[i]);
+				mcmc_append_current_parameters(sinmod[i]);
+			/*}*/
 		}
-		mcmc_check_best(sinmod[0]);
-		mcmc_append_current_parameters(sinmod[0]);
-		/* TODO: what happens if a different one (!=0) finds a really good solution? */
-
 		iter++;
 		parallel_tempering_swap(sinmod, n_beta, n_swap);
 

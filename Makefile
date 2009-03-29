@@ -6,7 +6,7 @@
 ## You might want to compile your gsl with -DHAVE_INLINE 
 ## 
 
-CFLAGS=-O2 -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
+CFLAGS=-O2 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
 MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_calculate.c \
@@ -22,6 +22,7 @@ help:
 	@grep -E '^## ' Makefile|grep -v ':'|sed 's,^## ,,g'
 	@echo This Makefile has the targets:
 	@grep -E '^## [.a-z]{2,}:' Makefile|sed 's,^## *,\t,g' |sed 's,: ,\t,g'
+	$(CC) --version
 
 ## all: 
 all: tests.exe simplesin.exe
