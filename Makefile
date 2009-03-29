@@ -11,6 +11,7 @@ LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
 MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_calculate.c \
 	mcmc_markov_chain.c mcmc_dump.c 
+PARALLEL_TEMPERING_SOURCES=parallel_tempering.c
 TEST_SOURCES=run-tests.c tests.c
 HELPER_SOURCES=gsl_helper.c 
 DEBUG_SOURCE=debug.c
@@ -31,7 +32,9 @@ all: tests.exe simplesin.exe
 tests.exe: $(HEADERS) tests.o run-tests.o $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-simplesin.exe: $(HEADERS) simplesin.c $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
+simplesin.exe: $(HEADERS) simplesin.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+simplesin5.exe: $(HEADERS) simplesin5.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 ## tests: run the tests

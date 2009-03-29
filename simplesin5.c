@@ -20,14 +20,15 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	double param0 = gsl_vector_get(m->params, 0);
 	double param1 = gsl_vector_get(m->params, 1);
 	double param2 = gsl_vector_get(m->params, 2);
+	double param3 = gsl_vector_get(m->params, 3);
 	double y;
 	double square_sum = 0;
 
 	(void) old_values;
 	/*dump_v("recalculating model for parameter values", m->params);*/
 	for (i = 0; i < m->x_dat->size; i++) {
-		y = apply_formula(m, i, param0, param1, param2) - gsl_vector_get(
-				m->y_dat, i);
+		y = apply_formula(m, i, param0, param1, param2) + param3
+				- gsl_vector_get(m->y_dat, i);
 		square_sum += y * y;
 	}
 	set_prob(m, get_beta(m) * square_sum / (-2 * sigma * sigma));
@@ -46,11 +47,11 @@ int main(void) {
 	double beta_0 = 0.001;
 	int burn_in_iterations = 10000;
 	double rat_limit = 0.5;
-	int iter_limit = 20000;
+	int iter_limit = 40000;
 	double mul = 0.85;
 	sigma = 0.5;
 
-	parallel_tempering("simplesin/input", n_beta, beta_0, burn_in_iterations,
+	parallel_tempering("simplesin5/input", n_beta, beta_0, burn_in_iterations,
 			rat_limit, iter_limit, mul);
 	return 0;
 }

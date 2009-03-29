@@ -45,13 +45,14 @@
                           IFDEBUG { printf("\tDEBUG[%s]: %s[%i]: %s\n", AT, str, index, var); fflush(NULL); }
 #define dump_s(str, var)  IFDEBUG { printf("\tDEBUG[%s]: %s: %s\n", AT, str, var); fflush(NULL); }
 #define dump_p(str, var)  IFDEBUG { printf("\tDEBUG[%s]: %s: %p\n", AT, str, var); fflush(NULL); }
-#define dump_v(str, v)    IFDEBUG { printf("\tDEBUG[%s]: %s: ", AT, str); dump_vector(v); fflush(NULL); }
+#define dump_v(str, v)    IFDEBUG { printf("\tDEBUG[%s]: %s: ", AT, str); dump_vectorln(v); fflush(NULL); }
 #define dump_m(str, m)    IFDEBUG { printf("\tDEBUG[%s]: %s\n", AT, str); dump(m); fflush(NULL); }
 
 #define wait() IFWAIT { printf("if it is ok to continue, press return. "); fflush(NULL); fgetc(stdin); }
 
 void dump(mcmc * m);
 void dump_vector(gsl_vector * v);
+void dump_vectorln(gsl_vector * v);
 
 #define require(x) (x) /* there is a gsl handler so we don't need that */
 #ifndef require

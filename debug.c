@@ -6,7 +6,12 @@ void dump_vector(gsl_vector * v) {
 	for (i = 0; i < v->size - 1; i++) {
 		printf("%f;", gsl_vector_get(v, i));
 	}
-	printf("%f]\n", gsl_vector_get(v, v->size - 1));
+	printf("%f]", gsl_vector_get(v, v->size - 1));
+}
+
+void dump_vectorln(gsl_vector * v) {
+	dump_vector(v);
+	printf("\n");
 }
 
 /**
