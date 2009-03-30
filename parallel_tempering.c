@@ -221,17 +221,18 @@ void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	set_params(sinmod[a], dup_vector(get_params(sinmod[b])));
 	set_params(sinmod[b], temp);
 
-	temp = dup_vector(get_params_best(sinmod[a]));
-	set_params_best(sinmod[a], dup_vector(get_params_best(sinmod[b])));
-	set_params_best(sinmod[b], temp);
-
 	r = get_prob_best(sinmod[a]);
-	set_prob_best(sinmod[a], get_prob_best(sinmod[b]));
-	set_prob_best(sinmod[b], r);
+	if( r > get_prob_best(sinmod[b])) {
+		set_prob_best(sinmod[b], r);
+		set_params_best(sinmod[b], dup_vector(get_params_best(sinmod[a])));
+	}else{
+		r = get_prob_best(sinmod[b]);
+		set_prob_best(sinmod[a], r);
+		set_params_best(sinmod[a], dup_vector(get_params_best(sinmod[b])));
+	}
 
 	mcmc_check(sinmod[a]);
 	mcmc_check(sinmod[b]);
-	/* TODO: update best? */
 }
 
 void analyse(mcmc ** sinmod, int n_beta) {

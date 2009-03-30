@@ -42,7 +42,7 @@ void calc_model_for(mcmc * m, const unsigned int i, const double old_value) {
 }
 
 int main(void) {
-	int n_beta = 12 / 3;
+	int n_beta = 12 / 1;
 	double beta_0 = 0.001;
 	int burn_in_iterations = 10000;
 	double rat_limit = 0.5;
