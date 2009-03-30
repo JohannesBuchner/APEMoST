@@ -123,7 +123,6 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 		printf("\tCalibrating chain %d\n", i);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
-		sinmod[i]->prob *= get_beta(sinmod[i]);
 
 		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
