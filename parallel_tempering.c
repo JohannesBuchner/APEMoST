@@ -49,9 +49,9 @@ void print_current_positions(mcmc ** sinmod, int n_beta) {
 	int i;
 	printf("printing chain parameters: \n");
 	for (i = 0; i < n_beta; i++) {
-		printf("\tchain %d: current: ", i);
+		printf("\tchain %d: current %f: ", i, get_prob(sinmod[i]));
 		dump_vectorln(get_params(sinmod[i]));
-		printf("\tchain %d: best: ", i);
+		printf("\tchain %d: best %f: ", i, get_prob_best(sinmod[i]));
 		dump_vectorln(get_params_best(sinmod[i]));
 	}
 	fflush(stdout);
@@ -197,12 +197,12 @@ int parallel_tempering_decide_swap_nonrandom(mcmc ** sinmod, int n_beta, int n_s
 	}
 	return -1;
 }
-int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta, int n_swap, int iter) {
+int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta) {
 	int a, b;
 	assert(n_beta > 0);
 	if (n_beta == 1)
 		return -1;
-	a = iter/n_swap % n_beta;
+	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
 	b = (a + 1) % n_beta;
 	if(check_swap_probability(sinmod[a], sinmod[b]) == 1)
 		return a;
@@ -221,10 +221,10 @@ void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	set_params(sinmod[b], temp);
 
 	r = get_prob_best(sinmod[a]);
-	if( r > get_prob_best(sinmod[b])) {
+	if (r > get_prob_best(sinmod[b])) {
 		set_prob_best(sinmod[b], r);
 		set_params_best(sinmod[b], dup_vector(get_params_best(sinmod[a])));
-	}else{
+	} else {
 		r = get_prob_best(sinmod[b]);
 		set_prob_best(sinmod[a], r);
 		set_params_best(sinmod[a], dup_vector(get_params_best(sinmod[b])));
@@ -232,6 +232,18 @@ void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 
 	mcmc_check(sinmod[a]);
 	mcmc_check(sinmod[b]);
+}
+
+void reset_to_best(mcmc ** sinmod, int n_beta) {
+	int a;
+	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0]));
+	if (a < n_beta) {
+		printf("Resetting chain %d to", a);
+		dump_vector(get_params_best(sinmod[a]));
+		set_prob(sinmod[a], get_prob_best(sinmod[a]));
+		set_params(sinmod[a], dup_vector(get_params_best(sinmod[a])));
+		calc_model(sinmod[a], NULL);
+	}
 }
 
 void analyse(mcmc ** sinmod, int n_beta) {
@@ -264,7 +276,7 @@ void analyse(mcmc ** sinmod, int n_beta) {
 		#ifdef RANDOMSWAP		
 		candidate = parallel_tempering_decide_swap_random(sinmod, n_beta, 1);
 		#else
-		candidate = parallel_tempering_decide_swap_now(sinmod, n_beta, n_swap, iter);
+		candidate = parallel_tempering_decide_swap_now(sinmod, n_beta);
 		/*candidate = parallel_tempering_decide_swap_nonrandom(sinmod, n_beta, n_swap, iter);*/
 		#endif
 		if(candidate != -1) {
@@ -272,6 +284,7 @@ void analyse(mcmc ** sinmod, int n_beta) {
 			parallel_tempering_do_swap(sinmod, n_beta, candidate);
 			swapcount++;
 		}
+		reset_to_best(sinmod, n_beta);
 		if (iter % PRINT_PROB_INTERVAL == 0) {
 			if (dumpflag) {
 				mcmc_dump_probabilities(sinmod[0], DUMP_PROB_LENGTH);
