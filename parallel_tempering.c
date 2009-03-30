@@ -225,10 +225,10 @@ void analyse(mcmc ** sinmod, int n_beta) {
 			/*for (subiter = 0; subiter < 200; subiter++) {*/
 				/*dump_i("one markov-chain step for ", i);*/
 				markov_chain_step(sinmod[i], 0);
-				mcmc_check_best(sinmod[i]);
-				mcmc_append_current_parameters(sinmod[i]);
 			/*}*/
 		}
+		mcmc_check_best(sinmod[0]);
+		mcmc_append_current_parameters(sinmod[0]);
 		iter++;
 		parallel_tempering_swap(sinmod, n_beta, n_swap);
 
