@@ -23,6 +23,9 @@ int check_swap_probability(mcmc * a, mcmc * b) {
 	}
 }
 
+/**
+ * chooses a chain to swap by random. Swaps occur with probability 1/n_swap
+ */
 int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta,
 		int n_swap) {
 	double swap_probability;
@@ -41,28 +44,34 @@ int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta,
 	}
 	return -1;
 }
+
+/**
+ * chooses one chain after another to swap. Swaps occur every n_swap.
+ */
 int parallel_tempering_decide_swap_nonrandom(mcmc ** sinmod, int n_beta,
 		int n_swap, int iter) {
-	int a, b;
+	int a;
 	assert(n_beta > 0);
 	if (n_beta == 1)
 		return -1;
 	if (iter % n_swap == 0) {
 		a = iter / n_swap % (n_beta - 1);
-		b = (a + 1) % n_beta;
-		if (check_swap_probability(sinmod[a], sinmod[b]) == 1)
+		if (check_swap_probability(sinmod[a], sinmod[a + 1]) == 1)
 			return a;
 	}
 	return -1;
 }
+
+/**
+ * chooses one chain to swap by random. Swap occurs every time.
+ */
 int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta) {
-	int a, b;
+	int a;
 	assert(n_beta > 0);
 	if (n_beta == 1)
 		return -1;
-	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
-	b = (a + 1) % n_beta;
-	if (check_swap_probability(sinmod[a], sinmod[b]) == 1)
+	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % (n_beta - 1);
+	if (check_swap_probability(sinmod[a], sinmod[a + 1]) == 1)
 		return a;
 	return -1;
 }
@@ -71,7 +80,8 @@ void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	double r;
 	int b;
 	gsl_vector * temp;
-	b = (a + 1) % n_beta;
+	assert(a < n_beta - 1);
+	b = a + 1;
 	IFDEBUG
 		printf("swapping %d with %d\n", a, b);
 	temp = dup_vector(get_params(sinmod[a]));
@@ -93,6 +103,7 @@ void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 }
 
 void reset_to_best(mcmc ** sinmod, int n_beta) {
+
 #ifdef RESET_TO_BEST
 	int a;
 	a = (int) (n_beta * RESET_TO_BEST * get_next_urandom(sinmod[0]));

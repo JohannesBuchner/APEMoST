@@ -48,6 +48,13 @@ mcmc * mcmc_load_params(const char * filename);
 void mcmc_load_data(mcmc * m, const char * datafilename);
 
 /**
+ * reference to another object for x and y-data.
+ *
+ * @param m the object to fill
+ * @param m_orig the object with loaded data
+ */
+void mcmc_reuse_data(mcmc * m, const mcmc * m_orig);
+/**
  * frees the memory used by the class
  *
  * @return NULL for simple assignment <code>x = mcmc_free(x)</code>;

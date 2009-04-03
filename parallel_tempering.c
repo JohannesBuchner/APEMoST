@@ -8,12 +8,6 @@
 #include "tempering_interaction.h"
 #include "debug.h"
 
-#ifdef BENCHMARK
-#define MAX_ITERATIONS  100000
-#else
-#define MAX_ITERATIONS 1000000
-#endif
-
 int run;
 int dumpflag;
 
@@ -87,18 +81,21 @@ void parallel_tempering(const char * params_filename,
 	const char ** params_descr;
 	mcmc ** sinmod;
 
-	/* TODO: load these from config */
+	/* TODO: make beta-configuration a parameter */
 	delta_beta = (1.0 - beta_0) / (n_beta - 1);
 	sinmod = (mcmc**) calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
-#pragma omp parallel for
 	for (i = 0; i < n_beta; i++) {
 		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
 		/* That is kind of stupid (duplicate execution) and could be optimized.
 		 * not critical though. */
-		sinmod[i] = mcmc_load(params_filename, data_filename);
+		sinmod[i] = mcmc_load_params(params_filename);
+		if (i == 0)
+			mcmc_load_data(data_filename);
+		else
+			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		mcmc_check(sinmod[i]);
 		sinmod[i]->additional_data = malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], 1.0 - i * delta_beta);
@@ -122,12 +119,11 @@ void parallel_tempering(const char * params_filename,
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
 
-	printf(
-			"Setting startingpoint for the calibration of all hotter distribution to \n");
-	printf("  the best parameter values of the (beta=1)-distribution\n");
+	printf("Setting startingpoint for the calibration of all hotter "
+		"distribution to \n  the best parameter values of the (beta=1)"
+		"-distribution\n");
 	wait();
 
-	/* this could be parallelized */
 #pragma omp parallel for
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
@@ -168,7 +164,6 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	wait();
 
 	while (run && iter < MAX_ITERATIONS) {
-		/* TODO: maybe we can do 100 operations off these in threads using OpenMP ? */
 #pragma omp parallel for
 		for (i = 0; i < n_beta; i++) {
 			for (subiter = 0; subiter < n_swap; subiter++) {
@@ -179,7 +174,6 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				}
 			}
 		}
-		/* do this in master-thread */
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
 		if (iter % PRINT_PROB_INTERVAL == 0) {

@@ -3,12 +3,39 @@
 
 #include "mcmc.h"
 
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * set the number of iterations after you want the program to terminate.
+ *
+ * This is especially useful in benchmarking.
+ * Example: Set this to 100000.
+ */
+#define MAX_ITERATIONS
+#endif
+
+#ifndef DUMP_PROB_LENGTH
+/**
+ * How many probability values should be dumped?
+ * Set to -1 if you want to dump all of them.
+ */
 #define DUMP_PROB_LENGTH  1000*3
+#endif
+
+#ifndef PRINT_PROB_INTERVAL
+/**
+ * After how many iterations do you want the program to write out
+ * information?
+ *
+ * Note that this should be a multiple of N_SWAP, otherwise you get
+ * weird effects, since this is checked after N_SWAP iterations using
+ * <code>(iter % PRINT_PROB_INTERVAL == 0)</code>.
+ */
 #define PRINT_PROB_INTERVAL 1000
+#endif
 
 typedef struct {
 	/**
-	 * likelihood of acceptance (TODO: yes?)
+	 * likelihood of acceptance
 	 */
 	double beta;
 

@@ -2,12 +2,17 @@
 dependencies:
 
 gsl (GNU Scientific Library)
-boehmgc (Garbage Collector)
+boehmgc (Garbage Collector) 
+	unless you use -DWITHOUT_GARBAGE_COLLECTOR
 duma (optional)
 	install them using your package manager. 
 
 Compile:
-	make clean all tests
+	make clean all tests doc
+	This should never give you errors. Check running this command before 
+	committing a revision.  
+
+	Check that you have a reasonably new gcc (i.e. gcc-4).
 
 
 Alternative way to install the dependencies:

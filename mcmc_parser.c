@@ -138,6 +138,18 @@ void mcmc_load_data(mcmc * m, const char * datafilename) {
 	load_data(m, datafilename);
 	mcmc_check(m);
 }
+
+void mcmc_reuse_data(mcmc * m, const mcmc * m_orig) {
+	debug("reusing data from other struct");
+	m->x_dat = m_orig->x_dat;
+	assert(m->x_dat != NULL);
+	m->y_dat = m_orig->y_dat;
+	assert(m->y_dat != NULL);
+	m->model = gsl_vector_alloc(m->y_dat->size);
+	assert(m->model != NULL);
+	mcmc_check(m);
+}
+
 mcmc * mcmc_load_params(const char * filename) {
 	mcmc * m;
 	FILE * input;

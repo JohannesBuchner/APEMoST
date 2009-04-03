@@ -3,6 +3,7 @@
 #include "mcmc.h"
 #include "debug.h"
 #include "parallel_tempering.h"
+#include "tempering_interaction.h"
 
 /**
  * \mainpage
@@ -28,7 +29,7 @@
  * <code>$ CCFLAGS="-DN_PARAMETERS=3 -DDEBUG" make simplesin.exe</code>
  *
  * The possible parameters and their values:
- * \subsection Algorithm-related
+ * \subsection tuning Tuning the algorithm-related
  * <ul>
  * <li>#N_BETA</li>
  * <li>#BETA_0</li>
@@ -39,6 +40,18 @@
  * <li>#N_SWAP</li>
  * <li>#SIGMA</li>
  * <li>#N_PARAMETERS</li>
+ * </ul>
+ * \subsection Selecting a algorithm
+ * <ul>
+ * <li>#RANDOMSWAP</li>
+ * <li>#RESET_TO_BEST</li>
+ * </ul>
+ * \subsection Running
+ * <ul>
+ * <li>#MAX_ITERATIONS</li>
+ * <li>#PRINT_PROB_INTERVAL</li>
+ * <li>#DUMP_PROB_LENGTH</li>
+ * <li>#PRINT_PROB_INTERVAL</li>
  * </ul>
  * \subsection Others
  * <ul>
@@ -57,8 +70,23 @@
  * <code>0.7	0.4	3.0   Amplitude 0.01</code>
  *
  * The file #DATA_FILENAME should contain two columns (x/y) values.
+ *
+ * \section Results
+ * So the program runs and shows you where your chains are. But how do you
+ * get the visited datapoints in parameter space?
+ * For performance reasons, these are not dumped all the time.
+ * The are written out on exit (or termination with Ctrl-C).
+ *
+ * You can also send the process a signal to dump the datapoints: <br>
+ * <code>$ kill -SIGUSR1 processid</code>
+ *
+ * If your program is called "simplesin.exe", you can do
+ *
+ * <code>$ kill -SIGUSR1 $(pidof simplesin.exe)</code>
+ *
+ * @see DUMP_PROB_LENGTH
+ *
  */
-
 
 /**
  * Number of chains to use for parallel tempering
@@ -82,7 +110,7 @@
 #define BURN_IN_ITERATIONS 10000
 #endif
 /**
- * TODO
+ * TODO: document
  */
 #ifndef RAT_LIMIT
 #define RAT_LIMIT 0.5
@@ -107,7 +135,7 @@
 #define N_SWAP 30
 #endif
 /**
- * TODO
+ * TODO: document
  */
 #ifndef SIGMA
 #define SIGMA 0.5
