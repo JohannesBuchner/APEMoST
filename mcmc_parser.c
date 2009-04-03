@@ -117,7 +117,7 @@ static void load_data(mcmc * m, const char * filename) {
 	input = openfile(filename);
 	for (i = 0; i < npoints; i++) {
 		if (load_datapoint(m, input, i) != 0) {
-			fprintf(stderr, "Line %d of %s is of incorrect format.", i + 1,
+			fprintf(stderr, "Line %d of %s is of incorrect format.\n", i + 1,
 					filename);
 			exit(1);
 		}
@@ -133,14 +133,16 @@ char * my_strdup(const char * s) {
 	return buf;
 }
 
-mcmc * mcmc_load(const char * filename) {
+void mcmc_load_data(mcmc * m, const char * datafilename) {
+	dump_s("looking for data in file", datafilename);
+	load_data(m, datafilename);
+	mcmc_check(m);
+}
+mcmc * mcmc_load_params(const char * filename) {
 	mcmc * m;
 	FILE * input;
-	char datafilename[MAX_LINE_LENGTH];
-	char datafilepath[MAX_LINE_LENGTH];
-	char * datadir;
 	int currentline = 0;
-	const int pretext = 1;
+	const int pretext = 0;
 	int r;
 
 	int nlines;
@@ -149,12 +151,9 @@ mcmc * mcmc_load(const char * filename) {
 
 	m = mcmc_init(nlines - pretext);
 	input = openfile(filename);
-	fscanf(input, "%s\n", datafilename);
-	currentline++;
-
 	while (currentline < nlines) {
 		if (load_parameter(m, input, currentline - pretext) != 0) {
-			fprintf(stderr, "Line %d of %s is of incorrect format.",
+			fprintf(stderr, "Line %d of %s is of incorrect format.\n",
 					currentline + 1, filename);
 			exit(1);
 		}
@@ -162,14 +161,11 @@ mcmc * mcmc_load(const char * filename) {
 	}
 	r = fclose(input);
 	assert (r == 0);
-
-	datadir = dirname(my_strdup(filename));
-	sprintf(datafilepath, "%s/%s", datadir, datafilename);
-	free(datadir);
-	dump_s("looking for data in file", datafilepath);
-
-	load_data(m, datafilepath);
-	mcmc_check(m);
+	return m;
+}
+mcmc * mcmc_load(const char * filename, const char * datafilename) {
+	mcmc * m = mcmc_load_params(filename);
+	mcmc_load_data(m, datafilename);
 	return m;
 }
 

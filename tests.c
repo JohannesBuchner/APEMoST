@@ -81,8 +81,21 @@ int test_create(void) {
 }
 
 
+int test_alloc(void) {
+	unsigned int amount = 1000;
+	unsigned int i;
+	mcmc * m = mcmc_init(3);
+	debug("allocating a lot\n");
+
+	for(i = 0; i < amount; i++) {
+		mcmc_prepare_iteration(m, i);
+	}
+	m = mcmc_free(m);
+	return 0;
+}
+
 int test_load(void) {
-	mcmc * m = mcmc_load("tests/testinput1");
+	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
 	ASSERT(m != NULL, "loaded");
 	ASSERTEQUALI(m->n_par, 3, "number of parameters");
 	ASSERTEQUALD(gsl_vector_get(m->params, 0),      0.7,  "start");
@@ -143,42 +156,8 @@ int test_append(void) {
 }
 
 
-int test_write(void) {
-	mcmc * m = mcmc_load("tests/testinput1");
-	debug("lets cheat and say we got the sum x-data + y-data as model");
-	gsl_vector_memcpy(m->model, m->y_dat);
-	gsl_vector_add(m->model, m->x_dat);
-	mcmc_dump_model(m);
-	m = mcmc_free(m);
-	return 0;
-}
-
-int test_write_prob(void) {
-	mcmc * m = mcmc_load("tests/testinput1");
-	debug("add starting points, ...");
-	mcmc_append_current_parameters(m);
-	mcmc_check(m);
-	debug("maxima ...");
-	require(gsl_vector_memcpy(m->params, m->params_max));
-	mcmc_append_current_parameters(m);
-	mcmc_check(m);
-	debug("and minima as visited parameter values");
-	require(gsl_vector_memcpy(m->params, m->params_max));
-	mcmc_append_current_parameters(m);
-	mcmc_check(m);
-	mcmc_dump_probabilities(m, 1);
-	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 1, "" );
-	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  1, "" );
-	mcmc_dump_probabilities(m, -1);
-	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
-	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  3, "" );
-	m = mcmc_free(m);
-	return 0;
-}
-
-
 int test_random(void) {
-	mcmc * m = mcmc_load("tests/testinput1");
+	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
 	double v = 0, last_v;
 	int i;
 	for (i = 0; i < 10; i++) {
@@ -202,18 +181,39 @@ int test_mod(void) {
 	return 0;
 }
 
-int test_alloc(void) {
-	unsigned int amount = 1000;
-	unsigned int i;
-	mcmc * m = mcmc_init(3);
-	debug("allocating a lot\n");
-
-	for(i = 0; i < amount; i++) {
-		mcmc_prepare_iteration(m, i);
-	}
+int test_write(void) {
+	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
+	debug("lets cheat and say we got the sum x-data + y-data as model");
+	gsl_vector_memcpy(m->model, m->y_dat);
+	gsl_vector_add(m->model, m->x_dat);
+	mcmc_dump_model(m);
 	m = mcmc_free(m);
 	return 0;
 }
+
+int test_write_prob(void) {
+	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
+	debug("add starting points, ...");
+	mcmc_append_current_parameters(m);
+	mcmc_check(m);
+	debug("maxima ...");
+	require(gsl_vector_memcpy(m->params, m->params_max));
+	mcmc_append_current_parameters(m);
+	mcmc_check(m);
+	debug("and minima as visited parameter values");
+	require(gsl_vector_memcpy(m->params, m->params_max));
+	mcmc_append_current_parameters(m);
+	mcmc_check(m);
+	mcmc_dump_probabilities(m, 1);
+	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 1, "" );
+	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  1, "" );
+	mcmc_dump_probabilities(m, -1);
+	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
+	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  3, "" );
+	m = mcmc_free(m);
+	return 0;
+}
+
 
 void calc_prob(mcmc * m) {
 	(void)m;
@@ -232,14 +232,14 @@ void calc_model_for(mcmc * m, const unsigned int index, const double old_value) 
 /* register of all tests */
 int (*tests_registration[])(void)  = {
 	/* this is test 1 */ /*test_tests, */
-	test_random,
-	test_mod,
 	test_hist,
-	test_alloc,
 	test_create,
+	test_alloc,
 	test_load,
 	test_resize,
 	test_append,
+	test_random,
+	test_mod,
 	test_write,
 	test_write_prob,
 

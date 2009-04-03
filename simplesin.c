@@ -41,18 +41,3 @@ void calc_model_for(mcmc * m, const unsigned int i, const double old_value) {
 	calc_model(m, NULL);
 }
 
-int main(void) {
-	int n_beta = 12 / 3;
-	double beta_0 = 0.001;
-	int burn_in_iterations = 10000;
-	double rat_limit = 0.5;
-	int iter_limit = 20000;
-	double mul = 0.85;
-	int n_swap = 30;
-	sigma = 0.5;
-
-	parallel_tempering("simplesin/input", n_beta, beta_0, burn_in_iterations,
-			rat_limit, iter_limit, mul, n_swap);
-	return 0;
-}
-

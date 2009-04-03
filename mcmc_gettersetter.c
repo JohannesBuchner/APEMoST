@@ -112,11 +112,24 @@ void set_model(mcmc * m, gsl_vector * new_model) {
 	m->model = new_model;
 }
 
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Fix the number of parameters to the given value
+ *
+ * Setting this might lead the compiler to more optimization, a theory that
+ * has not been proven for the program.
+ * If in doubt, do not set, as your program then can be used for any
+ * problems regardless of number of parameters.
+ */
+#define N_PARAMETERS
+#endif
+
 unsigned int get_n_par(const mcmc * m) {
 #ifdef N_PARAMETERS
 	(void)m;
 	return N_PARAMETERS;
 #else
+#define N_PARAMETERS
 	return m->n_par;
 #endif
 }

@@ -75,9 +75,10 @@ void report(mcmc ** sinmod, int n_beta) {
 int run;
 int dumpflag;
 
-void analyse(mcmc ** sinmod, int n_beta);
+void analyse(mcmc ** sinmod, int n_beta, int n_swap);
 
-void parallel_tempering(const char * filename, int n_beta, double beta_0,
+void parallel_tempering(const char * params_filename,
+		const char * data_filename, int n_beta, double beta_0,
 		unsigned long burn_in_iterations, double rat_limit,
 		unsigned long iter_limit, double mul, int n_swap) {
 	int n_par;
@@ -97,7 +98,7 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
 		/* That is kind of stupid (duplicate execution) and could be optimized.
 		 * not critical though. */
-		sinmod[i] = mcmc_load(filename);
+		sinmod[i] = mcmc_load(params_filename, data_filename);
 		mcmc_check(sinmod[i]);
 		sinmod[i]->additional_data = malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], 1.0 - i * delta_beta);

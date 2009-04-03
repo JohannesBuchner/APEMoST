@@ -16,13 +16,13 @@ TEST_SOURCES=run-tests.c tests.c
 HELPER_SOURCES=gsl_helper.c 
 DEBUG_SOURCE=debug.c
 HEADERS=*.h
+MAIN=generic_main.c
 
 ## help: this clutter
 help:
 	@grep -E '^## ' Makefile|grep -v ':'|sed 's,^## ,,g'
 	@echo This Makefile has the targets:
 	@grep -E '^## [.a-z]{2,}:' Makefile|sed 's,^## *,\t,g' |sed 's,: ,\t,g'
-	$(CC) --version
 
 ## all: 
 all: tests.exe simplesin.exe
@@ -33,9 +33,9 @@ all: tests.exe simplesin.exe
 tests.exe: $(HEADERS) tests.o run-tests.o $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-simplesin.exe: $(HEADERS) simplesin.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
+simplesin.exe: $(HEADERS) simplesin.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) $(MAIN) 
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
-simplesin5.exe: $(HEADERS) simplesin5.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
+simplesin5.exe: $(HEADERS) simplesin5.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) $(MAIN)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 ## tests: run the tests

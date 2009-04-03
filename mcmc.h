@@ -7,6 +7,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Turns additional sanity checks off.
+ *
+ * One could think that turning this off would improve performance,
+ * but tests have shown the modification is not significant.
+ */
+#define NOASSERT
+#endif
 
 #ifdef NOASSERT
 #define assert(cond)
@@ -18,10 +27,26 @@
 
 /**
  * create and initialize a mcmc class using the configuration given in
- * @param filename
+ * @param filename  file containing the model parameters
+ * @param datafilename x/y observed data
  * @return the created mcmc class
  */
-mcmc * mcmc_load(const char * filename);
+mcmc * mcmc_load(const char * filename, const char * datafilename);
+
+/**
+ * create and initialize a mcmc class using the configuration given in
+ * @param filename  file containing the model parameters
+ * @return the created mcmc class
+ */
+mcmc * mcmc_load_params(const char * filename);
+
+/**
+ * loads the data from the given file as x/y values
+ * @param m
+ * @param datafilename
+ */
+void mcmc_load_data(mcmc * m, const char * datafilename);
+
 /**
  * frees the memory used by the class
  *
