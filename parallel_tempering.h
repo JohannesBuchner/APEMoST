@@ -13,11 +13,20 @@ typedef struct {
 	 */
 	double beta;
 
+	/**
+	 * times this was swapped
+	 */
+	unsigned long swapcount;
+
 } parallel_tempering_mcmc;
 
 void set_beta(mcmc * m, double newbeta);
 
 double get_beta(mcmc * m);
+
+void inc_swapcount(mcmc * m);
+
+unsigned long get_swapcount(mcmc * m);
 
 
 void parallel_tempering(const char * filename, int n_beta,

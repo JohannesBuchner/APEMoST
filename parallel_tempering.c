@@ -5,6 +5,7 @@
 #include "mcmc.h"
 #include "gsl_helper.h"
 #include "parallel_tempering.h"
+#include "tempering_interaction.h"
 #include "debug.h"
 
 #ifdef BENCHMARK
@@ -18,9 +19,16 @@ int dumpflag;
 
 void set_beta(mcmc * m, double newbeta) {
 	((parallel_tempering_mcmc *) m->additional_data)->beta = newbeta;
+	((parallel_tempering_mcmc *) m->additional_data)->swapcount = 0;
 }
 double get_beta(mcmc * m) {
 	return ((parallel_tempering_mcmc *) m->additional_data)->beta;
+}
+void inc_swapcount(mcmc * m) {
+	((parallel_tempering_mcmc *) m->additional_data)->swapcount++;
+}
+unsigned long get_swapcount(mcmc * m) {
+	return ((parallel_tempering_mcmc *) m->additional_data)->swapcount;
 }
 
 void ctrl_c_handler(int signalnr) {
@@ -49,17 +57,18 @@ void print_current_positions(mcmc ** sinmod, int n_beta) {
 	int i;
 	printf("printing chain parameters: \n");
 	for (i = 0; i < n_beta; i++) {
+		printf("\tchain %d: swapped %lu times: ", i, get_swapcount(sinmod[i]));
 		printf("\tchain %d: current %f: ", i, get_prob(sinmod[i]));
 		dump_vectorln(get_params(sinmod[i]));
 		printf("\tchain %d: best %f: ", i, get_prob_best(sinmod[i]));
 		dump_vectorln(get_params_best(sinmod[i]));
+
 	}
 	fflush(stdout);
 }
 
-void report(mcmc ** sinmod, int n_beta, int swapcount) {
+void report(mcmc ** sinmod, int n_beta) {
 	print_current_positions(sinmod, n_beta);
-	printf("swapped %d times.", swapcount);
 	mcmc_dump_probabilities(sinmod[0], -1);
 }
 
@@ -70,7 +79,7 @@ void analyse(mcmc ** sinmod, int n_beta);
 
 void parallel_tempering(const char * filename, int n_beta, double beta_0,
 		unsigned long burn_in_iterations, double rat_limit,
-		unsigned long iter_limit, double mul) {
+		unsigned long iter_limit, double mul, int n_swap) {
 	int n_par;
 	double delta_beta;
 	int i;
@@ -83,7 +92,7 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (i = 0; i < n_beta; i++) {
 		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
 		/* That is kind of stupid (duplicate execution) and could be optimized.
@@ -118,7 +127,7 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 	wait();
 
 	/* this could be parallelized */
-	#pragma omp parallel for
+#pragma omp parallel for
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
@@ -139,7 +148,7 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 	signal(SIGUSR2, sigusr_handler);
 	signal(SIGUSR1, sigusr_handler);
 
-	analyse(sinmod, n_beta);
+	analyse(sinmod, n_beta, n_swap);
 	for (i = 0; i < n_beta; i++) {
 		sinmod[i] = mcmc_free(sinmod[i]);
 		free(sinmod[i]);
@@ -147,112 +156,10 @@ void parallel_tempering(const char * filename, int n_beta, double beta_0,
 	free(sinmod);
 }
 
-int check_swap_probability(mcmc * a, mcmc * b) {
-	double a_beta, b_beta;
-	double a_prob, b_prob;
-	double r, c;
-	/* this code is probably not threadsafe -- start */
-	a_prob = get_prob(a);
-	b_prob = get_prob(b);
-	/* this code is probably not threadsafe -- end */
-	a_beta = get_beta(a);
-	b_beta = get_beta(b);
-	r = a_beta * b_prob / b_beta + b_beta * a_prob / a_beta - (a_prob
-			+ b_prob);
-	c = get_next_alog_urandom(a);
-	if (r > c) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-
-int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta, int n_swap) {
-	double swap_probability;
-	int a, b;
-	assert(n_beta > 0);
-	if (n_beta == 1)
-		return -1;
-	IFVERBOSE
-		debug("checking if we do a swap");
-	swap_probability = get_next_urandom(sinmod[0]);
-	if (swap_probability < 1.0 / n_swap) {
-		a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
-		b = (a + 1) % n_beta;
-		if(check_swap_probability(sinmod[a], sinmod[b]) == 1)
-			return a;
-	}
-	return -1;
-}
-int parallel_tempering_decide_swap_nonrandom(mcmc ** sinmod, int n_beta, int n_swap, int iter) {
-	int a, b;
-	assert(n_beta > 0);
-	if (n_beta == 1)
-		return -1;
-	if (iter % n_swap == 0) { 
-		a = iter/n_swap % n_beta;
-		b = (a + 1) % n_beta;
-		if(check_swap_probability(sinmod[a], sinmod[b]) == 1)
-			return a;
-	}
-	return -1;
-}
-int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta) {
-	int a, b;
-	assert(n_beta > 0);
-	if (n_beta == 1)
-		return -1;
-	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % n_beta;
-	b = (a + 1) % n_beta;
-	if(check_swap_probability(sinmod[a], sinmod[b]) == 1)
-		return a;
-	return -1;
-}
-
-void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
-	double r;
-	int b;
-	gsl_vector * temp;
-	b = (a + 1) % n_beta;
-	IFDEBUG
-		printf("swapping %d with %d\n", a, b);
-	temp = dup_vector(get_params(sinmod[a]));
-	set_params(sinmod[a], dup_vector(get_params(sinmod[b])));
-	set_params(sinmod[b], temp);
-
-	r = get_prob_best(sinmod[a]);
-	if (r > get_prob_best(sinmod[b])) {
-		set_prob_best(sinmod[b], r);
-		set_params_best(sinmod[b], dup_vector(get_params_best(sinmod[a])));
-	} else {
-		r = get_prob_best(sinmod[b]);
-		set_prob_best(sinmod[a], r);
-		set_params_best(sinmod[a], dup_vector(get_params_best(sinmod[b])));
-	}
-
-	mcmc_check(sinmod[a]);
-	mcmc_check(sinmod[b]);
-}
-
-void reset_to_best(mcmc ** sinmod, int n_beta) {
-	int a;
-	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0]));
-	if (a < n_beta) {
-		printf("Resetting chain %d to", a);
-		dump_vector(get_params_best(sinmod[a]));
-		set_prob(sinmod[a], get_prob_best(sinmod[a]));
-		set_params(sinmod[a], dup_vector(get_params_best(sinmod[a])));
-		calc_model(sinmod[a], NULL);
-	}
-}
-
-void analyse(mcmc ** sinmod, int n_beta) {
+void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
-	int n_swap = 30;
 	unsigned long iter = sinmod[0]->n_iter;
-	int candidate;
 	int subiter;
-	int swapcount = 0;
 	get_duration();
 	run = 1;
 	dumpflag = 0;
@@ -261,7 +168,7 @@ void analyse(mcmc ** sinmod, int n_beta) {
 
 	while (run && iter < MAX_ITERATIONS) {
 		/* TODO: maybe we can do 100 operations off these in threads using OpenMP ? */
-		#pragma omp parallel for
+#pragma omp parallel for
 		for (i = 0; i < n_beta; i++) {
 			for (subiter = 0; subiter < n_swap; subiter++) {
 				markov_chain_step(sinmod[i], 0);
@@ -273,18 +180,7 @@ void analyse(mcmc ** sinmod, int n_beta) {
 		}
 		/* do this in master-thread */
 		iter += n_swap;
-		#ifdef RANDOMSWAP		
-		candidate = parallel_tempering_decide_swap_random(sinmod, n_beta, 1);
-		#else
-		candidate = parallel_tempering_decide_swap_now(sinmod, n_beta);
-		/*candidate = parallel_tempering_decide_swap_nonrandom(sinmod, n_beta, n_swap, iter);*/
-		#endif
-		if(candidate != -1) {
-			/* wait for threads to reach iteration */
-			parallel_tempering_do_swap(sinmod, n_beta, candidate);
-			swapcount++;
-		}
-		reset_to_best(sinmod, n_beta);
+		tempering_interaction(sinmod, n_beta, iter);
 		if (iter % PRINT_PROB_INTERVAL == 0) {
 			if (dumpflag) {
 				mcmc_dump_probabilities(sinmod[0], DUMP_PROB_LENGTH);
@@ -307,6 +203,6 @@ void analyse(mcmc ** sinmod, int n_beta) {
 			}
 		}
 	}
-	report(sinmod, n_beta, swapcount);
+	report(sinmod, n_beta);
 }
 

@@ -48,10 +48,11 @@ int main(void) {
 	double rat_limit = 0.5;
 	int iter_limit = 20000;
 	double mul = 0.85;
+	int n_swap = 30;
 	sigma = 0.5;
 
 	parallel_tempering("simplesin/input", n_beta, beta_0, burn_in_iterations,
-			rat_limit, iter_limit, mul);
+			rat_limit, iter_limit, mul, n_swap);
 	return 0;
 }
 

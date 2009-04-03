@@ -11,7 +11,7 @@ LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
 MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_calculate.c \
 	mcmc_markov_chain.c mcmc_dump.c 
-PARALLEL_TEMPERING_SOURCES=parallel_tempering.c
+PARALLEL_TEMPERING_SOURCES=parallel_tempering.c tempering_interaction.c
 TEST_SOURCES=run-tests.c tests.c
 HELPER_SOURCES=gsl_helper.c 
 DEBUG_SOURCE=debug.c
