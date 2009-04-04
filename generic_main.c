@@ -29,7 +29,7 @@
  * <code>$ CCFLAGS="-DN_PARAMETERS=3 -DDEBUG" make simplesin.exe</code>
  *
  * The possible parameters and their values:
- * \subsection tuning Tuning the algorithm-related
+ * \subsection tuning Fine-tuning the algorithm
  * <ul>
  * <li>#N_BETA</li>
  * <li>#BETA_0</li>
@@ -41,7 +41,7 @@
  * <li>#SIGMA</li>
  * <li>#N_PARAMETERS</li>
  * </ul>
- * \subsection Selecting a algorithm
+ * \subsection alg Defining algorithm behaviour
  * <ul>
  * <li>#RANDOMSWAP</li>
  * <li>#RESET_TO_BEST</li>
@@ -183,8 +183,13 @@ void checkfile(char * filename) {
 #define OUTPUT_PARAMI(P) printf("\t%s: %d\n", #P, P);
 
 void check(const char * progname) {
-	printf("%s: Checking environment:\n\n", progname);
-	printf("Compile Parameters:\n");
+	printf("%s: Checking environment:\n", progname);
+
+	printf("\nFiles:\n");
+	checkfile(PARAMS_FILENAME);
+	checkfile(DATA_FILENAME);
+
+	printf("\nFine-tuning the algorithm:\n");
 	OUTPUT_PARAMI(N_BETA);
 	OUTPUT_PARAMD(BETA_0);
 	OUTPUT_PARAMI(BURN_IN_ITERATIONS);
@@ -193,36 +198,57 @@ void check(const char * progname) {
 	OUTPUT_PARAMD(MUL);
 	OUTPUT_PARAMI(N_SWAP);
 	OUTPUT_PARAMD(SIGMA);
-
-	printf("\nFiles:\n");
-	checkfile(PARAMS_FILENAME);
-	checkfile(DATA_FILENAME);
+	
+	printf("\nDefining algorithm behaviour:\n");
+	printf("\tRANDOMSWAP: Random swapping: "); 
+#ifdef RANDOMSWAP
+	printf("on\n");
+#else
+	printf("off\n");
+#endif
+	printf("\tRESET_TO_BEST: Resetting to best: "); 
+#ifdef RESET_TO_BEST
+	printf("on, %d\n", RESET_TO_BEST);
+#else
+	printf("off\n");
+#endif
+#ifdef MAX_ITERATIONS
+	printf("\tMAX_ITERATIONS: Stops after %d iterations\n", MAX_ITERATIONS);
+#else
+	printf("\tMAX_ITERATIONS: Run indefinitely long\n");
+#endif
+	OUTPUT_PARAMI(PRINT_PROB_INTERVAL);
+	OUTPUT_PARAMI(DUMP_PROB_LENGTH);
 
 	printf("\nDebugging Parameters:\n");
+	printf("\tDEBUG: Debug output: ");
 #ifdef DEBUG
-	printf("\tDebug output: on\n");
+	printf("on\n");
 #else
-	printf("\tDebug output: off\n");
+	printf("off\n");
 #endif
+	printf("\tVERBOSE: Verbose debug output: ");
 #ifdef VERBOSE
-	printf("\tVerbose debug output: on\n");
+	printf("on\n");
 #else
-	printf("\tVerbose debug output: off\n");
+	printf("off\n");
 #endif
+	printf("\tSEGV: Segfault detecting output: ");
 #ifdef SEGV
-	printf("\tSEGFAULT output: on\n");
+	printf("on\n");
 #else
-	printf("\tSEGFAULT output: off\n");
+	printf("off\n");
 #endif
+	printf("\tNOASSERT: Runtime sanity checks: ");
 #ifdef NOASSERT
-	printf("\tRuntime sanity checks: off\n");
+	printf("off\n");
 #else
-	printf("\tRuntime sanity checks: on\n");
+	printf("on\n");
 #endif
 #ifdef N_PARAMETERS
-	printf("\tCompiled for fixed number of parameters: %d\n", N_PARAMETERS);
+	printf("\tN_PARAMETERS: Compiled for fixed number of parameters: %d\n", N_PARAMETERS);
 #else
-	printf("\tCompiled for variable number of parameters\n");
+	printf("\tN_PARAMETERS: Compiled for variable number of parameters\n");
 #endif
 
 }
