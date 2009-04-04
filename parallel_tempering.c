@@ -93,7 +93,7 @@ void parallel_tempering(const char * params_filename,
 		 * not critical though. */
 		sinmod[i] = mcmc_load_params(params_filename);
 		if (i == 0)
-			mcmc_load_data(data_filename);
+			mcmc_load_data(sinmod[i], data_filename);
 		else
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		mcmc_check(sinmod[i]);
@@ -163,7 +163,11 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	printf("starting the analysis\n");
 	wait();
 
-	while (run && iter < MAX_ITERATIONS) {
+	while (run
+#ifdef MAX_ITERATIONS
+			&& iter < MAX_ITERATIONS
+#endif
+	) {
 #pragma omp parallel for
 		for (i = 0; i < n_beta; i++) {
 			for (subiter = 0; subiter < n_swap; subiter++) {
