@@ -12,7 +12,7 @@ CC=gcc
 MCMC_SOURCES=src/*.c
 TEST_SOURCES=tests/*.c
 APPS=apps/*.c
-MAIN=src/generic_main.c
+MAIN=apps/generic_main.c
 
 ## help: this clutter
 help:
@@ -26,7 +26,7 @@ all: tests.exe
 tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-%.exe: apps/%.c $(MCMC_SOURCES) $(MAIN) 
+simplesin.exe: apps/simplesin.c $(MCMC_SOURCES) $(MAIN) 
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 ## tests: run the tests

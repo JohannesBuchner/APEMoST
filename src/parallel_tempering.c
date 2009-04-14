@@ -109,6 +109,8 @@ double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 #error "choose a beta distribution, e.g.: BETA_DISTRIBUTION=equidistant_beta"
 #error "also available: equidistant_temperature, chebyshev_beta, chebyshev_temperature"
 #endif
+	if (n_beta == 1)
+		return 1.0;
 	return BETA_DISTRIBUTION(i, n_beta, beta_0);
 }
 
