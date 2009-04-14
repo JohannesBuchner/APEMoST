@@ -9,14 +9,10 @@
 CFLAGS=-O2 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
-MCMC_SOURCES=mcmc.c mcmc_gettersetter.c mcmc_parser.c mcmc_calculate.c \
-	mcmc_markov_chain.c mcmc_dump.c 
-PARALLEL_TEMPERING_SOURCES=parallel_tempering.c tempering_interaction.c
-TEST_SOURCES=run-tests.c tests.c
-HELPER_SOURCES=gsl_helper.c 
-DEBUG_SOURCE=debug.c
-HEADERS=*.h
-MAIN=generic_main.c
+MCMC_SOURCES=src/*.c
+TEST_SOURCES=tests/*.c
+APPS=apps/*.c
+MAIN=src/generic_main.c
 
 ## help: this clutter
 help:
@@ -25,18 +21,13 @@ help:
 	@grep -E '^## [.a-z]{2,}:' Makefile|sed 's,^## *,\t,g' |sed 's,: ,\t,g'
 
 ## all: 
-all: tests.exe simplesin.exe
+all: tests.exe
 
-%.o : %.c
-	$(CC) $(CFLAGS) -c $^
+tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES)
+	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-tests.exe: $(HEADERS) tests.o run-tests.o $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) 
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
-
-simplesin.exe: $(HEADERS) simplesin.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) $(MAIN) 
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
-simplesin5.exe: $(HEADERS) simplesin5.c $(PARALLEL_TEMPERING_SOURCES) $(MCMC_SOURCES) $(DEBUG_SOURCE) $(HELPER_SOURCES) $(MAIN)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+%.exe: apps/%.c $(MCMC_SOURCES) $(MAIN) 
+	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 ## tests: run the tests
 tests: tests.exe
