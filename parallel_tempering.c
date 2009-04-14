@@ -71,24 +71,62 @@ int dumpflag;
 
 void analyse(mcmc ** sinmod, int n_beta, int n_swap);
 
+double equidistant_beta(unsigned int i, unsigned int n_beta, double beta_0) {
+	return 1 - i * (1 - beta_0) / (n_beta - 1);
+}
+double equidistant_temperature(unsigned int i, unsigned int n_beta,
+		double beta_0) {
+	return 1 / (1 / beta_0 + i * (1 - 1 / beta_0) / (n_beta - 1));
+}
+double chebyshev_temperature(unsigned int i, unsigned int n_beta, double beta_0) {
+	return 1 / (1 / beta_0 + (1 - 1 / beta_0) / 2 * (1 - cos(i * M_PI / (n_beta
+			- 1))));
+}
+double chebyshev_beta(unsigned int i, unsigned int n_beta, double beta_0) {
+	return beta_0 + (1 - beta_0) / 2 * (1 - cos(i * M_PI / (n_beta - 1)));
+}
+
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Defines how the beta value should be assigned/distributed between the chains.
+ *
+ * beta = 1 / temperature.
+ *
+ * You can choose equidistant (linear) distribution of the temperature or beta.
+ * Or, what often proves to be a good choice, you can use Chebyshev nodes
+ * for the distribution of the temperature or beta.
+ *
+ * e.g.: BETA_DISTRIBUTION=equidistant_beta <br>
+ * also available: equidistant_temperature, chebyshev_beta,
+ * chebyshev_temperature
+ *
+ */
+#define BETA_DISTRIBUTION
+#endif
+
+double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
+#ifndef BETA_DISTRIBUTION
+#error "choose a beta distribution, e.g.: BETA_DISTRIBUTION=equidistant_beta"
+#error "also available: equidistant_temperature, chebyshev_beta, chebyshev_temperature"
+#endif
+	return BETA_DISTRIBUTION(i, n_beta, beta_0);
+}
+
 void parallel_tempering(const char * params_filename,
 		const char * data_filename, int n_beta, double beta_0,
 		unsigned long burn_in_iterations, double rat_limit,
 		unsigned long iter_limit, double mul, int n_swap) {
 	int n_par;
-	double delta_beta;
 	int i;
 	const char ** params_descr;
 	mcmc ** sinmod;
 
-	/* TODO: make beta-configuration a parameter */
-	delta_beta = (1.0 - beta_0) / (n_beta - 1);
 	sinmod = (mcmc**) calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
 	for (i = 0; i < n_beta; i++) {
-		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
+		printf("\tChain %2d - beta = %f ", i, get_chain_beta(i, n_beta, beta_0));
 		/* That is kind of stupid (duplicate execution) and could be optimized.
 		 * not critical though. */
 		sinmod[i] = mcmc_load_params(params_filename);
@@ -98,7 +136,7 @@ void parallel_tempering(const char * params_filename,
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		mcmc_check(sinmod[i]);
 		sinmod[i]->additional_data = malloc(sizeof(parallel_tempering_mcmc));
-		set_beta(sinmod[i], 1.0 - i * delta_beta);
+		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		printf("\tsteps: ");
 		dump_vectorln(get_steps(sinmod[i]));
 		mcmc_check(sinmod[i]);
@@ -135,7 +173,7 @@ void parallel_tempering(const char * params_filename,
 	}
 	printf("all chains calibrated.\n");
 	for (i = 0; i < n_beta; i++) {
-		printf("\tChain %2d - beta = %f ", i, 1.0 - i * delta_beta);
+		printf("\tChain %2d - beta = %f ", i, get_beta(sinmod[i]));
 		printf("\tsteps: ");
 		dump_vectorln(get_steps(sinmod[i]));
 	}
@@ -165,7 +203,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 
 	while (run
 #ifdef MAX_ITERATIONS
-			&& iter < MAX_ITERATIONS
+	&& iter < MAX_ITERATIONS
 #endif
 	) {
 #pragma omp parallel for

@@ -31,6 +31,7 @@
  * The possible parameters and their values:
  * \subsection tuning Tuning the algorithm-related
  * <ul>
+ * <li style="color:red">#BETA_DISTRIBUTION (required)</li>
  * <li>#N_BETA</li>
  * <li>#BETA_0</li>
  * <li>#BURN_IN_ITERATIONS</li>
@@ -41,7 +42,7 @@
  * <li>#SIGMA</li>
  * <li>#N_PARAMETERS</li>
  * </ul>
- * \subsection Selecting a algorithm
+ * \subsection select Selecting a algorithm
  * <ul>
  * <li>#RANDOMSWAP</li>
  * <li>#RESET_TO_BEST</li>
@@ -185,6 +186,7 @@ void checkfile(char * filename) {
 void check(const char * progname) {
 	printf("%s: Checking environment:\n\n", progname);
 	printf("Compile Parameters:\n");
+	printf("\tBETA_DISTRIBUTION: %s\n", TOSTRING(BETA_DISTRIBUTION));
 	OUTPUT_PARAMI(N_BETA);
 	OUTPUT_PARAMD(BETA_0);
 	OUTPUT_PARAMI(BURN_IN_ITERATIONS);
