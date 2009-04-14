@@ -1,0 +1,3 @@
+generate the documentation (you need doxygen)
+ $ make doc
+and point your web browser to doc/html/index.html
