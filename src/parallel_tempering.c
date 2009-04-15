@@ -195,6 +195,11 @@ void parallel_tempering(const char * params_filename,
 
 	analyse(sinmod, n_beta, n_swap);
 	for (i = 0; i < n_beta; i++) {
+		free(sinmod[i]->additional_data);
+		if(i != 0) {
+			set_x(sinmod[i], NULL);
+			set_y(sinmod[i], NULL);
+		}
 		sinmod[i] = mcmc_free(sinmod[i]);
 		free(sinmod[i]);
 	}
