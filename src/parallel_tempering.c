@@ -226,9 +226,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 			for (subiter = 0; subiter < n_swap; subiter++) {
 				markov_chain_step(sinmod[i], 0);
 				mcmc_check_best(sinmod[i]);
-				if (i == 0) {
-					mcmc_append_current_parameters(sinmod[0]);
-				}
+				mcmc_append_current_parameters(sinmod[i]);
 			}
 		}
 		iter += n_swap;
