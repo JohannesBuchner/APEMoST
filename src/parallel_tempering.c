@@ -5,7 +5,7 @@
 #include "mcmc.h"
 #include "gsl_helper.h"
 #include "parallel_tempering.h"
-#include "tempering_interaction.h"
+#include "parallel_tempering_interaction.h"
 #include "debug.h"
 
 int run;
@@ -106,8 +106,7 @@ double chebyshev_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 
 double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 #ifndef BETA_DISTRIBUTION
-#error "choose a beta distribution, e.g.: BETA_DISTRIBUTION=equidistant_beta"
-#error "also available: equidistant_temperature, chebyshev_beta, chebyshev_temperature"
+#define BETA_DISTRIBUTION chebyshev_temperature
 #endif
 	if (n_beta == 1)
 		return 1.0;

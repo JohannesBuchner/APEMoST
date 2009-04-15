@@ -50,4 +50,13 @@ gsl_vector * calc_normalized(const gsl_vector * v);
  */
 int calc_same(const gsl_vector * a, const gsl_vector * b);
 
+/**
+ * a = max(a, b)
+ */
+void max_vector(gsl_vector * a, const gsl_vector * b);
+/**
+ * a = min(a, b)
+ */
+void min_vector(gsl_vector * a, const gsl_vector * b);
+
 #endif

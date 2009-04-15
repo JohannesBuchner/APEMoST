@@ -1,4 +1,4 @@
-#include "tempering_interaction.h"
+#include "parallel_tempering_interaction.h"
 #include "parallel_tempering.h"
 #include "debug.h"
 #include "mcmc_internal.h"

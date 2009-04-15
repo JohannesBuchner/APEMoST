@@ -3,7 +3,7 @@
 #include "mcmc.h"
 #include "debug.h"
 #include "parallel_tempering.h"
-#include "tempering_interaction.h"
+#include "parallel_tempering_interaction.h"
 
 /**
  * \mainpage
@@ -193,15 +193,15 @@ void check(const char * progname) {
 	OUTPUT_PARAMI(ITER_LIMIT);
 	OUTPUT_PARAMD(MUL);
 	OUTPUT_PARAMI(N_SWAP);
-	
+
 	printf("\nDefining algorithm behaviour:\n");
-	printf("\tRANDOMSWAP: Random swapping: "); 
+	printf("\tRANDOMSWAP: Random swapping: ");
 #ifdef RANDOMSWAP
 	printf("on\n");
 #else
 	printf("off\n");
 #endif
-	printf("\tRESET_TO_BEST: Resetting to best: "); 
+	printf("\tRESET_TO_BEST: Resetting to best: ");
 #ifdef RESET_TO_BEST
 	printf("on, %d\n", RESET_TO_BEST);
 #else

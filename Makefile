@@ -9,9 +9,11 @@
 CFLAGS=-O2 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
-MCMC_SOURCES=src/*.c
+COMMON_SOURCES=src/gsl_helper.c src/debug.c
+MCMC_SOURCES=src/mcmc*.c
+MARKOV_CHAIN_SOURCES=src/markov_chain*.c
+PARALLEL_TEMPERING_SOURCES=src/parallel_tempering*.c
 TEST_SOURCES=tests/*.c
-APPS=apps/*.c
 MAIN=apps/generic_main.c
 
 ## help: this clutter
@@ -21,12 +23,15 @@ help:
 	@grep -E '^## [.a-z]{2,}:' Makefile|sed 's,^## *,\t,g' |sed 's,: ,\t,g'
 
 ## all: 
-all: tests.exe
+all: tests.exe histogram_tool.exe random_tool.exe
 
-tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES)
+tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-simplesin.exe: apps/simplesin.c $(MCMC_SOURCES) $(MAIN) 
+%.exe: apps/%.c  $(MCMC_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES) $(MAIN) 
+	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+%.exe: tools/%.c $(MCMC_SOURCES) $(COMMON_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 ## tests: run the tests

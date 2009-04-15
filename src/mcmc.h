@@ -94,7 +94,7 @@ void mcmc_dump_probabilities(const mcmc * m, int n_values);
  */
 void mcmc_check_best(mcmc * m);
 
-#include "mcmc_markov_chain.h"
+#include "markov_chain.h"
 
 #include "mcmc_gettersetter.h"
 

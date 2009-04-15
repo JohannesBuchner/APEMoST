@@ -88,3 +88,29 @@ int calc_same(const gsl_vector * a, const gsl_vector * b) {
 	}
 	return 1;
 }
+
+void max_vector(gsl_vector * a, const gsl_vector * b) {
+	unsigned int i;
+	assert(a->size == b->size);
+
+	if (a == b)
+		return;
+
+	for (i = 0; i < a->size; i++) {
+		if (gsl_vector_get(a, i) < gsl_vector_get(b, i))
+			gsl_vector_set(a, i, gsl_vector_get(b, i));
+	}
+}
+
+void min_vector(gsl_vector * a, const gsl_vector * b) {
+	unsigned int i;
+	assert(a->size == b->size);
+
+	if (a == b)
+		return;
+
+	for (i = 0; i < a->size; i++) {
+		if (gsl_vector_get(a, i) > gsl_vector_get(b, i))
+			gsl_vector_set(a, i, gsl_vector_get(b, i));
+	}
+}
