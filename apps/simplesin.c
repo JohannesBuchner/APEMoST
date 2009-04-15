@@ -5,7 +5,12 @@
 #include "parallel_tempering.h"
 #include "debug.h"
 
-double sigma;
+/**
+ * TODO: document
+ */
+#ifndef SIGMA
+#define SIGMA 0.5
+#endif
 
 double apply_formula(mcmc * m, unsigned int i, double param0, double param1,
 		double param2) {
@@ -30,7 +35,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 				m->y_dat, i);
 		square_sum += y * y;
 	}
-	set_prob(m, get_beta(m) * square_sum / (-2 * sigma * sigma));
+	set_prob(m, get_beta(m) * square_sum / (-2 * SIGMA * SIGMA));
 	/*debug("model done");*/
 }
 

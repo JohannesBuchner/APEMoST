@@ -135,12 +135,6 @@
 #ifndef N_SWAP
 #define N_SWAP 30
 #endif
-/**
- * TODO: document
- */
-#ifndef SIGMA
-#define SIGMA 0.5
-#endif
 
 #define PARAMS_FILENAME "params"
 #define DATA_FILENAME "data"
@@ -199,7 +193,6 @@ void check(const char * progname) {
 	OUTPUT_PARAMI(ITER_LIMIT);
 	OUTPUT_PARAMD(MUL);
 	OUTPUT_PARAMI(N_SWAP);
-	OUTPUT_PARAMD(SIGMA);
 	
 	printf("\nDefining algorithm behaviour:\n");
 	printf("\tRANDOMSWAP: Random swapping: "); 
