@@ -204,10 +204,10 @@ int test_write_prob(void) {
 	require(gsl_vector_memcpy(m->params, m->params_max));
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
-	mcmc_dump_probabilities(m, 1);
+	mcmc_dump_probabilities(m, 1, "");
 	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 1, "" );
 	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  1, "" );
-	mcmc_dump_probabilities(m, -1);
+	mcmc_dump_probabilities(m, -1, "");
 	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
 	ASSERTEQUALI(countlines("Frequenz.prob.dump"),  3, "" );
 	m = mcmc_free(m);

@@ -62,8 +62,17 @@ void print_current_positions(mcmc ** sinmod, int n_beta) {
 }
 
 void report(mcmc ** sinmod, int n_beta) {
+	int i;
+	char buf[100];
 	print_current_positions(sinmod, n_beta);
-	mcmc_dump_probabilities(sinmod[0], -1);
+	printf("writing out visited parameters ");
+	for(i = 0; i < n_beta; i++) {
+		printf(".");
+		sprintf(buf, "-chain%d", i);
+		mcmc_dump_probabilities(sinmod[i], -1, buf);
+		fflush(stdout);
+	}
+	printf("done.\n");
 }
 
 int run;
@@ -72,7 +81,7 @@ int dumpflag;
 void analyse(mcmc ** sinmod, int n_beta, int n_swap);
 
 double equidistant_beta(unsigned int i, unsigned int n_beta, double beta_0) {
-	return 1 - i * (1 - beta_0) / (n_beta - 1);
+	return beta_0 + i * (1 - beta_0) / (n_beta - 1);
 }
 double equidistant_temperature(unsigned int i, unsigned int n_beta,
 		double beta_0) {
@@ -219,9 +228,11 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 		}
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
+		/* TODO: add continuous dumping */
 		if (iter % PRINT_PROB_INTERVAL == 0) {
 			if (dumpflag) {
-				mcmc_dump_probabilities(sinmod[0], DUMP_PROB_LENGTH);
+				/* TODO: dump all chains */
+				mcmc_dump_probabilities(sinmod[0], DUMP_PROB_LENGTH, "");
 				print_current_positions(sinmod, n_beta);
 				dumpflag = 0;
 			}

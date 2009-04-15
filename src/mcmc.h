@@ -85,8 +85,9 @@ void mcmc_dump_y_dat(const mcmc * m);
  *
  * @param m
  * @param n_values use the n last iterations. if negative, all are used.
+ * @param suffix added to output filename as a suffix
  */
-void mcmc_dump_probabilities(const mcmc * m, int n_values);
+void mcmc_dump_probabilities(const mcmc * m, int n_values, const char * suffix);
 
 /**
  * check if a new best value has been found
