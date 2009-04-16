@@ -66,7 +66,7 @@ void report(mcmc ** sinmod, int n_beta) {
 	char buf[100];
 	print_current_positions(sinmod, n_beta);
 	printf("writing out visited parameters ");
-	for(i = 0; i < n_beta; i++) {
+	for (i = 0; i < n_beta; i++) {
 		printf(".");
 		sprintf(buf, "-chain%d", i);
 		mcmc_dump_probabilities(sinmod[i], -1, buf);
@@ -158,36 +158,38 @@ void parallel_tempering(const char * params_filename,
 	 * this should be done externally before calling the program. */
 
 	printf("Initializing models\n");
+	fflush(stdout);
 	for (i = 0; i < n_beta; i++) {
 		calc_model(sinmod[i], NULL);
 		mcmc_check(sinmod[i]);
 	}
 	printf("Starting markov chain calibration\n");
-	wait();
+	fflush(stdout);
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
 
 	printf("Setting startingpoint for the calibration of all hotter "
 		"distribution to \n  the best parameter values of the (beta=1)"
 		"-distribution\n");
-	wait();
+	fflush(stdout);
 
 #pragma omp parallel for
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
+		fflush(stdout);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 
 		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
 	}
+	fflush(stdout);
 	printf("all chains calibrated.\n");
 	for (i = 0; i < n_beta; i++) {
 		printf("\tChain %2d - beta = %f ", i, get_beta(sinmod[i]));
 		printf("\tsteps: ");
 		dump_vectorln(get_steps(sinmod[i]));
 	}
-	wait();
 
 	signal(SIGINT, ctrl_c_handler);
 	signal(SIGUSR2, sigusr_handler);
@@ -196,7 +198,7 @@ void parallel_tempering(const char * params_filename,
 	analyse(sinmod, n_beta, n_swap);
 	for (i = 0; i < n_beta; i++) {
 		free(sinmod[i]->additional_data);
-		if(i != 0) {
+		if (i != 0) {
 			set_x(sinmod[i], NULL);
 			set_y(sinmod[i], NULL);
 		}
@@ -214,7 +216,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	run = 1;
 	dumpflag = 0;
 	printf("starting the analysis\n");
-	wait();
+	fflush(stdout);
 
 	while (run
 #ifdef MAX_ITERATIONS

@@ -147,7 +147,6 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		}
 	}
 	debug("calibration of markov-chain done.");
-	wait();
 }
 
 double mod_double(double x, double div) {

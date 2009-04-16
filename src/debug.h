@@ -81,11 +81,6 @@
 #define dump_v(str, v)    IFDEBUG { printf("\tDEBUG[%s]: %s: ", AT, str); dump_vectorln(v); fflush(NULL); }
 #define dump_m(str, m)    IFDEBUG { printf("\tDEBUG[%s]: %s\n", AT, str); dump(m); fflush(NULL); }
 
-/**
- * Wait for keyboard input
- */
-#define wait() IFWAIT { printf("if it is ok to continue, press return. "); fflush(NULL); fgetc(stdin); }
-
 void dump(mcmc * m);
 void dump_vector(gsl_vector * v);
 void dump_vectorln(gsl_vector * v);
