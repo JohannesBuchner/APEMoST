@@ -87,6 +87,7 @@ void limit(gsl_vector * v) {
 int find_local_maximum(int ndim, double exactness, gsl_vector * start) {
 	int i;
 	int count = 0;
+	int possibly_circle_jump;
 	double current_val;
 	gsl_vector * current_probe = gsl_vector_alloc(ndim);
 	gsl_vector * next_probe = gsl_vector_alloc(ndim);
@@ -119,13 +120,50 @@ int find_local_maximum(int ndim, double exactness, gsl_vector * start) {
 		}
 		dump_v("probe results", probe_values);
 		gsl_vector_memcpy(start, current_x);
+
+		/* detect_circle_jumps*/
+		possibly_circle_jump = 0;
+		for (i = 0; i < ndim; i++) {
+			if (gsl_vector_get(probe_values, i) > 0) {
+				if (gsl_vector_get(flaps, i) == 1) {
+					possibly_circle_jump = 1;
+					continue; /* we jump back */
+				} else {
+					/* a jump forward */
+					possibly_circle_jump = 0;
+					break;
+				}
+			} else {
+				if (gsl_vector_get(flaps, i) == 0) {
+					/* turning around after a jump */
+					possibly_circle_jump = 1;
+					continue;
+				} else {
+					/* turning around after turning around */
+					if (gsl_vector_get(flaps, i) == 2) {
+						possibly_circle_jump = 1;
+						continue; /* and we are inconclusive in the others */
+					} else {
+						possibly_circle_jump = 0;
+						break;
+					}
+				}
+			}
+		}
+		if (i != ndim) {
+			possibly_circle_jump = 0;
+		} else if (possibly_circle_jump == 1) {
+			debug("circle-jump possible. increased randomness");
+		}
+
 		for (i = 0; i < ndim; i++) {
 			if (gsl_vector_get(probe_values, i) > 0) {
 				dump_i("we jump forward in", i);
 				gsl_vector_set(current_x, i, gsl_vector_get(current_x, i)
 						+ gsl_vector_get(scales, i) * JUMP_SCALE * (1
-								+ gsl_rng_uniform(get_rng_instance())
-										* RANDOM_SCALE));
+								+ (gsl_rng_uniform(get_rng_instance()) - 0.5)
+										* 2 * (RANDOM_SCALE
+										+ possibly_circle_jump * 0.5)));
 				limit(current_x);
 				if (gsl_vector_get(current_x, i) == gsl_vector_get(start, i)) {
 					/* we clashed against a wall. That means we are ready to
@@ -172,17 +210,27 @@ void free_coefficients(unsigned int ndim) {
 int main(int argc, char ** argv) {
 	unsigned int i;
 	long count = 0;
-	unsigned int limit = 100;
+	unsigned int limit;
+	unsigned int ndim;
+	double exactness;
 	gsl_vector * start;
-	if (argc == 2) {
+	if (argc == 4) {
 		limit = atoi(argv[1]);
+		ndim = atoi(argv[2]);
+		exactness = 1.0/atoi(argv[3]);
+	}else{
+		printf("%s: SYNOPSIS: <number of runs> <ndim> <exactness>\n"
+				"\n"
+				"\n\texactness\tinverse. so if you want 0.001, give 1000.",
+				argv[0]);
+		exit(1);
 	}
 	setup_rng();
 	for (i = 0; i < limit; i++) {
-		coefficients = generate_coefficients(5);
-		start = get_random_uniform_vector(5);
-		count += find_local_maximum(5, 0.001, start);
-		free_coefficients(5);
+		coefficients = generate_coefficients(ndim);
+		start = get_random_uniform_vector(ndim);
+		count += find_local_maximum(ndim, exactness, start);
+		free_coefficients(ndim);
 		gsl_vector_free(start);
 	}
 	gsl_rng_free(get_rng_instance());
