@@ -163,7 +163,7 @@ int find_local_maximum(int ndim, double exactness, gsl_vector * start) {
 						+ gsl_vector_get(scales, i) * JUMP_SCALE * (1
 								+ (gsl_rng_uniform(get_rng_instance()) - 0.5)
 										* 2 * (RANDOM_SCALE
-										+ possibly_circle_jump * 0.5)));
+										+ possibly_circle_jump * RANDOM_SCALE_CIRCLE_JUMP)));
 				limit(current_x);
 				if (gsl_vector_get(current_x, i) == gsl_vector_get(start, i)) {
 					/* we clashed against a wall. That means we are ready to
