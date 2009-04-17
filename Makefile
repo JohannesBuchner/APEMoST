@@ -23,7 +23,7 @@ help:
 	@grep -E '^## [.a-z]{2,}:' Makefile|sed 's,^## *,\t,g' |sed 's,: ,\t,g'
 
 ## all: 
-all: tests.exe histogram_tool.exe random_tool.exe ndim_histogram_tool.exe
+all: tests.exe histogram_tool.exe random_tool.exe ndim_histogram_tool.exe climber.exe
 
 tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
