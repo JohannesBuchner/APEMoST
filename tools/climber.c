@@ -63,27 +63,6 @@ double my_polynome(gsl_vector * x) {
 	return v;
 }
 
-double get_vector_max(gsl_vector * v) {
-	unsigned int i;
-	double max;
-	max = gsl_vector_get(v, 0);
-	for (i = 1; i < v->size; i++) {
-		if (max < gsl_vector_get(v, i))
-			max = gsl_vector_get(v, i);
-	}
-	return max;
-}
-double get_vector_min(gsl_vector * v) {
-	unsigned int i;
-	double min;
-	min = gsl_vector_get(v, 0);
-	for (i = 1; i < v->size; i++) {
-		if (min > gsl_vector_get(v, i))
-			min = gsl_vector_get(v, i);
-	}
-	return min;
-}
-
 /*
  * a expensive function, that can be assumed to be
  * always non-constant in at least one dimension, except on the maximum to
@@ -108,11 +87,10 @@ void limit(gsl_vector * v) {
 int find_local_maximum(int ndim, double exactness, gsl_vector * start) {
 	int i;
 	int count = 0;
-	int ignore_candidate;
 	double current_val;
 	gsl_vector * current_probe = gsl_vector_alloc(ndim);
 	gsl_vector * next_probe = gsl_vector_alloc(ndim);
-	gsl_vector * current_x = start;
+	gsl_vector * current_x = dup_vector(start);
 	gsl_vector * scales = gsl_vector_alloc(ndim);
 	/* did we switch direction in the last move? */
 	gsl_vector * flaps = gsl_vector_alloc(ndim);
@@ -140,41 +118,22 @@ int find_local_maximum(int ndim, double exactness, gsl_vector * start) {
 			count++;
 		}
 		dump_v("probe results", probe_values);
-
-		/* avoid circle-jumps */
-
-		ignore_candidate = -1;
-		for (i = 0; i < ndim; i++) {
-			if (gsl_vector_get(probe_values, i) > 0) {
-				if (gsl_vector_get(flaps, i) == 1) {
-					ignore_candidate = i;
-					continue; /* we jump back */
-				} else
-					break;
-			} else {
-				if (gsl_vector_get(flaps, i) == 0) {
-					continue;
-				} else {
-					if (gsl_vector_get(flaps, i) == 2) {
-						continue; /* and we are inconclusive in the others */
-					} else {
-						break;
-					}
-				}
-			}
-		}
-		if (ignore_candidate > 0) {
-			dump_i("circle-jump protection in action for", ignore_candidate);
-			gsl_vector_set(probe_values, ignore_candidate, -1);
-		}
-
+		gsl_vector_memcpy(start, current_x);
 		for (i = 0; i < ndim; i++) {
 			if (gsl_vector_get(probe_values, i) > 0) {
 				dump_i("we jump forward in", i);
 				gsl_vector_set(current_x, i, gsl_vector_get(current_x, i)
-						+ gsl_vector_get(scales, i) * 1.0);
+						+ gsl_vector_get(scales, i) * JUMP_SCALE * (1
+								+ gsl_rng_uniform(get_rng_instance())
+										* RANDOM_SCALE));
 				limit(current_x);
-				gsl_vector_set(flaps, i, 0);
+				if (gsl_vector_get(current_x, i) == gsl_vector_get(start, i)) {
+					/* we clashed against a wall. That means we are ready to
+					 * refine */
+					gsl_vector_set(flaps, i, 2);
+				} else {
+					gsl_vector_set(flaps, i, 0);
+				}
 			} else {
 				if (gsl_vector_get(flaps, i) == 0) {
 					dump_i("we turn back in", i);
@@ -183,21 +142,22 @@ int find_local_maximum(int ndim, double exactness, gsl_vector * start) {
 				} else {
 					dump_i("we turned back twice in", i);
 					gsl_vector_set(flaps, i, 2);
-					if (calc_vector_sum(flaps) == 2 * ndim) {
-						debug("all dimensions are ready, lets refine");
-						if (get_vector_min(scales) < exactness) {
-							gsl_vector_free(scales);
-							gsl_vector_free(flaps);
-							gsl_vector_free(probe_values);
-							gsl_vector_free(current_probe);
-							gsl_vector_free(next_probe);
-							return count;
-						}
-						gsl_vector_scale(scales, 0.5);
-						dump_d("new exactness", get_vector_min(scales));
-					}
 				}
 			}
+		}
+		if (gsl_vector_min(flaps) == 2) {
+			debug("all dimensions are ready, lets refine");
+			if (gsl_vector_min(scales) < exactness) {
+				gsl_vector_free(scales);
+				gsl_vector_free(flaps);
+				gsl_vector_free(probe_values);
+				gsl_vector_free(current_probe);
+				gsl_vector_free(next_probe);
+				gsl_vector_free(current_x);
+				return count;
+			}
+			gsl_vector_scale(scales, 0.5);
+			dump_d("new exactness", gsl_vector_min(scales));
 		}
 	}
 }
@@ -214,7 +174,7 @@ int main(int argc, char ** argv) {
 	long count = 0;
 	unsigned int limit = 100;
 	gsl_vector * start;
-	if(argc == 2) {
+	if (argc == 2) {
 		limit = atoi(argv[1]);
 	}
 	setup_rng();
