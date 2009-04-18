@@ -53,13 +53,13 @@ int main(int argc, char ** argv) {
 	double exactness;
 	gsl_vector * start;
 	if (argc == 4) {
-		limit = atoi(argv[1]);
-		ndim = atoi(argv[2]);
-		exactness = 1.0 / atoi(argv[3]);
+		exactness = atof(argv[1]);
+		limit = atoi(argv[2]);
+		ndim = atoi(argv[3]);
 	} else {
-		printf("%s: SYNOPSIS: <number of runs> <ndim> <exactness>\n"
+		printf("%s: SYNOPSIS: <exactness> <number of runs> <ndim>\n"
 			"\n"
-			"\n\texactness\tinverse. so if you want 0.001, give 1000."
+			"\texactness: \thow detailled should we refine the search\n"
 			"\n", argv[0]);
 		exit(1);
 	}
@@ -67,6 +67,8 @@ int main(int argc, char ** argv) {
 	for (i = 0; i < limit; i++) {
 		coefficients = generate_coefficients(ndim);
 		start = get_random_uniform_vector(ndim);
+		gsl_vector_add_constant(start, -0.5);
+		gsl_vector_scale(start, 2);
 		count += find_local_maximum(ndim, exactness, start);
 		free_coefficients(ndim);
 		gsl_vector_free(start);

@@ -34,6 +34,7 @@ double f_read_from_stdin(gsl_vector * x) {
 		fprintf(stderr, "user aborted.\n");
 		exit(1);
 	}
+	fprintf(stderr, "%f\n", value);
 	return value;
 }
 
@@ -48,14 +49,14 @@ double f(gsl_vector * x) {
 void usage(char * progname) {
 	printf("%s: SYNOPSIS: <exactness> parameters...\n"
 		"\n"
-		"\texactness: \tinverse. so if you want 0.001, give 1000.\n"
+		"\texactness: \thow detailled should we refine the search\n"
 		"\tparameters:\teach parameter is a quadrupel of type, min, max, start\n"
 		"\t\ttype: i for integer, d for double\n"
 		"\t\tmin : lower bound of parameter values\n"
 		"\t\tmax : upperbound of parameter values\n"
 		"\t\tstart : starting point (0..1)\n"
 		"\n"
-		"example: %s 100 i -10 100 0 d 12.3 54 20\n"
+		"example: %s 0.001 i -10 100 0 d 12.3 54 20\n"
 		"\n", progname, progname);
 	exit(1);
 
@@ -67,7 +68,7 @@ int main(int argc, char ** argv) {
 	double exactness;
 	gsl_vector * start;
 	if (argc >= 2 + 4 * 1) {
-		exactness = 1.0 / atoi(argv[3]);
+		exactness = atof(argv[1]);
 		if ((argc - 2) % 4) {
 			fprintf(stderr, "%s: wrong number of arguments\n", argv[0]);
 			usage(argv[0]);
