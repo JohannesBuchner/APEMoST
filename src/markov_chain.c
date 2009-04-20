@@ -20,6 +20,8 @@ void reset_accept_rejects(mcmc * m) {
 		set_params_accepts_for(m, 0, i);
 		set_params_rejects_for(m, 0, i);
 	}
+	m->reject = 0;
+	m->accept = 0;
 }
 
 double abs_double(double x) {
@@ -160,6 +162,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			}
 		}
 	}
+	reset_accept_rejects(m);
 	debug("calibration of markov-chain done.");
 }
 
