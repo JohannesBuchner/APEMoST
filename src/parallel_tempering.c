@@ -119,7 +119,8 @@ double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 #endif
 	if (n_beta == 1)
 		return 1.0;
-	return BETA_DISTRIBUTION(i, n_beta, beta_0);
+	/* this reverts the order so that beta(0) = 1.0. */
+	return BETA_DISTRIBUTION(n_beta - i - 1, n_beta, beta_0);
 }
 
 void parallel_tempering(const char * params_filename,
@@ -210,6 +211,7 @@ void parallel_tempering(const char * params_filename,
 
 void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
+	unsigned int j;
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
 	FILE * acceptance_file = NULL;
@@ -252,6 +254,13 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				fprintf(acceptance_file, "%f\t",
 						(double) get_params_accepts_sum(sinmod[i])
 								/ (double) get_params_rejects_sum(sinmod[i]));
+				fprintf(acceptance_file, "%f\t",
+						sinmod[i]->accept * 1.0 / (sinmod[i]->accept + sinmod[i]->reject));
+				for (j = 0; j < get_n_par(sinmod[i]); j++) {
+					fprintf(acceptance_file, "%f\t",
+							(double) get_params_accepts_for(sinmod[i], j)
+									/ (double) get_params_rejects_for(sinmod[i], j));
+				}
 			}
 			fprintf(acceptance_file, "\n");
 			fflush(acceptance_file);

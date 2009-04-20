@@ -43,6 +43,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 
 	unsigned long iter = 0;
 	unsigned long subiter;
+	int nchecks_without_rescaling = 0;
+	int rescaled;
 
 	if (rat_limit < 0)
 		rat_limit = pow(0.25, 1.0 / get_n_par(m));
@@ -77,7 +79,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("Calibrating step widths ...(set cont=1 to abort)");
 	reset_accept_rejects(m);
 
-	while (iter < iter_limit && reached_perfection == 0) {
+	while (iter < iter_limit) {
 		for (i = 0; i < get_n_par(m); i++) {
 			markov_chain_step_for(m, i, 1);
 			mcmc_check_best(m);
@@ -104,6 +106,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
+			rescaled = 0;
 			for (i = 0; i < get_n_par(m); i++) {
 				IFDEBUG
 					printf(
@@ -115,17 +118,21 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 							m->params_step, i) / mul);
 					IFDEBUG
 						printf("\t scaling up   ^");
+					rescaled = 1;
 				}
 				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
 					gsl_vector_set(m->params_step, i, gsl_vector_get(
 							m->params_step, i) * mul);
 					IFDEBUG
 						printf("\t scaling down v");
+					rescaled = 1;
 				}
 				IFDEBUG
 					printf("\n");
 				dump_v("steps", m->params_step);
 			}
+			if (rescaled == 0)
+				nchecks_without_rescaling++;
 			restart_from_best(m);
 			reset_accept_rejects(m);
 			for (subiter = 0; subiter < 200; subiter++) {
@@ -135,14 +142,21 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			dump_v("New overall accept rate after reset", get_accept_rate(m));
 			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
 					- 0.23;
+			dump_d("Compared to desired rate", delta_reject_accept_t);
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				reached_perfection = 1;
+				debug("quitting calibration because we reached the desired acceptance rate");
+				break;
 			} else {
 				if (delta_reject_accept_t < 0) {
 					rat_limit /= 0.99;
 				} else {
 					rat_limit *= 0.99;
 				}
+			}
+			if (nchecks_without_rescaling > NO_RESCALING_LIMIT) {
+				debug("quitting calibration because we did not need to rescale for several times");
+				break;
 			}
 		}
 	}
