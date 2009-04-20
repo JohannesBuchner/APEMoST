@@ -211,7 +211,6 @@ void parallel_tempering(const char * params_filename,
 
 void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
-	unsigned int j;
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
 	FILE * acceptance_file = NULL;
@@ -255,15 +254,6 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 						sinmod[i]));
 				fprintf(acceptance_file, "%lu\t", get_params_rejects_sum(
 						sinmod[i]));
-				fprintf(acceptance_file, "%lu\t", sinmod[i]->accept);
-				fprintf(acceptance_file, "%lu\t", sinmod[i]->reject);
-				fprintf(acceptance_file, "\t");
-				for (j = 0; j < get_n_par(sinmod[i]); j++) {
-					fprintf(acceptance_file, "%lu\t",
-							get_params_accepts_for(sinmod[i], j));
-					fprintf(acceptance_file, "%lu\t",
-							get_params_rejects_for(sinmod[i], j));
-				}
 			}
 			fprintf(acceptance_file, "\n");
 			fflush(acceptance_file);
