@@ -251,15 +251,18 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 			}
 			fprintf(acceptance_file, "%lu\t", iter);
 			for (i = 0; i < n_beta; i++) {
-				fprintf(acceptance_file, "%f\t",
-						(double) get_params_accepts_sum(sinmod[i])
-								/ (double) get_params_rejects_sum(sinmod[i]));
-				fprintf(acceptance_file, "%f\t",
-						sinmod[i]->accept * 1.0 / (sinmod[i]->accept + sinmod[i]->reject));
+				fprintf(acceptance_file, "%lu\t", get_params_accepts_sum(
+						sinmod[i]));
+				fprintf(acceptance_file, "%lu\t", get_params_rejects_sum(
+						sinmod[i]));
+				fprintf(acceptance_file, "%lu\t", sinmod[i]->accept);
+				fprintf(acceptance_file, "%lu\t", sinmod[i]->reject);
+				fprintf(acceptance_file, "\t");
 				for (j = 0; j < get_n_par(sinmod[i]); j++) {
-					fprintf(acceptance_file, "%f\t",
-							(double) get_params_accepts_for(sinmod[i], j)
-									/ (double) get_params_rejects_for(sinmod[i], j));
+					fprintf(acceptance_file, "%lu\t",
+							get_params_accepts_for(sinmod[i], j));
+					fprintf(acceptance_file, "%lu\t",
+							get_params_rejects_for(sinmod[i], j));
 				}
 			}
 			fprintf(acceptance_file, "\n");
