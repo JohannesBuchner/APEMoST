@@ -147,16 +147,16 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			dump_d("Compared to desired rate", delta_reject_accept_t);
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				reached_perfection = 1;
-				debug("quitting calibration because we reached the desired acceptance rate");
-				break;
+				debug("calibration reached the desired acceptance rate");
 			} else {
+				reached_perfection = 0;
 				if (delta_reject_accept_t < 0) {
 					rat_limit /= 0.99;
 				} else {
 					rat_limit *= 0.99;
 				}
 			}
-			if (nchecks_without_rescaling > NO_RESCALING_LIMIT) {
+			if (nchecks_without_rescaling > NO_RESCALING_LIMIT && reached_perfection == 1) {
 				debug("quitting calibration because we did not need to rescale for several times");
 				break;
 			}

@@ -6,7 +6,7 @@
 #define DEFAULT_MUL 0.85
 #define DEFAULT_ADJUST_STEP 0.5
 #define DEFAULT_RAT_LIMIT -1 /* is calculated then */
-#define NO_RESCALING_LIMIT 100
+#define NO_RESCALING_LIMIT 15
 
 /**
  * create/calibrate the markov-chain
