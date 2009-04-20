@@ -212,11 +212,21 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
+	FILE * files[100];
+	char filename[255];
+
+	assert(n_beta < 100);
+
 	get_duration();
 	run = 1;
 	dumpflag = 0;
 	printf("starting the analysis\n");
 	fflush(stdout);
+	for (i = 0; i < n_beta; i++) {
+		sprintf(filename, "ar-%d.dump", i);
+		files[i] = fopen(filename, "w");
+		assert(filename != NULL);
+	}
 
 	while (run
 #ifdef MAX_ITERATIONS
@@ -241,6 +251,11 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				print_current_positions(sinmod, n_beta);
 				dumpflag = 0;
 			}
+			for (i = 0; i < n_beta; i++) {
+				fprintf(files[i], "%e\n", (double)get_params_accepts_sum(sinmod[i])
+						/ (double)get_params_rejects_sum(sinmod[i]));
+				fflush(files[i]);
+			}
 			IFDEBUG {
 				debug("dumping distribution");
 				dump_ul("iteration", iter);
@@ -255,6 +270,11 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				printf(" [%d/%lu ticks]\r", get_duration(), CLOCKS_PER_SEC);
 				fflush(stdout);
 			}
+		}
+	}
+	for (i = 0; i < n_beta; i++) {
+		if (fclose(files[i]) != 0) {
+			assert(0);
 		}
 	}
 	report(sinmod, n_beta);
