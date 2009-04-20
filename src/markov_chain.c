@@ -156,7 +156,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					rat_limit *= 0.99;
 				}
 			}
-			if (nchecks_without_rescaling > NO_RESCALING_LIMIT && reached_perfection == 1) {
+			if (nchecks_without_rescaling > NO_RESCALING_LIMIT
+					&& reached_perfection == 1 && rescaled == 0) {
 				debug("quitting calibration because we did not need to rescale for several times");
 				break;
 			}
