@@ -35,4 +35,9 @@ void markov_chain_step(mcmc * m, int calc_index);
  */
 void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index);
 
+/**
+ * adapts the step width
+ */
+void rmw_adapt_stepwidth(mcmc * m, double prob_old);
+
 #endif /* MCMC_MARKOV_CHAIN_H_ */

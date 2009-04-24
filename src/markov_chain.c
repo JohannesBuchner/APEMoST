@@ -261,27 +261,35 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 }
 
 #ifndef MINIMAL_STEPWIDTH
-#define MINIMAL_STEPWIDTH 0.001
+#define MINIMAL_STEPWIDTH 0.000001
 #endif
 #ifndef MAXIMAL_STEPWIDTH
 #define MAXIMAL_STEPWIDTH 0.75
 #endif
 
-void rmw(mcmc * m, double prob_old) {
+void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
 	unsigned int i;
 	double step;
+	double min;
+	double scale;
+	double max;
 	double alpha = exp(get_prob(m) - prob_old);
 	if (alpha > 1)
 		alpha = 1;
 	for (i = 0; i < get_n_par(m); i++) {
+		scale = (gsl_vector_get(m->params_max, i)
+				- gsl_vector_get(m->params_min, i));
+		min = MINIMAL_STEPWIDTH * scale;
+		max = MAXIMAL_STEPWIDTH * scale;
+
 		step = gsl_vector_get(get_steps(m), i);
-		step += get_next_uniform_random(m) / sqrt(m->n_iter) * (alpha - 0.234);
-		if (step < MINIMAL_STEPWIDTH)
-			step = MINIMAL_STEPWIDTH;
-		if (step > MAXIMAL_STEPWIDTH)
-			step = MAXIMAL_STEPWIDTH;
-		IFDEBUG
-			printf("RMW: set step width of %d to %f\n", i, step);
+		step += get_next_uniform_random(m) / sqrt(m->n_iter) * (alpha - 0.234)
+				* scale;
+		;
+		if (step < min)
+			step = min;
+		if (step > max)
+			step = max;
 		gsl_vector_set(get_steps(m), i, step);
 	}
 }
@@ -307,9 +315,4 @@ void markov_chain_step(mcmc * m, int calc_index) {
 		set_params(m, old_values);
 		inc_params_rejects(m);
 	}
-
-#ifdef RMW
-	rmw(m, prob_old);
-#endif
-
 }

@@ -65,7 +65,7 @@ void report(mcmc ** sinmod, int n_beta) {
 	int i;
 	char buf[100];
 	print_current_positions(sinmod, n_beta);
-	printf("writing out visited parameters ");
+	printf("\nwriting out visited parameters ");
 	for (i = 0; i < n_beta; i++) {
 		printf(".");
 		sprintf(buf, "-chain%d", i);
@@ -214,7 +214,9 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
 	FILE * acceptance_file = NULL;
-
+#ifdef RMW
+	double prob_old[100];
+#endif
 	assert(n_beta < 100);
 
 	get_duration();
@@ -238,6 +240,26 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				mcmc_append_current_parameters(sinmod[i]);
 			}
 		}
+#ifdef RMW
+		for (i = 0; i < n_beta; i++) {
+			prob_old[i] = get_prob(sinmod[i]);
+			markov_chain_step(sinmod[i], 0);
+			rmw_adapt_stepwidth(sinmod[i], prob_old[i]);
+		}
+#endif
+#ifdef ADAPT
+		for (i = 0; i < n_beta; i++) {
+			if (get_params_accepts_sum(sinmod[i]) * 1.0
+					/ get_params_rejects_sum(sinmod[i]) < 0.23 - 0.05) {
+				debug("too little accepts, scaling down");
+				gsl_vector_scale(get_steps(sinmod[i]), 0.99);
+			} else if (get_params_accepts_sum(sinmod[i]) * 1.0
+					/ get_params_rejects_sum(sinmod[i]) > 0.23 + 0.05) {
+				debug("too many accepts, scaling up");
+				gsl_vector_scale(get_steps(sinmod[i]), 1/ 0.99);
+			}
+		}
+#endif
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
 		/* TODO: add continuous dumping */
