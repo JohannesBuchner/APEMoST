@@ -1,6 +1,7 @@
 #include "mcmc.h"
 #include "gsl_helper.h"
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf.h>
 
 long get_params_accepts_sum(const mcmc * m) {
@@ -210,9 +211,15 @@ void set_steps_all(mcmc * m, const double * new_steps) {
 	}
 }
 
-double get_next_urandom(const mcmc * m) {
+double get_next_uniform_plusminus_random(const mcmc * m) {
+	return 2* get_next_uniform_random (m) - 1;
+}
+double get_next_uniform_random(const mcmc * m) {
 	return gsl_rng_uniform(get_random(m));
 }
+double get_next_gauss_random(const mcmc * m, double sigma) {
+	return gsl_ran_gaussian(get_random(m), sigma);
+}
 double get_next_alog_urandom(const mcmc * m) {
-	return gsl_sf_log(get_next_urandom(m));
+	return gsl_sf_log(get_next_uniform_random(m));
 }

@@ -162,7 +162,7 @@ int test_random(void) {
 	int i;
 	for (i = 0; i < 10; i++) {
 		last_v = v;
-		v = get_next_urandom(m);
+		v = get_next_uniform_random(m);
 		ASSERT( v != last_v, "v != last_v");
 		ASSERT( v >= 0, "v >= 0");
 		ASSERT( v <= 1, "v <= 1");

@@ -181,11 +181,11 @@ double mod_double(double x, double div) {
 void do_step_for(mcmc * m, unsigned int i) {
 	double step = gsl_vector_get(m->params_step, i);
 	double old_value = gsl_vector_get(m->params, i);
-	/* TODO: next line should be a ran_gauss(step) + old_value IMO */
-	double new_value = old_value + (2* get_next_urandom (m) - 1) * step;
+	double new_value = old_value + get_next_gauss_random(m, step);
 	double max = gsl_vector_get(m->params_max, i);
 	double min = gsl_vector_get(m->params_min, i);
 	/* dump_d("Jumping from", old_value); */
+
 	if (new_value > max)
 		new_value = max - mod_double(new_value - max, max - min);
 	else if (new_value < min)
@@ -275,7 +275,7 @@ void rmw(mcmc * m, double prob_old) {
 		alpha = 1;
 	for (i = 0; i < get_n_par(m); i++) {
 		step = gsl_vector_get(get_steps(m), i);
-		step += get_next_urandom(m) / sqrt(m->n_iter) * (alpha - 0.234);
+		step += get_next_uniform_random(m) / sqrt(m->n_iter) * (alpha - 0.234);
 		if (step < MINIMAL_STEPWIDTH)
 			step = MINIMAL_STEPWIDTH;
 		if (step > MAXIMAL_STEPWIDTH)
