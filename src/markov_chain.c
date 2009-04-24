@@ -181,6 +181,7 @@ double mod_double(double x, double div) {
 void do_step_for(mcmc * m, unsigned int i) {
 	double step = gsl_vector_get(m->params_step, i);
 	double old_value = gsl_vector_get(m->params, i);
+	/* TODO: next line should be a ran_gauss(step) + old_value IMO */
 	double new_value = old_value + (2* get_next_urandom (m) - 1) * step;
 	double max = gsl_vector_get(m->params_max, i);
 	double min = gsl_vector_get(m->params_min, i);
@@ -192,6 +193,7 @@ void do_step_for(mcmc * m, unsigned int i) {
 	/* dump_d("To", new_value); */
 	set_params_for(m, new_value, i);
 }
+
 void do_step(mcmc * m) {
 	unsigned int i;
 	for (i = 0; i < get_n_par(m); i++) {
@@ -258,6 +260,32 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 	}
 }
 
+#ifndef MINIMAL_STEPWIDTH
+#define MINIMAL_STEPWIDTH 0.001
+#endif
+#ifndef MAXIMAL_STEPWIDTH
+#define MAXIMAL_STEPWIDTH 0.75
+#endif
+
+void rmw(mcmc * m, double prob_old) {
+	unsigned int i;
+	double step;
+	double alpha = exp(get_prob(m) - prob_old);
+	if (alpha > 1)
+		alpha = 1;
+	for (i = 0; i < get_n_par(m); i++) {
+		step = gsl_vector_get(get_steps(m), i);
+		step += get_next_urandom(m) / sqrt(m->n_iter) * (alpha - 0.234);
+		if (step < MINIMAL_STEPWIDTH)
+			step = MINIMAL_STEPWIDTH;
+		if (step > MAXIMAL_STEPWIDTH)
+			step = MAXIMAL_STEPWIDTH;
+		IFDEBUG
+			printf("RMW: set step width of %d to %f\n", i, step);
+		gsl_vector_set(get_steps(m), i, step);
+	}
+}
+
 void markov_chain_step(mcmc * m, int calc_index) {
 	double prob_old = get_prob(m);
 	gsl_vector * old_model = dup_vector(m->model);
@@ -279,4 +307,9 @@ void markov_chain_step(mcmc * m, int calc_index) {
 		set_params(m, old_values);
 		inc_params_rejects(m);
 	}
+
+#ifdef RMW
+	rmw(m, prob_old);
+#endif
+
 }
