@@ -13,8 +13,10 @@ gsl_vector ** generate_coefficients(unsigned int dimensions) {
 		c[i] = get_random_uniform_vector(order);
 		gsl_vector_add_constant(c[i], -0.5);
 		gsl_vector_scale(c[i], 20);
-		printf("  coeff %d: ", i);
-		dump_vectorln(c[i]);
+		IFDEBUG {
+			printf("  coeff %d: ", i);
+			dump_vectorln(c[i]);
+		}
 	}
 	return c;
 }
@@ -47,6 +49,7 @@ void free_coefficients(unsigned int ndim) {
 
 int main(int argc, char ** argv) {
 	unsigned int i;
+	long sum = 0;
 	long count = 0;
 	unsigned int limit;
 	unsigned int ndim;
@@ -69,11 +72,18 @@ int main(int argc, char ** argv) {
 		start = get_random_uniform_vector(ndim);
 		gsl_vector_add_constant(start, -0.5);
 		gsl_vector_scale(start, 2);
-		count += find_local_maximum(ndim, exactness, start);
+		count = find_local_maximum(ndim, exactness, start);
+#ifdef WORSTCASE
+		if (count > sum) {
+			sum = count;
+		}
+#else
+		sum += count;
+#endif
 		free_coefficients(ndim);
 		gsl_vector_free(start);
 	}
 	gsl_rng_free(get_rng_instance());
-	printf("%lu steps\n", count);
+	printf("%lu steps\n", sum);
 	return 0;
 }

@@ -11,6 +11,14 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
+#ifndef ZOOM_IN_FACTOR
+#define ZOOM_IN_FACTOR 0.172
+#endif
+
+#ifndef START_SCALE
+#define START_SCALE 1.0
+#endif
+
 gsl_rng * rng;
 
 void setup_rng() {
@@ -72,11 +80,13 @@ void limit(gsl_vector * v) {
 	gsl_vector_free(high);
 }
 #ifndef RANDOM_SCALE_CIRCLE_JUMP
-#ifdef ADAPTIVE
-#define RANDOM_SCALE_CIRCLE_JUMP 1.83
+	#ifdef ADAPTIVE
+	#define RANDOM_SCALE_CIRCLE_JUMP 1.83
+	#else
+	#define RANDOM_SCALE_CIRCLE_JUMP 1.0
+	#endif
 #else
-#define RANDOM_SCALE_CIRCLE_JUMP 1.0
-#endif
+	#define RANDOM_SCALE_CIRCLE_JUMP 1.0
 #endif
 #ifndef JUMP_SCALE
 #define JUMP_SCALE 1.0
@@ -143,7 +153,7 @@ int find_local_maximum_multi(unsigned int ndim, double exactness,
 	/* did we switch direction in the last move? */
 	gsl_vector * flaps = gsl_vector_alloc(ndim);
 	gsl_vector * probe_values = gsl_vector_alloc(ndim);
-	gsl_vector_set_all(scales, 1.0 / 3);
+	gsl_vector_set_all(scales, START_SCALE);
 	gsl_vector_set_all(flaps, 0);
 	assert(exactness < 1);
 
@@ -239,7 +249,7 @@ int find_local_maximum_multi(unsigned int ndim, double exactness,
 				gsl_vector_free(current_x);
 				return count;
 			}
-			gsl_vector_scale(scales, 0.5);
+			gsl_vector_scale(scales, ZOOM_IN_FACTOR);
 			gsl_vector_set_all(flaps, 0);
 			dump_d("new exactness (min)", gsl_vector_min(scales));
 			dump_d("new exactness (max)", gsl_vector_max(scales));
@@ -262,7 +272,7 @@ int find_local_maximum_naive(unsigned int ndim, double exactness,
 	/* did we switch direction in the last move? */
 	int flaps = 0;
 	double probe_value;
-	gsl_vector_set_all(scales, 1.0 / 3);
+	gsl_vector_set_all(scales, START_SCALE);
 
 	current_val = f(current_x);
 	count++;
@@ -326,7 +336,7 @@ int find_local_maximum_naive(unsigned int ndim, double exactness,
 					gsl_vector_free(next_probe);
 					return count;
 				}
-				gsl_vector_scale(scales, 0.5);
+				gsl_vector_scale(scales, ZOOM_IN_FACTOR);
 				flaps = 0;
 				dump_d("new exactness (min)", gsl_vector_min(scales));
 				dump_d("new exactness (max)", gsl_vector_max(scales));
