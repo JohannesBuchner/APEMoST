@@ -1,8 +1,19 @@
 #include "climber.c"
+#include <math.h>
 
+#ifdef ROSENBROCK
+/*#define FORMULA -(pow(0.75-x,2)+100*pow(y-x*x,2))*/
+#define FORMULA -(-1.5*x + x*x + 100*y*y - 200*x*x*y + 100*x*x*x*x)
+#endif
 
-double f(gsl_vector * x) {
-	return -(gsl_vector_get(x, 0)*gsl_vector_get(x, 0) + gsl_vector_get(x, 1)*gsl_vector_get(x, 1));
+#ifndef FORMULA
+#define FORMULA -(x*x + y*y)
+#endif
+
+double f(gsl_vector * v) {
+	double x = gsl_vector_get(v, 0);
+	double y = gsl_vector_get(v, 1);
+	return FORMULA;
 }
 
 int main(int argc, char ** argv) {
@@ -21,8 +32,6 @@ int main(int argc, char ** argv) {
 	}
 	setup_rng();
 	start = get_random_uniform_vector(2);
-	gsl_vector_add_constant(start, -0.5);
-	gsl_vector_scale(start, 2);
 	count = find_local_maximum(2, exactness, start);
 	printf("%lu steps\n", count);
 	gsl_vector_free(start);
