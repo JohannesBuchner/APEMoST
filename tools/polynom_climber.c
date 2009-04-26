@@ -1,6 +1,6 @@
 #include "climber.c"
 
-gsl_vector ** coefficients;
+gsl_vector ** coefficients = NULL;
 
 gsl_vector ** generate_coefficients(unsigned int dimensions) {
 	unsigned int i;
@@ -12,7 +12,7 @@ gsl_vector ** generate_coefficients(unsigned int dimensions) {
 		assert(order <= 10);
 		c[i] = get_random_uniform_vector(order);
 		gsl_vector_add_constant(c[i], -0.5);
-		gsl_vector_scale(c[i], 20);
+		gsl_vector_scale(c[i], 2000);
 		IFDEBUG {
 			printf("  coeff %d: ", i);
 			dump_vectorln(c[i]);
@@ -47,6 +47,38 @@ void free_coefficients(unsigned int ndim) {
 	free(coefficients);
 }
 
+char * get_var_name(int n) {
+	char * name;
+	if (n == 0)
+		return "x";
+	if (n == 1)
+		return "y";
+	if (n == 2)
+		return "z";
+	name = (char *) calloc(100, sizeof(char));
+	sprintf(name, "x%d", n);
+	return name;
+}
+
+void print_coefficients(unsigned int ndim, gsl_vector ** c, gsl_vector * start,gsl_vector * end,
+		long count) {
+	unsigned int i, j;
+
+	printf("new worst case (%li): start: ", count);
+	dump_vectorln(start);
+	for (i = 0; i < ndim; i++) {
+		printf("  coeff %d: ", i);
+		for (j = 0; j < c[i]->size - 1; j++) {
+			printf("%f*%s**%d + ", gsl_vector_get(c[i], j), get_var_name(i), j);
+		}
+		printf("%f*%s**%d\n", gsl_vector_get(c[i], c[i]->size - 1),
+				get_var_name(i), j);
+	}
+	printf("found optimum at: ");
+	dump_vectorln(end);
+	printf("\n");
+}
+
 int main(int argc, char ** argv) {
 	unsigned int i;
 	long sum = 0;
@@ -55,6 +87,7 @@ int main(int argc, char ** argv) {
 	unsigned int ndim;
 	double exactness;
 	gsl_vector * start;
+	gsl_vector * end;
 	if (argc == 4) {
 		exactness = atof(argv[1]);
 		limit = atoi(argv[2]);
@@ -68,19 +101,22 @@ int main(int argc, char ** argv) {
 	}
 	setup_rng();
 	for (i = 0; i < limit; i++) {
-		coefficients = generate_coefficients(ndim);
+		if (i % 100 == 0) {
+			if (coefficients != NULL)
+				free_coefficients(ndim);
+			coefficients = generate_coefficients(ndim);
+		}
 		start = get_random_uniform_vector(ndim);
-		gsl_vector_add_constant(start, -0.5);
-		gsl_vector_scale(start, 2);
-		count = find_local_maximum(ndim, exactness, start);
+		end = dup_vector(start);
+		count = find_local_maximum(ndim, exactness, end);
 #ifdef WORSTCASE
 		if (count > sum) {
 			sum = count;
+			print_coefficients(ndim, coefficients, start, end, count);
 		}
 #else
 		sum += count;
 #endif
-		free_coefficients(ndim);
 		gsl_vector_free(start);
 	}
 	gsl_rng_free(get_rng_instance());
