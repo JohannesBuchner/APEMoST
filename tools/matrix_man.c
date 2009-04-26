@@ -62,7 +62,7 @@ int qualifies_parse(int i, char * qualification_in) {
 	int result = -1;
 
 	qualification = (char*) calloc(len + 1, sizeof(char));
-	if(qualification == NULL) {
+	if (qualification == NULL) {
 		perror("could not allocate buffer");
 		exit(-1);
 	}
@@ -91,25 +91,25 @@ int qualifies_parse(int i, char * qualification_in) {
 		IFDEBUG
 			printf("DEBUG: qual: relation\n");
 		if (qualification[tokens[0]] == '<') {
-			if (atoi(&qualification[tokens[0] + 1]) < i) {
+			if (i + 1 < atoi(&qualification[tokens[0] + 1])) {
 				result = 1;
 			} else {
 				result = 0;
 			}
 		} else if (qualification[tokens[0]] == '>') {
-			if (i > atoi(&qualification[tokens[0] + 1])) {
+			if (i + 1 > atoi(&qualification[tokens[0] + 1])) {
 				result = 1;
 			} else {
 				result = 0;
 			}
 		} else if (qualification[tokens[0]] == '=') {
-			if (i == atoi(&qualification[tokens[0] + 1])) {
+			if (i + 1 == atoi(&qualification[tokens[0] + 1])) {
 				result = 1;
 			} else {
 				result = 0;
 			}
 		} else if (qualification[tokens[0]] == '/') {
-			if (i != atoi(&qualification[tokens[0] + 1])) {
+			if (i + 1 != atoi(&qualification[tokens[0] + 1])) {
 				result = 1;
 			} else {
 				result = 0;
@@ -226,11 +226,11 @@ void command_add(int count, gsl_vector * current, char * qualification_source,
 			target = i;
 		}
 	}
-	if(source == -1) {
+	if (source == -1) {
 		fprintf(stderr, "no source match\n");
 		exit(-1);
 	}
-	if(target == -1) {
+	if (target == -1) {
 		fprintf(stderr, "no target match\n");
 		exit(-1);
 	}
@@ -288,11 +288,11 @@ void command_mul(int count, gsl_vector * current, char * qualification_source,
 			target = i;
 		}
 	}
-	if(source == -1) {
+	if (source == -1) {
 		fprintf(stderr, "no source match\n");
 		exit(-1);
 	}
-	if(target == -1) {
+	if (target == -1) {
 		fprintf(stderr, "no target match\n");
 		exit(-1);
 	}
@@ -354,6 +354,8 @@ void row_man(int argc, char ** argv) {
 		line++;
 		current = gsl_vector_alloc(100);
 		fgets(buf, 10000, input);
+		if (feof(input))
+			break;
 		count = 0;
 		i = 0;
 		at_whitespace = 1;
