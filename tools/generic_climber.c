@@ -4,7 +4,6 @@ gsl_vector * min;
 gsl_vector * max;
 gsl_vector_int * round;
 
-
 void print_real_vector(gsl_vector * x) {
 	double realval;
 	unsigned int i;
@@ -67,33 +66,32 @@ int main(int argc, char ** argv) {
 	unsigned int ndim;
 	double exactness;
 	gsl_vector * start;
-	if (argc >= 2 + 4 * 1) {
-		exactness = atof(argv[1]);
-		if ((argc - 2) % 4) {
-			fprintf(stderr, "%s: wrong number of arguments\n", argv[0]);
-			usage(argv[0]);
-		}
-		ndim = (argc - 2) / 4;
-		round = gsl_vector_int_alloc(ndim);
-		min = gsl_vector_alloc(ndim);
-		max = gsl_vector_alloc(ndim);
-		start = gsl_vector_alloc(ndim);
-
-		for (i = 0; i < ndim; i++) {
-			if (strcmp(argv[2 + i * 4], "i") == 0)
-				gsl_vector_int_set(round, i, 1);
-			else if (strcmp(argv[2 + i * 4], "d") == 0)
-				gsl_vector_int_set(round, i, 0);
-			else
-				usage(argv[0]);
-			gsl_vector_set(min, i, atof(argv[2 + i * 4 + 1]));
-			gsl_vector_set(max, i, atof(argv[2 + i * 4 + 2]));
-			gsl_vector_set(start, i, (atof(argv[2 + i * 4 + 3])
-					- gsl_vector_get(min, i)) / (gsl_vector_get(max, i)
-					- gsl_vector_get(min, i)));
-		}
-	} else {
+	if (argc < 2 + 4 * 1) {
 		usage(argv[0]);
+		return 1;
+	}
+	exactness = atof(argv[1]);
+	if ((argc - 2) % 4) {
+		fprintf(stderr, "%s: wrong number of arguments\n", argv[0]);
+		usage(argv[0]);
+	}
+	ndim = (argc - 2) / 4;
+	round = gsl_vector_int_alloc(ndim);
+	min = gsl_vector_alloc(ndim);
+	max = gsl_vector_alloc(ndim);
+	start = gsl_vector_alloc(ndim);
+
+	for (i = 0; i < ndim; i++) {
+		if (strcmp(argv[2 + i * 4], "i") == 0)
+			gsl_vector_int_set(round, i, 1);
+		else if (strcmp(argv[2 + i * 4], "d") == 0)
+			gsl_vector_int_set(round, i, 0);
+		else
+			usage(argv[0]);
+		gsl_vector_set(min, i, atof(argv[2 + i * 4 + 1]));
+		gsl_vector_set(max, i, atof(argv[2 + i * 4 + 2]));
+		gsl_vector_set(start, i, (atof(argv[2 + i * 4 + 3]) - gsl_vector_get(
+				min, i)) / (gsl_vector_get(max, i) - gsl_vector_get(min, i)));
 	}
 	setup_rng();
 
