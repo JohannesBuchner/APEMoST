@@ -30,6 +30,14 @@ long get_params_rejects_for(const mcmc * m, const int i) {
 	return m->params_rejects[i];
 }
 
+unsigned long get_params_accepts_global(const mcmc * m) {
+	return m->accept;
+}
+
+unsigned long get_params_rejects_global(const mcmc * m) {
+	return m->reject;
+}
+
 gsl_vector * get_vector_from_array(const long * array, const unsigned int size) {
 	unsigned int i;
 	gsl_vector * v = gsl_vector_alloc(size);

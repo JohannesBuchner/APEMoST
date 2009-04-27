@@ -71,7 +71,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("Calibrating step widths ...(set cont=1 to abort)");
 	reset_accept_rejects(m);
 
-	while (iter < iter_limit) {
+	while (1) {
 		for (i = 0; i < get_n_par(m); i++) {
 			markov_chain_step_for(m, i, 1);
 			mcmc_check_best(m);
@@ -150,6 +150,11 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					&& reached_perfection == 1 && rescaled == 0) {
 				debug("quitting calibration because we did not need to rescale for several times");
 				break;
+			}
+			if (iter > iter_limit) {
+				dump_i("calibration failed: limit of %d iterations reached.",
+						iter_limit);
+				exit(1);
 			}
 		}
 	}
@@ -251,10 +256,10 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 }
 
 #ifndef MINIMAL_STEPWIDTH
-#define MINIMAL_STEPWIDTH 0.000001
+#define MINIMAL_STEPWIDTH 0.0000001
 #endif
 #ifndef MAXIMAL_STEPWIDTH
-#define MAXIMAL_STEPWIDTH 0.75
+#define MAXIMAL_STEPWIDTH 1000000
 #endif
 
 void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
@@ -267,8 +272,8 @@ void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
 	if (alpha > 1)
 		alpha = 1;
 	for (i = 0; i < get_n_par(m); i++) {
-		scale = (gsl_vector_get(m->params_max, i)
-				- gsl_vector_get(m->params_min, i));
+		scale = (gsl_vector_get(m->params_max, i) - gsl_vector_get(
+				m->params_min, i));
 		min = MINIMAL_STEPWIDTH * scale;
 		max = MAXIMAL_STEPWIDTH * scale;
 
