@@ -249,14 +249,22 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 #endif
 #ifdef ADAPT
 		for (i = 0; i < n_beta; i++) {
+			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
+					sinmod[i]) < 10000) {
+				continue;
+			}
 			if (get_params_accepts_sum(sinmod[i]) * 1.0
 					/ get_params_rejects_sum(sinmod[i]) < 0.23 - 0.05) {
-				dump_i("too little accepts, scaling down", i);
+				dump_i("too few accepts, scaling down", i);
 				gsl_vector_scale(get_steps(sinmod[i]), 0.99);
 			} else if (get_params_accepts_sum(sinmod[i]) * 1.0
 					/ get_params_rejects_sum(sinmod[i]) > 0.23 + 0.05) {
 				dump_i("too many accepts, scaling up", i);
-				gsl_vector_scale(get_steps(sinmod[i]), 1/ 0.99);
+				gsl_vector_scale(get_steps(sinmod[i]), 1 / 0.99);
+			}
+			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
+					sinmod[i]) > 20000) {
+				reset_accept_rejects(sinmod[i]);
 			}
 		}
 #endif

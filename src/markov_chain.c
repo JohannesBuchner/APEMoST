@@ -14,16 +14,6 @@ void restart_from_best(mcmc * m) {
 	set_prob(m, -1E7);
 }
 
-void reset_accept_rejects(mcmc * m) {
-	unsigned int i;
-	for (i = 0; i < get_n_par(m); i++) {
-		set_params_accepts_for(m, 0, i);
-		set_params_rejects_for(m, 0, i);
-	}
-	m->reject = 0;
-	m->accept = 0;
-}
-
 double abs_double(double x) {
 	if (x < 0)
 		return -x;

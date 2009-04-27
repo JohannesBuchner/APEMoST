@@ -49,6 +49,11 @@ void inc_params_accepts_for(mcmc * m, const unsigned int i);
 void inc_params_rejects_for(mcmc * m, const unsigned int i);
 void inc_params_accepts(mcmc * m);
 void inc_params_rejects(mcmc * m);
+/**
+ * restart counting
+ */
+void reset_accept_rejects(mcmc * m);
+
 
 /**
  * get next random number (uniformly distributed between 0 and 1)
