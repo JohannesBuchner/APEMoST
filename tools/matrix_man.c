@@ -10,6 +10,8 @@
 #define SEP '\t'
 #define OUTPUTFORMAT "%e\t"
 
+char * outputformat = "%e\t";
+
 #ifdef DEBUG
 #define IFDEBUG if(1)
 #else
@@ -40,10 +42,10 @@ void usage(char * progname) {
 		"\tmulc <i> <v>     multiply i with the value v\n"
 		"\tmul_rel <i> <o>  multiply the value in column i+o onto i\n");
 	printf("\n"
-		"\tfor any column number a column selection can be given:"
-		"\t\ti%%2=0,i>3,i<2,i=2,i/4\n"
-		"\t, acts as a boolean 'and'. / means unequal. \n"
-		"\tabove, o is always a offset number\n"
+		"For any column number a column selection can be given:\n"
+		"\ti%%2=0,i>3,i<2,i=2,i/4\n"
+		"The character ',' acts as a boolean 'and'. '/' means unequal. \n"
+		"above, o is always a offset number\n"
 		"\n");
 	exit(1);
 
@@ -154,7 +156,7 @@ void command_rm(int count, gsl_vector * current, char * qualification) {
 	int i;
 	for (i = 0; i < count; i++) {
 		if (!qualifies(i, qualification))
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 	}
 	printf("\n");
 	fflush(stdout);
@@ -163,9 +165,9 @@ void command_inva(int count, gsl_vector * current, char * qualification) {
 	int i;
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification))
-			printf(OUTPUTFORMAT, -gsl_vector_get(current, i));
+			printf(outputformat, -gsl_vector_get(current, i));
 		else
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 	}
 	printf("\n");
 	fflush(stdout);
@@ -174,9 +176,9 @@ void command_invm(int count, gsl_vector * current, char * qualification) {
 	int i;
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification))
-			printf(OUTPUTFORMAT, 1.0 / gsl_vector_get(current, i));
+			printf(outputformat, 1.0 / gsl_vector_get(current, i));
 		else
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 	}
 	printf("\n");
 	fflush(stdout);
@@ -186,10 +188,10 @@ void command_diff(int count, gsl_vector * prev, gsl_vector * current,
 	int i;
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification))
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) - gsl_vector_get(
+			printf(outputformat, gsl_vector_get(current, i) - gsl_vector_get(
 					prev, i));
 		else
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 	}
 	printf("\n");
 	fflush(stdout);
@@ -200,15 +202,15 @@ void command_new(int count, gsl_vector * current, char * qualification) {
 	int i;
 	for (i = 0; i < count; i++) {
 		if (qualifies(i + offset, qualification)) {
-			printf(OUTPUTFORMAT, 0.0);
+			printf(outputformat, 0.0);
 			offset++;
 			i--;
 		} else {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 		}
 	}
 	if (qualifies(i, qualification))
-		printf(OUTPUTFORMAT, 0.0);
+		printf(outputformat, 0.0);
 
 	printf("\n");
 	fflush(stdout);
@@ -236,10 +238,10 @@ void command_add(int count, gsl_vector * current, char * qualification_source,
 	}
 	for (i = 0; i < count; i++) {
 		if (i == target)
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) + gsl_vector_get(
+			printf(outputformat, gsl_vector_get(current, i) + gsl_vector_get(
 					current, source));
 		else
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 	}
 	printf("\n");
 	fflush(stdout);
@@ -250,10 +252,10 @@ void command_add_rel(int count, gsl_vector * current,
 	int offset = atoi(offset_str);
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification_source)) {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) + gsl_vector_get(
+			printf(outputformat, gsl_vector_get(current, i) + gsl_vector_get(
 					current, i + offset));
 		} else {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 		}
 	}
 	printf("\n");
@@ -267,9 +269,9 @@ void command_addc(int count, gsl_vector * current, char * qualification_source,
 	sscanf(value_str, "%lf", &value);
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification_source)) {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) + value);
+			printf(outputformat, gsl_vector_get(current, i) + value);
 		} else {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 		}
 	}
 	printf("\n");
@@ -298,10 +300,10 @@ void command_mul(int count, gsl_vector * current, char * qualification_source,
 	}
 	for (i = 0; i < count; i++) {
 		if (i == target)
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) * gsl_vector_get(
+			printf(outputformat, gsl_vector_get(current, i) * gsl_vector_get(
 					current, source));
 		else
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 	}
 	printf("\n");
 	fflush(stdout);
@@ -312,10 +314,10 @@ void command_mul_rel(int count, gsl_vector * current,
 	int offset = atoi(offset_str);
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification_source)) {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) * gsl_vector_get(
+			printf(outputformat, gsl_vector_get(current, i) * gsl_vector_get(
 					current, i + offset));
 		} else {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 		}
 	}
 	printf("\n");
@@ -328,9 +330,9 @@ void command_mulc(int count, gsl_vector * current, char * qualification_source,
 	sscanf(value_str, "%lf", &value);
 	for (i = 0; i < count; i++) {
 		if (qualifies(i, qualification_source)) {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i) * value);
+			printf(outputformat, gsl_vector_get(current, i) * value);
 		} else {
-			printf(OUTPUTFORMAT, gsl_vector_get(current, i));
+			printf(outputformat, gsl_vector_get(current, i));
 		}
 	}
 	printf("\n");
@@ -430,6 +432,13 @@ int main(int argc, char ** argv) {
 		fprintf(stderr, "Wrong number of arguments\n");
 		usage(argv[0]);
 	} else {
+		if (strcmp(argv[1], "-f") == 0) {
+			outputformat = argv[2];
+
+			argc -= 2;
+			argv += 2;
+		}
+
 		row_man(argc, argv);
 	}
 
