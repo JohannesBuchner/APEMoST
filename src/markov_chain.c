@@ -20,6 +20,8 @@ void reset_accept_rejects(mcmc * m) {
 		set_params_accepts_for(m, 0, i);
 		set_params_rejects_for(m, 0, i);
 	}
+	m->reject = 0;
+	m->accept = 0;
 }
 
 double abs_double(double x) {
@@ -43,6 +45,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 
 	unsigned long iter = 0;
 	unsigned long subiter;
+	int nchecks_without_rescaling = 0;
+	int rescaled;
 
 	if (rat_limit < 0)
 		rat_limit = pow(0.25, 1.0 / get_n_par(m));
@@ -77,7 +81,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("Calibrating step widths ...(set cont=1 to abort)");
 	reset_accept_rejects(m);
 
-	while (iter < iter_limit && reached_perfection == 0) {
+	while (iter < iter_limit) {
 		for (i = 0; i < get_n_par(m); i++) {
 			markov_chain_step_for(m, i, 1);
 			mcmc_check_best(m);
@@ -104,6 +108,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
+			rescaled = 0;
 			for (i = 0; i < get_n_par(m); i++) {
 				IFDEBUG
 					printf(
@@ -115,17 +120,21 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 							m->params_step, i) / mul);
 					IFDEBUG
 						printf("\t scaling up   ^");
+					rescaled = 1;
 				}
 				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
 					gsl_vector_set(m->params_step, i, gsl_vector_get(
 							m->params_step, i) * mul);
 					IFDEBUG
 						printf("\t scaling down v");
+					rescaled = 1;
 				}
 				IFDEBUG
 					printf("\n");
 				dump_v("steps", m->params_step);
 			}
+			if (rescaled == 0)
+				nchecks_without_rescaling++;
 			restart_from_best(m);
 			reset_accept_rejects(m);
 			for (subiter = 0; subiter < 200; subiter++) {
@@ -135,17 +144,26 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			dump_v("New overall accept rate after reset", get_accept_rate(m));
 			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
 					- 0.23;
+			dump_d("Compared to desired rate", delta_reject_accept_t);
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				reached_perfection = 1;
+				debug("calibration reached the desired acceptance rate");
 			} else {
+				reached_perfection = 0;
 				if (delta_reject_accept_t < 0) {
 					rat_limit /= 0.99;
 				} else {
 					rat_limit *= 0.99;
 				}
 			}
+			if (nchecks_without_rescaling > NO_RESCALING_LIMIT
+					&& reached_perfection == 1 && rescaled == 0) {
+				debug("quitting calibration because we did not need to rescale for several times");
+				break;
+			}
 		}
 	}
+	reset_accept_rejects(m);
 	debug("calibration of markov-chain done.");
 }
 
@@ -163,10 +181,11 @@ double mod_double(double x, double div) {
 void do_step_for(mcmc * m, unsigned int i) {
 	double step = gsl_vector_get(m->params_step, i);
 	double old_value = gsl_vector_get(m->params, i);
-	double new_value = old_value + (2* get_next_urandom (m) - 1) * step;
+	double new_value = old_value + get_next_gauss_random(m, step);
 	double max = gsl_vector_get(m->params_max, i);
 	double min = gsl_vector_get(m->params_min, i);
 	/* dump_d("Jumping from", old_value); */
+
 	if (new_value > max)
 		new_value = max - mod_double(new_value - max, max - min);
 	else if (new_value < min)
@@ -174,6 +193,7 @@ void do_step_for(mcmc * m, unsigned int i) {
 	/* dump_d("To", new_value); */
 	set_params_for(m, new_value, i);
 }
+
 void do_step(mcmc * m) {
 	unsigned int i;
 	for (i = 0; i < get_n_par(m); i++) {
@@ -237,6 +257,40 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 		revert(m, old_model, prob_old);
 		set_params_for(m, old_value, index);
 		inc_params_rejects_for(m, index);
+	}
+}
+
+#ifndef MINIMAL_STEPWIDTH
+#define MINIMAL_STEPWIDTH 0.000001
+#endif
+#ifndef MAXIMAL_STEPWIDTH
+#define MAXIMAL_STEPWIDTH 0.75
+#endif
+
+void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
+	unsigned int i;
+	double step;
+	double min;
+	double scale;
+	double max;
+	double alpha = exp(get_prob(m) - prob_old);
+	if (alpha > 1)
+		alpha = 1;
+	for (i = 0; i < get_n_par(m); i++) {
+		scale = (gsl_vector_get(m->params_max, i)
+				- gsl_vector_get(m->params_min, i));
+		min = MINIMAL_STEPWIDTH * scale;
+		max = MAXIMAL_STEPWIDTH * scale;
+
+		step = gsl_vector_get(get_steps(m), i);
+		step += get_next_uniform_random(m) / sqrt(m->n_iter) * (alpha - 0.234)
+				* scale;
+		;
+		if (step < min)
+			step = min;
+		if (step > max)
+			step = max;
+		gsl_vector_set(get_steps(m), i, step);
 	}
 }
 

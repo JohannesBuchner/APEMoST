@@ -35,9 +35,9 @@ int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta,
 		return -1;
 	IFVERBOSE
 		debug("checking if we do a swap");
-	swap_probability = get_next_urandom(sinmod[0]);
+	swap_probability = get_next_uniform_random(sinmod[0]);
 	if (swap_probability < 1.0 / n_swap) {
-		a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % (n_beta - 1);
+		a = (int) (n_beta * 1000 * get_next_uniform_random(sinmod[0])) % (n_beta - 1);
 		b = (a + 1) % n_beta;
 		if (check_swap_probability(sinmod[a], sinmod[b]) == 1)
 			return a;
@@ -70,7 +70,7 @@ int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta) {
 	assert(n_beta > 0);
 	if (n_beta == 1)
 		return -1;
-	a = (int) (n_beta * 1000 * get_next_urandom(sinmod[0])) % (n_beta - 1);
+	a = (int) (n_beta * 1000 * get_next_uniform_random(sinmod[0])) % (n_beta - 1);
 	if (check_swap_probability(sinmod[a], sinmod[a + 1]) == 1)
 		return a;
 	return -1;
@@ -106,7 +106,7 @@ void reset_to_best(mcmc ** sinmod, int n_beta) {
 
 #ifdef RESET_TO_BEST
 	int a;
-	a = (int) (n_beta * RESET_TO_BEST * get_next_urandom(sinmod[0]));
+	a = (int) (n_beta * RESET_TO_BEST * get_next_uniform_random(sinmod[0]));
 	if (a < n_beta) {
 		printf("Resetting chain %d to", a);
 		dump_vector(get_params_best(sinmod[a]));

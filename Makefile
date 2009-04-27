@@ -25,7 +25,7 @@ help:
 ## all: 
 all: tests.exe tools 
 
-tools: histogram_tool.exe random_tool.exe ndim_histogram_tool.exe sum_tool.exe polynom_climber.exe generic_climber.exe example_climber.exe matrix_man.exe
+tools: histogram_tool.exe random_tool.exe ndim_histogram_tool.exe sum_tool.exe matrix_man.exe
 
 tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@

@@ -65,7 +65,7 @@ void report(mcmc ** sinmod, int n_beta) {
 	int i;
 	char buf[100];
 	print_current_positions(sinmod, n_beta);
-	printf("writing out visited parameters ");
+	printf("\nwriting out visited parameters ");
 	for (i = 0; i < n_beta; i++) {
 		printf(".");
 		sprintf(buf, "-chain%d", i);
@@ -119,7 +119,8 @@ double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 #endif
 	if (n_beta == 1)
 		return 1.0;
-	return BETA_DISTRIBUTION(i, n_beta, beta_0);
+	/* this reverts the order so that beta(0) = 1.0. */
+	return BETA_DISTRIBUTION(n_beta - i - 1, n_beta, beta_0);
 }
 
 void parallel_tempering(const char * params_filename,
@@ -212,11 +213,19 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
+	FILE * acceptance_file = NULL;
+#ifdef RMW
+	double prob_old[100];
+#endif
+	assert(n_beta < 100);
+
 	get_duration();
 	run = 1;
 	dumpflag = 0;
 	printf("starting the analysis\n");
 	fflush(stdout);
+	acceptance_file = fopen("acceptance_rate.dump", "w");
+	assert(acceptance_file != NULL);
 
 	while (run
 #ifdef MAX_ITERATIONS
@@ -231,6 +240,26 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				mcmc_append_current_parameters(sinmod[i]);
 			}
 		}
+#ifdef RMW
+		for (i = 0; i < n_beta; i++) {
+			prob_old[i] = get_prob(sinmod[i]);
+			markov_chain_step(sinmod[i], 0);
+			rmw_adapt_stepwidth(sinmod[i], prob_old[i]);
+		}
+#endif
+#ifdef ADAPT
+		for (i = 0; i < n_beta; i++) {
+			if (get_params_accepts_sum(sinmod[i]) * 1.0
+					/ get_params_rejects_sum(sinmod[i]) < 0.23 - 0.05) {
+				dump_i("too little accepts, scaling down", i);
+				gsl_vector_scale(get_steps(sinmod[i]), 0.99);
+			} else if (get_params_accepts_sum(sinmod[i]) * 1.0
+					/ get_params_rejects_sum(sinmod[i]) > 0.23 + 0.05) {
+				dump_i("too many accepts, scaling up", i);
+				gsl_vector_scale(get_steps(sinmod[i]), 1/ 0.99);
+			}
+		}
+#endif
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
 		/* TODO: add continuous dumping */
@@ -241,6 +270,15 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				print_current_positions(sinmod, n_beta);
 				dumpflag = 0;
 			}
+			fprintf(acceptance_file, "%lu\t", iter);
+			for (i = 0; i < n_beta; i++) {
+				fprintf(acceptance_file, "%lu\t", get_params_accepts_sum(
+						sinmod[i]));
+				fprintf(acceptance_file, "%lu\t", get_params_rejects_sum(
+						sinmod[i]));
+			}
+			fprintf(acceptance_file, "\n");
+			fflush(acceptance_file);
 			IFDEBUG {
 				debug("dumping distribution");
 				dump_ul("iteration", iter);
@@ -256,6 +294,9 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				fflush(stdout);
 			}
 		}
+	}
+	if (fclose(acceptance_file) != 0) {
+		assert(0);
 	}
 	report(sinmod, n_beta);
 }

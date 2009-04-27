@@ -6,6 +6,7 @@
 #define DEFAULT_MUL 0.85
 #define DEFAULT_ADJUST_STEP 0.5
 #define DEFAULT_RAT_LIMIT -1 /* is calculated then */
+#define NO_RESCALING_LIMIT 15
 
 /**
  * create/calibrate the markov-chain
@@ -33,5 +34,10 @@ void markov_chain_step(mcmc * m, int calc_index);
  * @param calc_index 1 if the model should be recalculated, 0 otherwise
  */
 void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index);
+
+/**
+ * adapts the step width
+ */
+void rmw_adapt_stepwidth(mcmc * m, double prob_old);
 
 #endif /* MCMC_MARKOV_CHAIN_H_ */

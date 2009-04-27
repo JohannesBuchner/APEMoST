@@ -53,11 +53,20 @@ void inc_params_rejects(mcmc * m);
 /**
  * get next random number (uniformly distributed between 0 and 1)
  */
-double get_next_urandom(const mcmc * m);
+double get_next_uniform_random(const mcmc * m);
+/**
+ * get next random number (uniformly distributed between -1 and 1)
+ */
+double get_next_uniform_plusminus_random(const mcmc * m);
 
 /**
  * get next random number (logarithmic uniformly distributed between -inf and 0)
  */
 double get_next_alog_urandom(const mcmc * m);
+
+/**
+ * get next random number (gauss distributed)
+ */
+double get_next_gauss_random(const mcmc * m, double sigma);
 
 #endif /* MCMC_GETTERSETTER_H_ */
