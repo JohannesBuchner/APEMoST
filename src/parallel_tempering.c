@@ -270,12 +270,9 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 #endif
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
-		/* TODO: add continuous dumping */
 		if (iter % PRINT_PROB_INTERVAL == 0) {
 			if (dumpflag) {
-				/* TODO: dump all chains */
-				mcmc_dump_probabilities(sinmod[0], DUMP_PROB_LENGTH, "");
-				print_current_positions(sinmod, n_beta);
+				report(sinmod, n_beta);
 				dumpflag = 0;
 			}
 			fprintf(acceptance_file, "%lu\t", iter);
