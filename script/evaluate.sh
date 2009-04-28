@@ -7,7 +7,7 @@ function die() {
 TMP=$(mktemp)
 mcmcdir=~/Desktop/Arbeit
 
-bash $mcmcdir/script/join.sh *.prob.dump || die 'join' 1
+bash $mcmcdir/script/join.sh *-chain*.prob.dump || die 'join' 1
 #paste *.all > data || exit 2
 for j in *.all; do 
 	$mcmcdir/histogram_tool.exe 500 $j | sed 's/\(.*\)\.\..*:[^0-9]*\([0-9]*\)/\1\t\2/g'|grep '\.' > $j.hist.tab || die 'histogram' 3
