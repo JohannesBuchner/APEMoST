@@ -36,6 +36,10 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	unsigned long subiter;
 	int nchecks_without_rescaling = 0;
 	int rescaled;
+	gsl_vector * original_steps = dup_vector(get_steps(m));
+	m->params_step = dup_vector(m->params_max);
+	gsl_vector_sub(m->params_step, dup_vector(m->params_min));
+	gsl_vector_scale(m->params_step, 0.1);
 
 	if (rat_limit < 0)
 		rat_limit = pow(0.25, 1.0 / get_n_par(m));
@@ -43,7 +47,6 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("Beginning calibration of MCMC ...");
 	debug("Starting burn-in ...");
 	mcmc_check(m);
-	gsl_vector_scale(get_steps(m), 10);
 	for (iter = 0; iter < burn_in_iterations / 2; iter++) {
 		for (subiter = 0; subiter < 200; subiter++) {
 			markov_chain_step(m, 0);
@@ -71,7 +74,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		mcmc_check_best(m);
 	}
 	debug("Burn-in done, adjusting steps ...");
-	gsl_vector_scale(get_steps(m), 0.01);
+	gsl_vector_memcpy(original_steps, get_steps(m));
+	gsl_vector_free(original_steps);
 	mcmc_check(m);
 	gsl_vector_scale(m->params_step, adjust_step);
 	set_params(m, dup_vector(get_params_best(m)));
@@ -142,11 +146,12 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 				}
 				IFDEBUG
 					printf("\n");
-				dump_v("steps", m->params_step);
 				assert(gsl_vector_min(get_steps(m)) > 0);
 			}
 			if (rescaled == 0)
 				nchecks_without_rescaling++;
+			else
+				dump_v("steps", m->params_step);
 			restart_from_best(m);
 			reset_accept_rejects(m);
 			for (subiter = 0; subiter < 200; subiter++) {
