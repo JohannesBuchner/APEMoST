@@ -18,9 +18,14 @@ done
 echo counting misses 1>&2
 for j in Amplitude Phase Frequenz; do
 #	cut -f1 $j.all.hist.tab |grep -v $(cut -f1 $mcmcdir/idl/simplesin/correct-$j.all.dat) > $TMP
-	cat $j.all|$matrix_man addc i=1 $(cut -f1 $mcmcdir/idl/simplesin/correct-$j.all.dat) > $TMP
+	cat $j.all|$matrix_man addc i=1 -$(cut -f1 $mcmcdir/idl/simplesin/correct-$j.all.dat) > $TMP
 
-	$mcmcdir/sum_tool.exe $TMP|$matrix_man new i=2|$matrix_man addc i=2 $(cat $j.all|wc -l)|$matrix_man invm i=2|$matrix_man mul_rel i=1 1|$matrix_man rm i=2
+	$mcmcdir/sum_tool.exe -s $TMP   |
+		$matrix_man new     i=2 |
+		$matrix_man addc    i=2 $(cat $j.all|wc -l)|
+		$matrix_man invm    i=2 |
+		$matrix_man mul_rel i=1 1|
+		$matrix_man rm      i=2
 done
 
 echo stuck chains 1>&2
