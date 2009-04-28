@@ -6,7 +6,6 @@
 #include "mcmc_internal.h"
 #include "debug.h"
 #include "gsl_helper.h"
-#include <math.h>
 #include <gsl/gsl_sf.h>
 
 void restart_from_best(mcmc * m) {
@@ -44,14 +43,17 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("Beginning calibration of MCMC ...");
 	debug("Starting burn-in ...");
 	mcmc_check(m);
+	gsl_vector_scale(get_steps(m), 10);
 	for (iter = 0; iter < burn_in_iterations / 2; iter++) {
 		for (subiter = 0; subiter < 200; subiter++) {
 			markov_chain_step(m, 0);
 		}
 		iter += subiter;
 		dump_ul("\tBurn-in Iteration", iter);
-		dump_v("stepwidth", get_steps(m));
-		dump_v("params", get_params(m));
+		IFVERBOSE {
+			dump_v("stepwidth", get_steps(m));
+			dump_v("params", get_params(m));
+		}
 		mcmc_check_best(m);
 	}
 	debug("Re-initializing burn-in ...");
@@ -62,11 +64,14 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		}
 		iter += subiter;
 		dump_ul("\tBurn-in Iteration", iter);
+		IFVERBOSE {
+			dump_v("stepwidth", get_steps(m));
+			dump_v("params", get_params(m));
+		}
 		mcmc_check_best(m);
-		dump_v("stepwidth", get_steps(m));
-		dump_v("params", get_params(m));
 	}
 	debug("Burn-in done, adjusting steps ...");
+	gsl_vector_scale(get_steps(m), 0.01);
 	mcmc_check(m);
 	gsl_vector_scale(m->params_step, adjust_step);
 	set_params(m, dup_vector(get_params_best(m)));
@@ -93,13 +98,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			dump_v("acceptance rate: ", get_accept_rate(m));
 			dump_v("steps", get_steps(m));
 
-			for (i = 0; i < get_n_par(m); i++) {
-				/*dump_i_s("Acceptance rates for", i, m->params_descr[i]);*/
-				/* TODO: print diff to old_* variables */
-			}
-			/*gsl_vector_free(accept_rate);*/
 			old_accepts = accept_rate;
-			/*gsl_vector_free(old_steps);*/
 			old_steps = dup_vector(get_steps(m));
 
 			rescaled = 0;
@@ -114,6 +113,15 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 							m->params_step, i) / mul);
 					IFDEBUG
 						printf("\t scaling up   ^");
+					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
+							m->params_max, i)
+							- gsl_vector_get(m->params_min, i)) > 1) {
+						printf("WARNING: step width is quite big! %d%%\n",
+								(int) (gsl_vector_get(m->params_step, i)
+										/ (gsl_vector_get(m->params_max, i)
+												- gsl_vector_get(m->params_min,
+														i))));
+					}
 					rescaled = 1;
 				}
 				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
@@ -121,11 +129,21 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 							m->params_step, i) * mul);
 					IFDEBUG
 						printf("\t scaling down v");
+					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
+							m->params_max, i)
+							- gsl_vector_get(m->params_min, i)) < 10E-10) {
+						printf("WARNING: step width is quite small! %e%%\n",
+								gsl_vector_get(m->params_step, i)
+										/ (gsl_vector_get(m->params_max, i)
+												- gsl_vector_get(m->params_min,
+														i)));
+					}
 					rescaled = 1;
 				}
 				IFDEBUG
 					printf("\n");
 				dump_v("steps", m->params_step);
+				assert(gsl_vector_min(get_steps(m)) > 0);
 			}
 			if (rescaled == 0)
 				nchecks_without_rescaling++;
@@ -166,15 +184,11 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("calibration of markov-chain done.");
 }
 
-double mod_double(double x, double div) {
-	while (1) {
-		if (x >= div)
-			x -= div;
-		else if (x < 0)
-			x += div;
-		else
-			return x;
-	}
+double mod_double(const double x, const double div) {
+	if (x < 0) {
+		return x - div * (int) (x / div - 1);
+	} else
+		return x - div * (int) (x / div);
 }
 
 void do_step_for(mcmc * m, unsigned int i) {
@@ -189,6 +203,8 @@ void do_step_for(mcmc * m, unsigned int i) {
 		new_value = max - mod_double(new_value - max, max - min);
 	else if (new_value < min)
 		new_value = min + mod_double(min - new_value, max - min);
+	assert(new_value <= max);
+	assert(new_value >= min);
 	/* dump_d("To", new_value); */
 	set_params_for(m, new_value, i);
 }

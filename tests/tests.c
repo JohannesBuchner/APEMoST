@@ -178,6 +178,9 @@ int test_mod(void) {
 	ASSERTEQUALD(mod_double(3.14, 3.00), 0.14, "mod ints");
 	ASSERTEQUALD(mod_double(3.14, 1.30), 0.54, "mod doubles");
 	ASSERTEQUALD(mod_double(-3.14, 1.30), 0.76, "mod doubles");
+	ASSERTEQUALD(mod_double(0, 1.30), 0.00, "mod doubles");
+	ASSERTEQUALD(mod_double(6000.3214, 1.1324), 0.8662, "mod doubles");
+	ASSERTEQUALD(mod_double(-6000.3214, 1.1324), 0.2662, "mod doubles");
 	return 0;
 }
 

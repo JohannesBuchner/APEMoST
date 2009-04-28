@@ -36,6 +36,6 @@ unsigned int countlines(const char * filename);
 /**
  * a modulo operator for double values
  */
-double mod_double(double x, double div);
+double mod_double(const double x, const double div);
 
 #endif /* MCMC_INTERNAL_H_ */

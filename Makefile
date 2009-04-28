@@ -7,7 +7,7 @@
 ## 
 
 CFLAGS=-O3 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
-LDFLAGS=-lgsl -lgslcblas -lm
+LDFLAGS=-lgsl -lgslcblas -lm -lgc
 CC=gcc
 COMMON_SOURCES=src/gsl_helper.c src/debug.c
 MCMC_SOURCES=src/mcmc*.c

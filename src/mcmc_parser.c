@@ -55,7 +55,7 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	double min;
 	double max;
 	double step;
-	char * descr = (char*) calloc(MAX_LINE_LENGTH, sizeof(char));
+	char * descr = (char*) mem_calloc(MAX_LINE_LENGTH, sizeof(char));
 	dump_i("parsing line", i);
 
 	col = fscanf(input, "%lf\t%lf\t%lf\t%s\t%lf\n", &start, &min, &max, descr,
@@ -139,7 +139,7 @@ static void load_data(mcmc * m, const char * filename) {
 }
 
 char * my_strdup(const char * s) {
-	char *buf = calloc(strlen(s) + 1, sizeof(char));
+	char *buf = mem_calloc(strlen(s) + 1, sizeof(char));
 	if (buf != NULL)
 		strcpy(buf, s);
 	return buf;

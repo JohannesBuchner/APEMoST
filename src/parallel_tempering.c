@@ -132,7 +132,7 @@ void parallel_tempering(const char * params_filename,
 	const char ** params_descr;
 	mcmc ** sinmod;
 
-	sinmod = (mcmc**) calloc(n_beta, sizeof(mcmc*));
+	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
@@ -146,7 +146,7 @@ void parallel_tempering(const char * params_filename,
 		else
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		mcmc_check(sinmod[i]);
-		sinmod[i]->additional_data = malloc(sizeof(parallel_tempering_mcmc));
+		sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		printf("\tsteps: ");
 		dump_vectorln(get_steps(sinmod[i]));
@@ -198,15 +198,15 @@ void parallel_tempering(const char * params_filename,
 
 	analyse(sinmod, n_beta, n_swap);
 	for (i = 0; i < n_beta; i++) {
-		free(sinmod[i]->additional_data);
+		mem_free(sinmod[i]->additional_data);
 		if (i != 0) {
 			set_x(sinmod[i], NULL);
 			set_y(sinmod[i], NULL);
 		}
 		sinmod[i] = mcmc_free(sinmod[i]);
-		free(sinmod[i]);
+		mem_free(sinmod[i]);
 	}
-	free(sinmod);
+	mem_free(sinmod);
 }
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
