@@ -31,7 +31,7 @@
  * The possible parameters and their values:
  * \subsection tuning Fine-tuning the algorithm
  * <ul>
- * <li style="color:red">#BETA_DISTRIBUTION (required)</li>
+ * <li>#BETA_DISTRIBUTION</li>
  * <li>#N_BETA</li>
  * <li>#BETA_0</li>
  * <li>#BURN_IN_ITERATIONS</li>
@@ -46,6 +46,8 @@
  * <ul>
  * <li>#RANDOMSWAP</li>
  * <li>#RESET_TO_BEST</li>
+ * <li>#ADAPT</li>
+ * <li>#RWM</li>
  * </ul>
  * \subsection Running
  * <ul>
@@ -111,7 +113,7 @@
 #define BURN_IN_ITERATIONS 10000
 #endif
 /**
- * TODO: document
+ * How much deviation from the desired acceptance rate is acceptable
  */
 #ifndef RAT_LIMIT
 #define RAT_LIMIT 0.5

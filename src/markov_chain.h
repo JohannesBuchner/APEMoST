@@ -8,6 +8,10 @@
 #define DEFAULT_RAT_LIMIT -1 /* is calculated then */
 #define NO_RESCALING_LIMIT 15
 
+#ifndef TARGET_ACCEPTANCE_RATE
+#define TARGET_ACCEPTANCE_RATE 0.23
+#endif
+
 /**
  * create/calibrate the markov-chain
  *

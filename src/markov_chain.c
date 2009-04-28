@@ -50,6 +50,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		}
 		iter += subiter;
 		dump_ul("\tBurn-in Iteration", iter);
+		dump_v("stepwidth", get_steps(m));
+		dump_v("params", get_params(m));
 		mcmc_check_best(m);
 	}
 	debug("Re-initializing burn-in ...");
@@ -61,6 +63,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		iter += subiter;
 		dump_ul("\tBurn-in Iteration", iter);
 		mcmc_check_best(m);
+		dump_v("stepwidth", get_steps(m));
+		dump_v("params", get_params(m));
 	}
 	debug("Burn-in done, adjusting steps ...");
 	mcmc_check(m);
@@ -133,7 +137,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			}
 			dump_v("New overall accept rate after reset", get_accept_rate(m));
 			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
-					- 0.23;
+					- TARGET_ACCEPTANCE_RATE;
 			dump_d("Compared to desired rate", delta_reject_accept_t);
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				reached_perfection = 1;
@@ -151,7 +155,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 				debug("quitting calibration because we did not need to rescale for several times");
 				break;
 			}
-			if (iter > iter_limit) {
+			if (iter - burn_in_iterations > iter_limit) {
 				dump_i("calibration failed: limit of %d iterations reached.",
 						iter_limit);
 				exit(1);
@@ -207,6 +211,8 @@ int check_accept(mcmc * m, double prob_old) {
 	if (prob_new == prob_old) {
 		return 1;
 	}
+	IFVERBOSE
+		dump_v("suggesting parameter", get_params(m));
 
 	if (prob_new > prob_old) {
 		IFVERBOSE
@@ -278,8 +284,8 @@ void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
 		max = MAXIMAL_STEPWIDTH * scale;
 
 		step = gsl_vector_get(get_steps(m), i);
-		step += get_next_uniform_random(m) / sqrt(m->n_iter) * (alpha - 0.234)
-				* scale;
+		step += get_next_uniform_random(m) / sqrt(m->n_iter) * (alpha
+				- TARGET_ACCEPTANCE_RATE) * scale;
 		;
 		if (step < min)
 			step = min;

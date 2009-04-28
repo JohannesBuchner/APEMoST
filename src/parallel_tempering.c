@@ -209,12 +209,28 @@ void parallel_tempering(const char * params_filename,
 	free(sinmod);
 }
 
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Enable Random Walk Metropolis (adaptive MCMC method)
+ * Also important: #MINIMAL_STEPWIDTH, #MAXIMAL_STEPWIDTH
+ */
+#define RWM
+#endif
+
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Enable a constant but small rescaling of the step width to keep the
+ * acceptance rate up.
+ */
+#define ADAPT
+#endif
+
 void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
 	FILE * acceptance_file = NULL;
-#ifdef RMW
+#ifdef RWM
 	double prob_old[100];
 #endif
 	assert(n_beta < 100);
@@ -240,7 +256,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				mcmc_append_current_parameters(sinmod[i]);
 			}
 		}
-#ifdef RMW
+#ifdef RWM
 		for (i = 0; i < n_beta; i++) {
 			prob_old[i] = get_prob(sinmod[i]);
 			markov_chain_step(sinmod[i], 0);
@@ -254,11 +270,11 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				continue;
 			}
 			if (get_params_accepts_sum(sinmod[i]) * 1.0
-					/ get_params_rejects_sum(sinmod[i]) < 0.23 - 0.05) {
+					/ get_params_rejects_sum(sinmod[i]) < TARGET_ACCEPTANCE_RATE - 0.05) {
 				dump_i("too few accepts, scaling down", i);
 				gsl_vector_scale(get_steps(sinmod[i]), 0.99);
 			} else if (get_params_accepts_sum(sinmod[i]) * 1.0
-					/ get_params_rejects_sum(sinmod[i]) > 0.23 + 0.05) {
+					/ get_params_rejects_sum(sinmod[i]) > TARGET_ACCEPTANCE_RATE + 0.05) {
 				dump_i("too many accepts, scaling up", i);
 				gsl_vector_scale(get_steps(sinmod[i]), 1 / 0.99);
 			}
