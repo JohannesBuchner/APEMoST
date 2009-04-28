@@ -423,6 +423,7 @@ void row_man(int argc, char ** argv) {
 		}
 		if (current != NULL)
 			gsl_vector_free(current);
+		fflush(stdout);
 	}
 
 }
