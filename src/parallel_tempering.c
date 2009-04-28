@@ -146,7 +146,8 @@ void parallel_tempering(const char * params_filename,
 		else
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		mcmc_check(sinmod[i]);
-		sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
+		sinmod[i]->additional_data
+				= mem_malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		printf("\tsteps: ");
 		dump_vectorln(get_steps(sinmod[i]));
@@ -168,6 +169,13 @@ void parallel_tempering(const char * params_filename,
 	fflush(stdout);
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
+	printf("You can update your parameters file to the initial steps:\n");
+	for (i = 0; i < n_par; i++) {
+		printf("\t%s\t%f\n", get_params_descr(sinmod[0])[i], gsl_vector_get(
+				get_steps(sinmod[0]), i) / (gsl_vector_get(
+				sinmod[0]->params_max, i) - gsl_vector_get(
+				sinmod[0]->params_min, i)));
+	}
 
 	printf("Setting startingpoint for the calibration of all hotter "
 		"distribution to \n  the best parameter values of the (beta=1)"
@@ -178,6 +186,8 @@ void parallel_tempering(const char * params_filename,
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
 		fflush(stdout);
+		gsl_vector_free(sinmod[i]->params_step);
+		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 
@@ -266,7 +276,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 #ifdef ADAPT
 		for (i = 0; i < n_beta; i++) {
 			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
-					sinmod[i]) < 20000) {
+							sinmod[i]) < 20000) {
 				continue;
 			}
 			if (get_params_accepts_sum(sinmod[i]) * 1.0
@@ -279,7 +289,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				gsl_vector_scale(get_steps(sinmod[i]), 1 / 0.99);
 			}
 			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
-					sinmod[i]) > 100000) {
+							sinmod[i]) > 100000) {
 				reset_accept_rejects(sinmod[i]);
 			}
 		}
