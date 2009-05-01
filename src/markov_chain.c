@@ -120,11 +120,13 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) > 1) {
-						printf("WARNING: step width is quite big! %d%%\n",
+						printf("WARNING: step width of %s is quite big! %d times the param space\n",
+							get_params_descr(m)[i],
 								(int) (gsl_vector_get(m->params_step, i)
 										/ (gsl_vector_get(m->params_max, i)
 												- gsl_vector_get(m->params_min,
 														i))));
+						printf("WARNING: This can mean the parameter is independent.\n");
 					}
 					rescaled = 1;
 				}
@@ -136,7 +138,8 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) < 10E-10) {
-						printf("WARNING: step width is quite small! %e%%\n",
+						printf("WARNING: step width of %s is quite small! %e times the param space\n",
+							get_params_descr(m)[i],
 								gsl_vector_get(m->params_step, i)
 										/ (gsl_vector_get(m->params_max, i)
 												- gsl_vector_get(m->params_min,
