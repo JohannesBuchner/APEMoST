@@ -10,7 +10,7 @@
 
 void restart_from_best(mcmc * m) {
 	set_params(m, dup_vector(get_params_best(m)));
-	set_prob(m, -1E7);
+	set_prob(m, get_prob_best(m));
 }
 
 double abs_double(double x) {
@@ -73,12 +73,12 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		}
 		mcmc_check_best(m);
 	}
+	restart_from_best(m);
 	debug("Burn-in done, adjusting steps ...");
 	gsl_vector_memcpy(original_steps, get_steps(m));
 	gsl_vector_free(original_steps);
 	mcmc_check(m);
 	gsl_vector_scale(m->params_step, adjust_step);
-	set_params(m, dup_vector(get_params_best(m)));
 	debug("Burn-in done.");
 
 	debug("Calibrating step widths ...(set cont=1 to abort)");
