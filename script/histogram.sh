@@ -1,6 +1,10 @@
 #!/bin/bash
 
-cat="cat"
+if [ "$CATCOMMAND" == "" ]; then
+	cat="cat"
+else
+	cat="$CATCOMMAND"
+fi
 if [ "$1" == "--last" ]; then
 	shift
 	cat="tail -n $1"

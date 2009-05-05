@@ -2,6 +2,7 @@
 paramnames="Amplitude Phase Frequenz"
 
 function getlimits() {
+	return;
 	case "$1" in
 		Amplitude.all)
 			echo "[0:3]"
