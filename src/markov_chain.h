@@ -12,6 +12,20 @@
 #define TARGET_ACCEPTANCE_RATE 0.23
 #endif
 
+#ifndef CIRCULAR_PARAMS
+/**
+ * Which parameters are circular?
+ *
+ * e.g. if the first and second parameters are angles, you write
+ * CIRCULAR_PARAMS=1,2;
+ * Do not use zero for the first parameter.
+ *
+ * N.B.: if you have a angle, you will want to make it go from 0 to 1
+ * or similar and use pi in your formula. This way it will be more exact.
+ */
+#define CIRCULAR_PARAMS 0
+#endif
+
 /**
  * create/calibrate the markov-chain
  *

@@ -120,13 +120,14 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) > 1) {
-						printf("WARNING: step width of %s is quite big! %d times the param space\n",
-							get_params_descr(m)[i],
-								(int) (gsl_vector_get(m->params_step, i)
-										/ (gsl_vector_get(m->params_max, i)
-												- gsl_vector_get(m->params_min,
-														i))));
-						printf("WARNING: This can mean the parameter is independent.\n");
+						printf(
+								"WARNING: step width of %s is quite big! %d times the param space\n",
+								get_params_descr(m)[i], (int) (gsl_vector_get(
+										m->params_step, i) / (gsl_vector_get(
+										m->params_max, i) - gsl_vector_get(
+										m->params_min, i))));
+						printf(
+								"WARNING: This can mean the parameter is independent.\n");
 					}
 					rescaled = 1;
 				}
@@ -138,12 +139,12 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) < 10E-10) {
-						printf("WARNING: step width of %s is quite small! %e times the param space\n",
-							get_params_descr(m)[i],
-								gsl_vector_get(m->params_step, i)
-										/ (gsl_vector_get(m->params_max, i)
-												- gsl_vector_get(m->params_min,
-														i)));
+						printf(
+								"WARNING: step width of %s is quite small! %e times the param space\n",
+								get_params_descr(m)[i], gsl_vector_get(
+										m->params_step, i) / (gsl_vector_get(
+										m->params_max, i) - gsl_vector_get(
+										m->params_min, i)));
 					}
 					rescaled = 1;
 				}
@@ -153,8 +154,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			}
 			if (rescaled == 0)
 				nchecks_without_rescaling++;
-			else
-				dump_v("steps", m->params_step);
+			else dump_v("steps", m->params_step);
 			restart_from_best(m);
 			reset_accept_rejects(m);
 			for (subiter = 0; subiter < 200; subiter++) {
@@ -199,6 +199,34 @@ double mod_double(const double x, const double div) {
 		return x - div * (int) (x / div);
 }
 
+double handle_overflow(double new_value, const double min, const double max,
+		const unsigned int i) {
+	unsigned int j = 0;
+	/** circular parameters **/
+	unsigned int parameters[] = { CIRCULAR_PARAMS, 0 };
+	if (new_value <= max && new_value >= min)
+		return new_value;
+
+	while (1) {
+		if (parameters[j] == 0) {
+			debug("non-circular parameter");
+			/* non-circular parameter */
+			if (new_value > max)
+				new_value = max - mod_double(new_value - max, max - min);
+			else if (new_value < min)
+				new_value = min + mod_double(min - new_value, max - min);
+			return new_value;
+		}
+		if (parameters[j] == i + 1) {
+			debug("circular parameter");
+			/* circular parameter */
+			new_value = min + mod_double(new_value - min, max - min);
+			return new_value;
+		}
+		j++;
+	}
+}
+
 void do_step_for(mcmc * m, unsigned int i) {
 	double step = gsl_vector_get(m->params_step, i);
 	double old_value = gsl_vector_get(m->params, i);
@@ -207,10 +235,7 @@ void do_step_for(mcmc * m, unsigned int i) {
 	double min = gsl_vector_get(m->params_min, i);
 	/* dump_d("Jumping from", old_value); */
 
-	if (new_value > max)
-		new_value = max - mod_double(new_value - max, max - min);
-	else if (new_value < min)
-		new_value = min + mod_double(min - new_value, max - min);
+	new_value = handle_overflow(new_value, min, max, i);
 	assert(new_value <= max);
 	assert(new_value >= min);
 	/* dump_d("To", new_value); */
