@@ -9,7 +9,7 @@
 CFLAGS=-O3 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm
 CC=gcc
-COMMON_SOURCES=src/gsl_helper.c src/debug.c
+COMMON_SOURCES=src/gsl_helper.c src/debug.c src/utils.c
 MCMC_SOURCES=src/mcmc*.c
 MARKOV_CHAIN_SOURCES=src/markov_chain*.c
 PARALLEL_TEMPERING_SOURCES=src/parallel_tempering*.c
@@ -25,7 +25,7 @@ help:
 ## all: 
 all: tests.exe tools 
 
-tools: histogram_tool.exe random_tool.exe ndim_histogram_tool.exe sum_tool.exe matrix_man.exe
+tools: histogram_tool.exe random_tool.exe ndim_histogram_tool.exe sum_tool.exe matrix_man.exe peaks.exe
 
 tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@

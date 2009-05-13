@@ -2,6 +2,17 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
+gsl_histogram * create_hist(int nbins, double min, double max) {
+	gsl_histogram * h;
+
+	h = gsl_histogram_alloc(nbins);
+	gsl_histogram_set_ranges_uniform(h, min, max);
+
+	/* with out the following, the max element doesn't fall in the last bin */
+	h->range[h->n] += 1;
+	return h;
+}
+
 gsl_histogram * calc_hist(const gsl_vector * v, int nbins) {
 	double max;
 	double min;
@@ -35,6 +46,34 @@ gsl_histogram * calc_hist(const gsl_vector * v, int nbins) {
 	require(gsl_histogram_scale (h, 1/sum));
 	debug("done");
 	return h;
+}
+
+void append_to_hists(gsl_histogram ** hists, unsigned int n,
+		const char * filename) {
+	FILE * input;
+	unsigned int i;
+	int col;
+	double v;
+	int line = 0;
+
+	input = openfile(filename);
+
+	while (!feof(input)) {
+		for (i = 0; i < n; i++) {
+			col = fscanf(input, "%lf", &v);
+			if (col != 1) {
+				if (feof(input))
+					break;
+				fprintf(stderr, "field could not be read: %d, line %d in %s\n",
+						i + 1, line + 1, filename);
+				exit(1);
+			}
+			gsl_histogram_increment(hists[i], v);
+		}
+		line++;
+	}
+	dump_i("read lines", line);
+	fclose(input);
 }
 
 double calc_vector_sum(const gsl_vector * v) {
@@ -112,5 +151,29 @@ void min_vector(gsl_vector * a, const gsl_vector * b) {
 	for (i = 0; i < a->size; i++) {
 		if (gsl_vector_get(a, i) > gsl_vector_get(b, i))
 			gsl_vector_set(a, i, gsl_vector_get(b, i));
+	}
+}
+
+void sort(gsl_vector ** vs, unsigned int nvectors, unsigned int vector_size) {
+	unsigned int i = 0;
+	unsigned int j = 0;
+	unsigned int best = 0;
+	double temp;
+
+	for (j = 0; j < vector_size; j++) {
+		best = j;
+		for (i = j + 1; i < vector_size; i++) {
+			if (gsl_vector_get(vs[0], i) > gsl_vector_get(vs[0], best)) {
+				best = i;
+			}
+		}
+		if (j != best) {
+			/* switch j and best */
+			for (i = 0; i < nvectors; i++) {
+				temp = gsl_vector_get(vs[i], j);
+				gsl_vector_set(vs[i], j, gsl_vector_get(vs[i], best));
+				gsl_vector_set(vs[i], best, temp);
+			}
+		}
 	}
 }

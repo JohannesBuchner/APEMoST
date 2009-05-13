@@ -30,12 +30,7 @@ void sum_up(gsl_vector * sum, unsigned int n, const char * filename, int square)
 	double v;
 	int line = 0;
 
-	input = fopen(filename, "r");
-	if (input == NULL) {
-		fprintf(stderr, "error opening file %s\n", filename);
-		perror("file could not be opened");
-		exit(1);
-	}
+	input = openfile(filename);
 	while (!feof(input)) {
 		for (i = 0; i < n; i++) {
 			col = fscanf(input, "%lf", &v);

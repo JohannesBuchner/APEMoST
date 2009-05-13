@@ -19,12 +19,7 @@ void find_min_max(char * filename, gsl_vector * min, gsl_vector * max) {
 	double v;
 	FILE * input;
 	assert(min->size == max->size);
-	input = fopen(filename, "r");
-	if (input == NULL) {
-		fprintf(stderr, "error opening file %s\n", filename);
-		perror("file could not be opened");
-		exit(1);
-	}
+	input = openfile(filename);
 	for (i = 0; i < n; i++) {
 		col = fscanf(input, "%lf", &v);
 		if (col != 1) {
@@ -73,12 +68,7 @@ unsigned int get_column_count(char * filename) {
 	int i = 0;
 	int at_whitespace = 1;
 
-	input = fopen(filename, "r");
-	if (input == NULL) {
-		fprintf(stderr, "error opening file %s\n", filename);
-		perror("file could not be opened");
-		exit(1);
-	}
+	input = openfile(filename);
 	fgets(buf, 10000, input);
 	while (buf[i] != 0) {
 		if (isspace(buf[i])) {

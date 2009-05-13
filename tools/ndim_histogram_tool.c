@@ -121,12 +121,7 @@ void append_to_hist(ndim_histogram * h, const char * filename) {
 	int line = 0;
 	gsl_vector * current = gsl_vector_alloc(h->dimensions);
 
-	input = fopen(filename, "r");
-	if (input == NULL) {
-		fprintf(stderr, "error opening file %s\n", filename);
-		perror("file could not be opened");
-		exit(1);
-	}
+	input = openfile(filename);
 	while (!feof(input)) {
 		for (i = 0; i < h->dimensions; i++) {
 			col = fscanf(input, "%lf", &v);
