@@ -36,6 +36,16 @@ unsigned int countlines(const char * filename);
 /**
  * a modulo operator for double values
  */
-double mod_double(double x, double div);
+double mod_double(const double x, const double div);
+
+/**
+ * the value with positive sign.
+ */
+double abs_double(double x);
+
+/**
+ * handle to stay inside the parameter space.
+ */
+double handle_overflow(double new_value, double min, double max, unsigned int i);
 
 #endif /* MCMC_INTERNAL_H_ */

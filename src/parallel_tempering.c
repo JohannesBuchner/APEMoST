@@ -132,7 +132,7 @@ void parallel_tempering(const char * params_filename,
 	const char ** params_descr;
 	mcmc ** sinmod;
 
-	sinmod = (mcmc**) calloc(n_beta, sizeof(mcmc*));
+	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
@@ -146,7 +146,8 @@ void parallel_tempering(const char * params_filename,
 		else
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		mcmc_check(sinmod[i]);
-		sinmod[i]->additional_data = malloc(sizeof(parallel_tempering_mcmc));
+		sinmod[i]->additional_data
+				= mem_malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		printf("\tsteps: ");
 		dump_vectorln(get_steps(sinmod[i]));
@@ -168,6 +169,13 @@ void parallel_tempering(const char * params_filename,
 	fflush(stdout);
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
+	printf("You can update your parameters file to the initial steps:\n");
+	for (i = 0; i < n_par; i++) {
+		printf("\t%s\t%f\n", get_params_descr(sinmod[0])[i], gsl_vector_get(
+				get_steps(sinmod[0]), i) / (gsl_vector_get(
+				sinmod[0]->params_max, i) - gsl_vector_get(
+				sinmod[0]->params_min, i)));
+	}
 
 	printf("Setting startingpoint for the calibration of all hotter "
 		"distribution to \n  the best parameter values of the (beta=1)"
@@ -178,6 +186,8 @@ void parallel_tempering(const char * params_filename,
 	for (i = 0 + 1; i < n_beta; i++) {
 		printf("\tCalibrating chain %d\n", i);
 		fflush(stdout);
+		gsl_vector_free(sinmod[i]->params_step);
+		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 
@@ -198,23 +208,39 @@ void parallel_tempering(const char * params_filename,
 
 	analyse(sinmod, n_beta, n_swap);
 	for (i = 0; i < n_beta; i++) {
-		free(sinmod[i]->additional_data);
+		mem_free(sinmod[i]->additional_data);
 		if (i != 0) {
 			set_x(sinmod[i], NULL);
 			set_y(sinmod[i], NULL);
 		}
 		sinmod[i] = mcmc_free(sinmod[i]);
-		free(sinmod[i]);
+		mem_free(sinmod[i]);
 	}
-	free(sinmod);
+	mem_free(sinmod);
 }
+
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Enable Random Walk Metropolis (adaptive MCMC method)
+ * Also important: #MINIMAL_STEPWIDTH, #MAXIMAL_STEPWIDTH
+ */
+#define RWM
+#endif
+
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * Enable a constant but small rescaling of the step width to keep the
+ * acceptance rate up.
+ */
+#define ADAPT
+#endif
 
 void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	int subiter;
 	FILE * acceptance_file = NULL;
-#ifdef RMW
+#ifdef RWM
 	double prob_old[100];
 #endif
 	assert(n_beta < 100);
@@ -240,7 +266,7 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				mcmc_append_current_parameters(sinmod[i]);
 			}
 		}
-#ifdef RMW
+#ifdef RWM
 		for (i = 0; i < n_beta; i++) {
 			prob_old[i] = get_prob(sinmod[i]);
 			markov_chain_step(sinmod[i], 0);
@@ -249,25 +275,30 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 #endif
 #ifdef ADAPT
 		for (i = 0; i < n_beta; i++) {
+			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
+							sinmod[i]) < 20000) {
+				continue;
+			}
 			if (get_params_accepts_sum(sinmod[i]) * 1.0
-					/ get_params_rejects_sum(sinmod[i]) < 0.23 - 0.05) {
-				dump_i("too little accepts, scaling down", i);
+					/ get_params_rejects_sum(sinmod[i]) < TARGET_ACCEPTANCE_RATE - 0.05) {
+				dump_i("too few accepts, scaling down", i);
 				gsl_vector_scale(get_steps(sinmod[i]), 0.99);
 			} else if (get_params_accepts_sum(sinmod[i]) * 1.0
-					/ get_params_rejects_sum(sinmod[i]) > 0.23 + 0.05) {
+					/ get_params_rejects_sum(sinmod[i]) > TARGET_ACCEPTANCE_RATE + 0.05) {
 				dump_i("too many accepts, scaling up", i);
-				gsl_vector_scale(get_steps(sinmod[i]), 1/ 0.99);
+				gsl_vector_scale(get_steps(sinmod[i]), 1 / 0.99);
+			}
+			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
+							sinmod[i]) > 100000) {
+				reset_accept_rejects(sinmod[i]);
 			}
 		}
 #endif
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
-		/* TODO: add continuous dumping */
 		if (iter % PRINT_PROB_INTERVAL == 0) {
 			if (dumpflag) {
-				/* TODO: dump all chains */
-				mcmc_dump_probabilities(sinmod[0], DUMP_PROB_LENGTH, "");
-				print_current_positions(sinmod, n_beta);
+				report(sinmod, n_beta);
 				dumpflag = 0;
 			}
 			fprintf(acceptance_file, "%lu\t", iter);

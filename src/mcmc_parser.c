@@ -28,7 +28,7 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	double min;
 	double max;
 	double step;
-	char * descr = (char*) calloc(MAX_LINE_LENGTH, sizeof(char));
+	char * descr = (char*) mem_calloc(MAX_LINE_LENGTH, sizeof(char));
 	dump_i("parsing line", i);
 
 	col = fscanf(input, "%lf\t%lf\t%lf\t%s\t%lf\n", &start, &min, &max, descr,
@@ -51,6 +51,18 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	debug("setting values");
 	gsl_vector_set(m->params, i, start);
 	gsl_vector_set(m->params_best, i, start);
+	if(min > max) {
+		fprintf(stderr, "min(%f) < max(%f)\n", min, max);
+		return 1;
+	}
+	if(start > max) {
+		fprintf(stderr, "start(%f) > max(%f)\n", start, max);
+		return 1;
+	}
+	if(start < min) {
+		fprintf(stderr, "start(%f) < min(%f)\n", start, min);
+		return 1;
+	}
 	gsl_vector_set(m->params_min, i, min);
 	gsl_vector_set(m->params_max, i, max);
 	m->params_descr[i] = descr;
@@ -100,7 +112,7 @@ static void load_data(mcmc * m, const char * filename) {
 }
 
 char * my_strdup(const char * s) {
-	char *buf = calloc(strlen(s) + 1, sizeof(char));
+	char *buf = mem_calloc(strlen(s) + 1, sizeof(char));
 	if (buf != NULL)
 		strcpy(buf, s);
 	return buf;

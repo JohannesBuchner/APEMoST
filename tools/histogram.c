@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "gsl_helper.h"
+#include "utils.h"
 #include "debug.h"
 
 void find_min_max(char * filename, gsl_vector * min, gsl_vector * max) {

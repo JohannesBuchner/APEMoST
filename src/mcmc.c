@@ -87,7 +87,7 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	mcmc * m;
 	IFSEGV
 		debug("allocating mcmc struct");
-	m = (mcmc*) malloc(sizeof(mcmc));
+	m = (mcmc*) mem_malloc(sizeof(mcmc));
 	assert(m != NULL);
 	m->n_iter = 0;
 	m->size = 0;
@@ -107,9 +107,9 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	mcmc_prepare_iteration(m, 0);
 	assert(m->params_distr != NULL);
 
-	m->params_accepts = (long*) calloc(m->n_par, sizeof(long));
+	m->params_accepts = (long*) mem_calloc(m->n_par, sizeof(long));
 	assert(m->params_accepts != NULL);
-	m->params_rejects = (long*) calloc(m->n_par, sizeof(long));
+	m->params_rejects = (long*) mem_calloc(m->n_par, sizeof(long));
 	assert(m->params_rejects != NULL);
 	m->params_step = gsl_vector_calloc(m->n_par);
 	assert(m->params_step != NULL);
@@ -118,7 +118,7 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	m->params_max = gsl_vector_calloc(m->n_par);
 	assert(m->params_max != NULL);
 
-	m->params_descr = (const char**) calloc(m->n_par, sizeof(char*));
+	m->params_descr = (const char**) mem_calloc(m->n_par, sizeof(char*));
 
 	m->x_dat = NULL;
 	m->y_dat = NULL;
@@ -145,14 +145,14 @@ mcmc * mcmc_free(mcmc * m) {
 	IFSEGV
 		debug("freeing params_descr");
 	for (i = 0; i < get_n_par(m); i++) {
-		free((char*) m->params_descr[i]);
+		mem_free(m->params_descr[i]);
 	}
-	free(m->params_descr);
+	mem_free(m->params_descr);
 
 	IFSEGV
 		debug("freeing accepts/rejects");
-	free(m->params_accepts);
-	free(m->params_rejects);
+	mem_free(m->params_accepts);
+	mem_free(m->params_rejects);
 	IFSEGV
 		debug("freeing step/min/max");
 	gsl_vector_free(m->params_step);
@@ -164,7 +164,7 @@ mcmc * mcmc_free(mcmc * m) {
 		gsl_vector_free((gsl_vector*) m->y_dat);
 	if (m->model != NULL)
 		gsl_vector_free(m->model);
-	free(m);
+	mem_free(m);
 	m = NULL;
 	return NULL;
 }

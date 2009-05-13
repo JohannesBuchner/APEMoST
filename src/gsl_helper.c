@@ -1,5 +1,6 @@
 
 #include "gsl_helper.h"
+#include "utils.h"
 #include "debug.h"
 
 gsl_histogram * create_hist(int nbins, double min, double max) {

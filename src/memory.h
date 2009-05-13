@@ -14,7 +14,7 @@
 #define mem_malloc(x) malloc(x)
 #define mem_calloc(n,x) calloc(n, x)
 #define mem_realloc(p,x) realloc(p,x)
-#define mem_free(x) { FREEMSG(x); free(x); (x) = NULL; }
+#define mem_free(x) { FREEMSG(x); free((void*)x); }
 
 #else
 
