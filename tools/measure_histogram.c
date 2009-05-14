@@ -25,25 +25,45 @@ void usage(char * progname) {
 		"the features.\n", progname);
 }
 
-void analyse_part(gsl_vector * v, unsigned int left, unsigned int right,
+void output_hist(gsl_histogram * h) {
+	double lower;
+	double upper;
+	unsigned int count;
+	unsigned int i;
+
+	for (i = 0; i < gsl_histogram_bins(h); i++) {
+		gsl_histogram_get_range(h, i, &lower, &upper);
+		count = gsl_histogram_get(h, i);
+
+		printf("%f..%f\t:\t%10d\n", lower, upper, count);
+	}
+}
+
+void analyse_part(gsl_histogram * h, unsigned int left, unsigned int right,
 		unsigned long nvalues, double * median, double * leftquartile,
 		double * rightquartile, double * percentage) {
-	unsigned long n = right - left + 1;
+	unsigned long n = 0;
 	unsigned long c = 0;
 	unsigned int i;
+	double min;
+	double max;
+	for (i = left; i <= right; i++) {
+		n += gsl_histogram_get(h, i);
+	}
 	dump_ul("number of values in this part", n);
 	*percentage = 1.0 * n / nvalues;
 	dump_d("equal to percentage of", *percentage);
 	for (i = left; i <= right; i++) {
-		c++;
-		if (c <= n * 1 / 4) {
-			*leftquartile = gsl_vector_get(v, i);
+		c += gsl_histogram_get(h, i);
+		gsl_histogram_get_range(h, i, &min, &max);
+		if (c < (right - left) * 1 / 4) {
+			*leftquartile = min;
 		}
-		if (c <= n * 2 / 4) {
-			*median = gsl_vector_get(v, i);
+		if (c < (right - left) * 2 / 4) {
+			*median = min;
 		}
-		if (c <= n * 3 / 4) {
-			*rightquartile = gsl_vector_get(v, i);
+		if (c < (right - left) * 3 / 4) {
+			*rightquartile = min;
 		}
 	}
 	dump_d("leftquartile", *leftquartile);
@@ -51,56 +71,17 @@ void analyse_part(gsl_vector * v, unsigned int left, unsigned int right,
 	dump_d("rightquartile", *rightquartile);
 }
 
-unsigned int fill_vector(gsl_vector * values, char * filename, double min,
-		double max) {
-	FILE * input;
-	int col;
-	double v;
-	int line = 0;
-	unsigned int i = 0;
-
-	input = openfile(filename);
-
-	while (!feof(input)) {
-		col = fscanf(input, "%lf", &v);
-		if (col != 1) {
-			if (feof(input))
-				break;
-			fprintf(stderr, "field could not be read: %d, line %d in %s\n", i
-					+ 1, line + 1, filename);
-			exit(1);
-		}
-		if (v >= min && v <= max) {
-			gsl_vector_set(values, i, v);
-			i++;
-		}
-		line++;
-	}
-	dump_i("read lines", line);
-	dump_i("accepted lines", i);
-	fclose(input);
-	return i;
-}
-
-int double_comp(const void * av, const void * bv) {
-	double a = *(double*) av;
-	double b = *(double*) bv;
-	if (a < b)
-		return -1;
-	else if (a == b)
-		return 0;
-	else
-		return 1;
-}
 
 void run(char * filename, unsigned long nmaxvalues, double min, double max) {
 	unsigned int i;
-	unsigned int nvalues;
-	double empty_space_needed;
+	gsl_histogram * h;
+	unsigned int nbins;
+	unsigned long nvalues;
+	unsigned int empty_in_a_row = 0;
+	unsigned int empty_in_a_row_needed;
 	unsigned int left;
 	unsigned int right;
 	double median, leftquartile, rightquartile, percentage;
-	gsl_vector * values = gsl_vector_alloc(nmaxvalues);
 	gsl_vector * medians = gsl_vector_alloc(100);
 	gsl_vector * leftquartiles = gsl_vector_alloc(100);
 	gsl_vector * rightquartiles = gsl_vector_alloc(100);
@@ -113,51 +94,49 @@ void run(char * filename, unsigned long nmaxvalues, double min, double max) {
 	vectors[3] = rightquartiles;
 
 	dump_ul("nmaxvalues", nmaxvalues);
-	nvalues = fill_vector(values, filename, min, max);
-	dump_ul("nvalues", nmaxvalues);
-	debug("data ready!");
-	qsort(values->data, nvalues, sizeof(double), double_comp);
-	debug("data sorted!");
+	h = create_hist(nmaxvalues, min, max);
+	append_to_hists(&h, 1, filename);
+	nvalues = gsl_histogram_sum(h);
+	debug("histogram ready!");
+
+	nbins = gsl_histogram_bins(h);
+	dump_ui("nbins", nbins);
 
 	/* 1% of parameter space */
-	empty_space_needed = (max - min) / 100;
-	dump_d("empty_space_needed", empty_space_needed);
-	dump_d("min", min);
-	dump_d("max", max);
+	empty_in_a_row_needed = nbins / 100;
 
-	assert(gsl_vector_get(values, 0) >= min);
-	assert(gsl_vector_get(values, 0) <= max);
-	assert(gsl_vector_get(values, nvalues - 1) >= min);
-	assert(gsl_vector_get(values, nvalues - 1) <= max);
-
-	left = 0;
+	dump_ui("nbins", nbins);
+	right = 0;
 	while (1) {
+		left = right;
+		while (left < nbins && (gsl_histogram_get(h, left) == 0))
+			left++;
+		left--;
+		if (left == nbins - 1)
+			break;
 		dump_ui("found left side", left);
-		dump_d("left side", gsl_vector_get(values, left));
 		right = left + 1;
-		for (; right < nvalues; right++) {
-			if (gsl_vector_get(values, right) - gsl_vector_get(values, right
-					- 1) > empty_space_needed) {
-				dump_d("gap till next", gsl_vector_get(values, right) - gsl_vector_get(values, right
-								- 1));
-				break;
+		for (; right < nbins; right++) {
+			if (gsl_histogram_get(h, right) == 0) {
+				empty_in_a_row++;
+				if (empty_in_a_row > empty_in_a_row_needed)
+					break;
+			} else {
+				empty_in_a_row = 0;
 			}
 		}
 		right--;
 		dump_ui("found right side", right);
-		dump_d("right side", gsl_vector_get(values, right));
-		analyse_part(values, left, right, nvalues, &median, &leftquartile,
+		analyse_part(h, left, right, nvalues, &median, &leftquartile,
 				&rightquartile, &percentage);
 		gsl_vector_set(medians, npeaks, median);
 		gsl_vector_set(leftquartiles, npeaks, leftquartile);
 		gsl_vector_set(rightquartiles, npeaks, rightquartile);
 		gsl_vector_set(percentages, npeaks, percentage);
 		npeaks++;
-		assert(npeaks < 100);
 
-		if (right == nvalues - 1)
+		if (right == nbins - 1)
 			break;
-		left = right + 1;
 	}
 
 #ifndef NOSORT
@@ -172,11 +151,7 @@ void run(char * filename, unsigned long nmaxvalues, double min, double max) {
 				gsl_vector_get(percentages, i));
 	}
 
-	gsl_vector_free(values);
-	gsl_vector_free(medians);
-	gsl_vector_free(leftquartiles);
-	gsl_vector_free(rightquartiles);
-	gsl_vector_free(percentages);
+	free(h);
 }
 
 /* see usage. nvalues min max file */

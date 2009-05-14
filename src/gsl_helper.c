@@ -1,4 +1,3 @@
-
 #include "gsl_helper.h"
 #include "utils.h"
 #include "debug.h"
@@ -176,5 +175,8 @@ void sort(gsl_vector ** vs, unsigned int nvectors, unsigned int vector_size) {
 				gsl_vector_set(vs[i], best, temp);
 			}
 		}
+		if (j % 1000 == 0)
+			IFDEBUG
+				printf("sorted: %u/%u\r", j, vector_size);
 	}
 }
