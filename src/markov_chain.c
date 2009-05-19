@@ -75,7 +75,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 		mcmc_check_best(m);
 	}
 	debug("Burn-in done, adjusting steps ...");
-	gsl_vector_memcpy(original_steps, get_steps(m));
+	gsl_vector_memcpy(get_steps(m), original_steps);
 	gsl_vector_free(original_steps);
 	mcmc_check(m);
 	gsl_vector_scale(m->params_step, adjust_step);
@@ -209,7 +209,6 @@ double handle_overflow(double new_value, const double min, const double max,
 
 	while (1) {
 		if (parameters[j] == 0) {
-			debug("non-circular parameter");
 			/* non-circular parameter */
 			if (new_value > max)
 				new_value = max - mod_double(new_value - max, max - min);
@@ -218,7 +217,6 @@ double handle_overflow(double new_value, const double min, const double max,
 			return new_value;
 		}
 		if (parameters[j] == i + 1) {
-			debug("circular parameter");
 			/* circular parameter */
 			new_value = min + mod_double(new_value - min, max - min);
 			return new_value;
