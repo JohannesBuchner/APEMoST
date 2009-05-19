@@ -49,8 +49,8 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 
 	for (i = 0; i < m->x_dat->size; i++) {
 		power_model = apply_formula(m, i);
-		prob += power_model + gsl_sf_exp(gsl_vector_get(m->y_dat, i)
-				/ power_model);
+		prob += gsl_sf_log(power_model) + gsl_vector_get(m->y_dat, i)
+				/ power_model;
 	}
 
 	set_prob(m, get_beta(m) * -1 * (prob + prior));
