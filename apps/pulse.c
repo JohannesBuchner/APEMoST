@@ -33,7 +33,7 @@ double calc_prior(const mcmc * m) {
 	double prior = 0;
 	double height;
 	/* i = 0 is lifetime. i is frequency, i+1 is height. */
-	for (i = 1; i < get_n_par(m) + 1; i += 2) {
+	for (i = 1; i < get_n_par(m); i += 2) {
 		height = gsl_vector_get(get_params(m), i + 1);
 		prior += gsl_sf_log(height + HMIN);
 	}

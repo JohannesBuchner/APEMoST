@@ -6,7 +6,13 @@
 #define DEFAULT_MUL 0.85
 #define DEFAULT_ADJUST_STEP 0.5
 #define DEFAULT_RAT_LIMIT -1 /* is calculated then */
+#ifndef NO_RESCALING_LIMIT
 #define NO_RESCALING_LIMIT 15
+#endif
+
+#ifndef ITER_READJUST
+#define ITER_READJUST 200
+#endif
 
 #ifndef TARGET_ACCEPTANCE_RATE
 #define TARGET_ACCEPTANCE_RATE 0.23

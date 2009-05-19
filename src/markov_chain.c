@@ -90,7 +90,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			mcmc_check_best(m);
 		}
 		iter++;
-		if (iter % 200 == 0) {
+		if (iter % ITER_READJUST == 0) {
 			accept_rate = get_accept_rate(m);
 
 			if (old_accepts == NULL) {
@@ -157,7 +157,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			else dump_v("steps", m->params_step);
 			restart_from_best(m);
 			reset_accept_rejects(m);
-			for (subiter = 0; subiter < 200; subiter++) {
+			for (subiter = 0; subiter < ITER_READJUST; subiter++) {
 				markov_chain_step(m, 0);
 				mcmc_check_best(m);
 			}
