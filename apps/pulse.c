@@ -39,7 +39,6 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	(void) old_values;
 	if (power_profile != NULL)
 		power_profile = NULL;
-	debug("normal calculation");
 
 	for (i = 0; i < m->x_dat->size; i++) {
 		y = 0;
@@ -83,7 +82,6 @@ void calc_model_for(mcmc * m, const unsigned int j, const double old_value) {
 		assert(power_profile != NULL);
 	}
 
-	dump_i("parameter changed", j);
 	if (j == 0) {
 		/* lifetime changed -> recalculate everything */
 		for (i = 1; i < get_n_par(m); i += 2) {
