@@ -5,16 +5,20 @@
 #include "parallel_tempering.h"
 #include "debug.h"
 
+#ifndef HMIN
+#define HMIN 1e-6
+#endif
+
 static gsl_vector ** power_profile = NULL;
 
-double calc_prior(const mcmc * m, double hmin) {
+static double calc_prior(const mcmc * m) {
 	unsigned int i;
 	const gsl_vector * params = m->params;
 	double prior = 0;
 	double mode_height;
-	for (i = 2; i < get_n_par(m); i += 2) {
+	for (i = 1; i < get_n_par(m); i += 2) {
 		mode_height = gsl_vector_get(params, i + 1);
-		prior += gsl_sf_log(mode_height + hmin);
+		prior += gsl_sf_log(mode_height + HMIN);
 	}
 	return prior;
 }
@@ -29,9 +33,8 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	double distance;
 	double freq;
 	const gsl_vector * params = m->params;
-	double hmin = pow(10, gsl_vector_get(params, 0));
-	double prior = calc_prior(m, hmin);
-	double lifetime = gsl_vector_get(params, 1);
+	double prior = calc_prior(m);
+	double lifetime = gsl_vector_get(params, 0);
 
 	(void) old_values;
 	if (power_profile != NULL)
@@ -41,7 +44,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	for (i = 0; i < m->x_dat->size; i++) {
 		y = 0;
 		freq = gsl_vector_get(m->x_dat, i);
-		for (j = 2; j < get_n_par(m); j += 2) {
+		for (j = 1; j < get_n_par(m); j += 2) {
 			mode_height = gsl_vector_get(params, j);
 			mode_freq = gsl_vector_get(params, j + 1);
 			distance = mode_freq - freq;
@@ -70,46 +73,35 @@ void calc_model_for(mcmc * m, const unsigned int j, const double old_value) {
 	double mode_height;
 	double freq;
 	double mode_freq;
-	double hmin;
 	double distance;
 	gsl_vector * params = m->params;
-	double lifetime = gsl_vector_get(params, 1);
+	double lifetime = gsl_vector_get(params, 0);
+	int mode = (j - 1) / 2;
 
 	if (power_profile == NULL) {
-		power_profile = mem_calloc(get_n_par(m)-2, sizeof(gsl_vector*));
+		power_profile = mem_calloc(get_n_par(m) - 1, sizeof(gsl_vector*));
 		assert(power_profile != NULL);
 	}
 
 	dump_i("parameter changed", j);
 	if (j == 0) {
-		/* hmin changed -> recalculate prior */
-		hmin = pow(10, gsl_vector_get(params, 0));
-		for (i = 2; i < get_n_par(m); i += 2) {
-			mode_height = gsl_vector_get(params, i + 1);
-			diffprob += gsl_sf_log(mode_height + hmin);
-			diffprob -= gsl_sf_log(mode_height + pow(10, old_value));
-		}
-		set_prob(m, get_beta(m) * -1 * (prob + diffprob));
-		return;
-	} else if (j == 1) {
 		/* lifetime changed -> recalculate everything */
-		for (i = 2; i < get_n_par(m); i += 2) {
-			if (power_profile[(i - 2) / 2] == NULL) {
-				power_profile[(i - 2) / 2] = gsl_vector_alloc(m->x_dat->size);
+		for (i = 1; i < get_n_par(m); i += 2) {
+			if (power_profile[(i - 1) / 2] == NULL) {
+				power_profile[(i - 1) / 2] = gsl_vector_alloc(m->x_dat->size);
 			}
 		}
-		hmin = pow(10, gsl_vector_get(params, 0));
-		prob = calc_prior(m, hmin);
+		prob = calc_prior(m);
 		for (i = 0; i < m->x_dat->size; i++) {
 			y = 0;
 			freq = gsl_vector_get(m->x_dat, i);
-			for (k = 2; k < get_n_par(m); k += 2) {
+			for (k = 1; k < get_n_par(m); k += 2) {
 				mode_height = gsl_vector_get(params, k);
 				mode_freq = gsl_vector_get(params, k + 1);
 				distance = mode_freq - freq;
-				gsl_vector_set(power_profile[(k - 2) / 2], i, mode_height / (1
+				gsl_vector_set(power_profile[(k - 1) / 2], i, mode_height / (1
 						+ 4 * distance * distance * M_PI * lifetime));
-				y += gsl_vector_get(power_profile[(k - 2) / 2], i);
+				y += gsl_vector_get(power_profile[(k - 1) / 2], i);
 			}
 			gsl_vector_set(m->model, i, y);
 
@@ -117,27 +109,26 @@ void calc_model_for(mcmc * m, const unsigned int j, const double old_value) {
 		}
 		set_prob(m, get_beta(m) * -1 * prob);
 		return;
-	} else if ((j - 2) % 2 == 0) {
+	} else if ((j - 1) % 2 == 0) {
 		/* a height parameter changed -> recalculate with new factor */
-		if (power_profile[(j - 2) / 2] != NULL) {
+		if (0 && power_profile[mode] != NULL) {
 			mode_height = gsl_vector_get(params, j);
 			for (i = 0; i < m->x_dat->size; i++) {
 				y = gsl_vector_get(m->model, i);
 				prob -= gsl_sf_log(y) + gsl_vector_get(m->y_dat, i) / y;
-				y -= gsl_vector_get(power_profile[(j - 2) / 2], i);
-				y += mode_height / old_value * gsl_vector_get(power_profile[(j
-						- 2) / 2], i);
+				y -= gsl_vector_get(power_profile[mode], i);
+				y += mode_height / old_value * gsl_vector_get(
+						power_profile[mode], i);
 				gsl_vector_set(m->model, i, y);
 				prob += gsl_sf_log(y) + gsl_vector_get(m->y_dat, i) / y;
 			}
-			gsl_vector_scale(power_profile[(j - 2) / 2], mode_height
-					/ old_value);
+			gsl_vector_scale(power_profile[mode], mode_height / old_value);
 			set_prob(m, get_beta(m) * -1 * (prob + diffprob));
 			return;
 		}
 	}
-	if (power_profile[(j - 2) / 2] == NULL) {
-		power_profile[(j - 2) / 2] = gsl_vector_alloc(m->x_dat->size);
+	if (power_profile[(j - 1) / 2] == NULL) {
+		power_profile[(j - 1) / 2] = gsl_vector_alloc(m->x_dat->size);
 	}
 
 	/* a frequency parameter changed. -> recalculate this */
@@ -145,13 +136,13 @@ void calc_model_for(mcmc * m, const unsigned int j, const double old_value) {
 		y = gsl_vector_get(m->model, i);
 		diffprob -= gsl_sf_log(y) + gsl_vector_get(m->y_dat, i) / y;
 		freq = gsl_vector_get(m->x_dat, i);
-		mode_height = gsl_vector_get(params, (j / 2) * 2);
-		mode_freq = gsl_vector_get(params, (j / 2) * 2 + 1);
+		mode_height = gsl_vector_get(params, 1 + mode * 2);
+		mode_freq = gsl_vector_get(params, 1 + mode * 2 + 1);
 		distance = mode_freq - freq;
-		gsl_vector_set(power_profile[(j - 2) / 2], i, 1 / (1 + 4 * distance
+		gsl_vector_set(power_profile[mode], i, 1 / (1 + 4 * distance
 				* distance * M_PI * lifetime));
-		y += mode_height * gsl_vector_get(power_profile[(j - 2) / 2], i);
-		if ((j - 2) % 2 == 0) {
+		y += mode_height * gsl_vector_get(power_profile[mode], i);
+		if ((j - 1) % 2 == 0) {
 			y -= old_value / (1 + 4 * distance * distance * M_PI * lifetime);
 		} else {
 			distance = old_value - freq;
