@@ -15,6 +15,7 @@ MARKOV_CHAIN_SOURCES=src/markov_chain*.c
 PARALLEL_TEMPERING_SOURCES=src/parallel_tempering*.c
 TEST_SOURCES=tests/*.c
 MAIN=apps/generic_main.c
+BENCH_MAIN=apps/benchmark_main.c
 
 ## help: this clutter
 help:
@@ -32,6 +33,9 @@ tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOUR
 
 %.exe: apps/%.c  $(MCMC_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES) $(MAIN) 
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+benchmark_%.exe: apps/%.c  $(MCMC_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES) $(BENCH_MAIN) 
+	$(CC) -pg -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 %.exe: tools/%.c $(MCMC_SOURCES) $(COMMON_SOURCES)
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
