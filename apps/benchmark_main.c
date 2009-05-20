@@ -33,7 +33,11 @@ int main(int argc, char ** argv) {
 		for (j = 0; j < get_n_par(m); j++) {
 			calc_model_for(m, j, gsl_vector_get(get_params(m), j));
 			i++;
-			assert(prob == get_prob(m));
+			if((prob - get_prob(m)) / (prob + get_prob(m)) > 1e-7) {
+				dump_d("original prob", prob);
+				dump_d("new prob", get_prob(m));
+				assert(prob == get_prob(m));
+			}
 		}
 	}
 	for (; i < n + p; i++) {
