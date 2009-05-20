@@ -142,15 +142,13 @@ void set_model(mcmc * m, gsl_vector * new_model) {
 #define N_PARAMETERS
 #endif
 
-unsigned int get_n_par(const mcmc * m) {
 #ifdef N_PARAMETERS
-	(void)m;
-	return N_PARAMETERS;
+#define get_n_par(m) N_PARAMETERS
 #else
-#define N_PARAMETERS
+unsigned int get_n_par(const mcmc * m) {
 	return m->n_par;
-#endif
 }
+#endif
 
 void set_params_best(mcmc * m, gsl_vector * new_params_best) {
 	m->params_best = new_params_best;

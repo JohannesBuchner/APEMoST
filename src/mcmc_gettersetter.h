@@ -14,7 +14,11 @@ gsl_vector * get_params(const mcmc * m);
 gsl_vector * get_params_best(const mcmc * m);
 const gsl_vector * get_x(const mcmc * m);
 const gsl_vector * get_y(const mcmc * m);
+#ifdef N_PARAMETERS
+#define get_n_par(m) N_PARAMETERS
+#else
 unsigned int get_n_par(const mcmc * m);
+#endif
 gsl_rng * get_random(const mcmc * m);
 double get_prob(const mcmc * m);
 double get_prob_best(const mcmc * m);
