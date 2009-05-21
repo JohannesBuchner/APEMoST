@@ -17,7 +17,7 @@
 			printf("  ASSERT FAILED: %s\n",text); \
 			if(DUMPONFAIL && a != NULL){ \
 				printf("    dump: \n"); \
-				dump(a); \
+				dump_mcmc(a); \
 			} \
 			return 1; \
 		} else { \
@@ -79,7 +79,7 @@ int test_create(void) {
 	debug("test-create");
 	m = mcmc_init(3);
 	ASSERTEQUALI(m->n_par, 3, "number of parameters");
-	dump(m);
+	dump_mcmc(m);
 	debug("freeing");
 	m = mcmc_free(m);
 	return 0;

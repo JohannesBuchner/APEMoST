@@ -17,7 +17,7 @@ void dump_vectorln(gsl_vector * v) {
 /**
  * Dump the mcmc structure
  */
-void dump(mcmc * m) {
+void dump_mcmc(mcmc * m) {
 	unsigned int i;
 	IFDEBUG {
 		debug("dumping m      ---- ");

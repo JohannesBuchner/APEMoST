@@ -11,6 +11,12 @@
  * Example: Set this to 100000.
  */
 #define MAX_ITERATIONS
+/**
+ * should all chains be dumped?
+ *
+ * Otherwise, only chain0 is dumped (beta = 1)
+ */
+#define DUMP_ALL_CHAINS
 #endif
 
 #ifndef DUMP_PROB_LENGTH

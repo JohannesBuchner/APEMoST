@@ -62,23 +62,27 @@ void print_current_positions(mcmc ** sinmod, int n_beta) {
 }
 
 void report(mcmc ** sinmod, int n_beta) {
-	int i;
+	int i = 0;
 	char buf[100];
 	print_current_positions(sinmod, n_beta);
 	printf("\nwriting out visited parameters ");
-	for (i = 0; i < n_beta; i++) {
+	while (1) {
 		printf(".");
 		sprintf(buf, "-chain%d", i);
 		mcmc_dump_probabilities(sinmod[i], -1, buf);
 		fflush(stdout);
+#ifndef DUMP_ALL_CHAINS
+		break;
+#endif
+		if (i > n_beta)
+			break;
+		i++;
 	}
 	printf("done.\n");
 }
 
 int run;
 int dumpflag;
-
-void analyse(mcmc ** sinmod, int n_beta, int n_swap);
 
 double equidistant_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 	return beta_0 + i * (1 - beta_0) / (n_beta - 1);
@@ -126,6 +130,8 @@ double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 	/* this reverts the order so that beta(0) = 1.0. */
 	return BETA_DISTRIBUTION(n_beta - i - 1, n_beta, beta_0);
 }
+
+void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
 void parallel_tempering(const char * params_filename,
 		const char * data_filename, int n_beta, double beta_0,
@@ -240,23 +246,106 @@ void parallel_tempering(const char * params_filename,
 #define ADAPT
 #endif
 
-void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
+void adapt(mcmc ** sinmod, unsigned int n_beta, unsigned int n_swap) {
+	unsigned int i;
+
+#ifdef RWM
+	static double prob_old[100];
+#endif
+
+#ifdef RWM
+	for (i = 0; i < n_beta; i++) {
+		prob_old[i] = get_prob(sinmod[i]);
+		markov_chain_step(sinmod[i], 0);
+		rmw_adapt_stepwidth(sinmod[i], prob_old[i]);
+	}
+#endif
+#ifdef ADAPT
+	for (i = 0; i < n_beta; i++) {
+		if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
+						sinmod[i]) < 20000) {
+			continue;
+		}
+		if (get_params_accepts_sum(sinmod[i]) * 1.0
+				/ get_params_rejects_sum(sinmod[i]) < TARGET_ACCEPTANCE_RATE - 0.05) {
+			dump_i("too few accepts, scaling down", i);
+			gsl_vector_scale(get_steps(sinmod[i]), 0.99);
+		} else if (get_params_accepts_sum(sinmod[i]) * 1.0
+				/ get_params_rejects_sum(sinmod[i]) > TARGET_ACCEPTANCE_RATE + 0.05) {
+			dump_i("too many accepts, scaling up", i);
+			gsl_vector_scale(get_steps(sinmod[i]), 1 / 0.99);
+		}
+		if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
+						sinmod[i]) > 100000) {
+			reset_accept_rejects(sinmod[i]);
+		}
+	}
+#endif
+	(void) sinmod;
+	i = n_beta + n_swap;
+}
+
+void dump(mcmc ** sinmod, unsigned int n_beta, unsigned long iter,
+		FILE * acceptance_file) {
+	unsigned int i;
+	if (iter % PRINT_PROB_INTERVAL == 0) {
+		if (dumpflag) {
+			report(sinmod, n_beta);
+			dumpflag = 0;
+		}
+		fprintf(acceptance_file, "%lu\t", iter);
+		for (i = 0; i < n_beta; i++) {
+			fprintf(acceptance_file, "%lu\t", get_params_accepts_sum(sinmod[i]));
+			fprintf(acceptance_file, "%lu\t", get_params_rejects_sum(sinmod[i]));
+		}
+		fprintf(acceptance_file, "\n");
+		fflush(acceptance_file);
+		IFDEBUG {
+			debug("dumping distribution");
+			dump_ul("iteration", iter);
+			dump_ul("acceptance rate: accepts", get_params_accepts_sum(sinmod[0]));
+			dump_ul("acceptance rate: rejects", get_params_rejects_sum(sinmod[0]));
+			dump_mcmc(sinmod[0]);
+		} else {
+			printf("iteration: %lu, a/r: %lu/%lu v:", iter,
+					get_params_accepts_sum(sinmod[0]), get_params_rejects_sum(
+							sinmod[0]));
+			dump_vector(get_params(sinmod[0]));
+			printf(" [%d/%lu ticks]\r", get_duration(), CLOCKS_PER_SEC);
+			fflush(stdout);
+		}
+	}
+}
+
+void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
-	int subiter;
-	FILE * acceptance_file = NULL;
-#ifdef RWM
-	double prob_old[100];
+	unsigned int subiter;
+	FILE * acceptance_file;
+
+#ifdef DUMP_PROBABILITIES
+	FILE ** probabilities_file = (FILE**) mem_calloc(n_beta, sizeof(FILE*));
+	char buf[100];
+	assert(probabilities_file != NULL);
+	for (i = 0; i < n_beta; i++) {
+		sprintf(buf, "prob-chain%d.dump", i);
+		probabilities_file[i] = fopen(buf, "w");
+		if (probabilities_file[i] == NULL) {
+			fprintf(stderr, "opening file %s failed\n", buf);
+			perror("opening file failed");
+			exit(1);
+		}
+	}
 #endif
 	assert(n_beta < 100);
 
+	acceptance_file = fopen("acceptance_rate.dump", "w");
+	assert(acceptance_file != NULL);
 	get_duration();
 	run = 1;
 	dumpflag = 0;
 	printf("starting the analysis\n");
 	fflush(stdout);
-	acceptance_file = fopen("acceptance_rate.dump", "w");
-	assert(acceptance_file != NULL);
 
 	while (run
 #ifdef MAX_ITERATIONS
@@ -269,71 +358,26 @@ void analyse(mcmc ** sinmod, int n_beta, int n_swap) {
 				markov_chain_step(sinmod[i], 0);
 				mcmc_check_best(sinmod[i]);
 				mcmc_append_current_parameters(sinmod[i]);
-			}
-		}
-#ifdef RWM
-		for (i = 0; i < n_beta; i++) {
-			prob_old[i] = get_prob(sinmod[i]);
-			markov_chain_step(sinmod[i], 0);
-			rmw_adapt_stepwidth(sinmod[i], prob_old[i]);
-		}
+#ifdef DUMP_PROBABILITIES
+				fprintf(probabilities_file[i], "%6e\n", get_prob(sinmod[i]));
 #endif
-#ifdef ADAPT
-		for (i = 0; i < n_beta; i++) {
-			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
-							sinmod[i]) < 20000) {
-				continue;
-			}
-			if (get_params_accepts_sum(sinmod[i]) * 1.0
-					/ get_params_rejects_sum(sinmod[i]) < TARGET_ACCEPTANCE_RATE - 0.05) {
-				dump_i("too few accepts, scaling down", i);
-				gsl_vector_scale(get_steps(sinmod[i]), 0.99);
-			} else if (get_params_accepts_sum(sinmod[i]) * 1.0
-					/ get_params_rejects_sum(sinmod[i]) > TARGET_ACCEPTANCE_RATE + 0.05) {
-				dump_i("too many accepts, scaling up", i);
-				gsl_vector_scale(get_steps(sinmod[i]), 1 / 0.99);
-			}
-			if (get_params_accepts_sum(sinmod[i]) + get_params_rejects_sum(
-							sinmod[i]) > 100000) {
-				reset_accept_rejects(sinmod[i]);
 			}
 		}
-#endif
+		adapt(sinmod, n_beta, iter);
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
-		if (iter % PRINT_PROB_INTERVAL == 0) {
-			if (dumpflag) {
-				report(sinmod, n_beta);
-				dumpflag = 0;
-			}
-			fprintf(acceptance_file, "%lu\t", iter);
-			for (i = 0; i < n_beta; i++) {
-				fprintf(acceptance_file, "%lu\t", get_params_accepts_sum(
-						sinmod[i]));
-				fprintf(acceptance_file, "%lu\t", get_params_rejects_sum(
-						sinmod[i]));
-			}
-			fprintf(acceptance_file, "\n");
-			fflush(acceptance_file);
-			IFDEBUG {
-				debug("dumping distribution");
-				dump_ul("iteration", iter);
-				dump_ul("acceptance rate: accepts", get_params_accepts_sum(sinmod[0]));
-				dump_ul("acceptance rate: rejects", get_params_rejects_sum(sinmod[0]));
-				dump(sinmod[0]);
-			} else {
-				printf("iteration: %lu, a/r: %lu/%lu v:", iter,
-						get_params_accepts_sum(sinmod[0]),
-						get_params_rejects_sum(sinmod[0]));
-				dump_vector(get_params(sinmod[0]));
-				printf(" [%d/%lu ticks]\r", get_duration(), CLOCKS_PER_SEC);
-				fflush(stdout);
-			}
-		}
+		dump(sinmod, n_beta, iter, acceptance_file);
 	}
 	if (fclose(acceptance_file) != 0) {
 		assert(0);
 	}
+#ifdef DUMP_PROBABILITIES
+	for (i = 0; i < n_beta; i++) {
+		if (fclose(probabilities_file[i]) != 0) {
+			assert(0);
+		}
+	}
+#endif
 	report(sinmod, n_beta);
 }
 

@@ -81,7 +81,7 @@
 #define dump_v(str, v)    IFDEBUG { printf("\tDEBUG[%s]: %s: ", AT, str); dump_vectorln(v); fflush(NULL); }
 #define dump_m(str, m)    IFDEBUG { printf("\tDEBUG[%s]: %s\n", AT, str); dump(m); fflush(NULL); }
 
-void dump(mcmc * m);
+void dump_mcmc(mcmc * m);
 void dump_vector(gsl_vector * v);
 void dump_vectorln(gsl_vector * v);
 
