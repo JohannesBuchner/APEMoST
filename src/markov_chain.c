@@ -20,9 +20,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 	unsigned int i;
 
 	int reached_perfection = 0;
-	gsl_vector * old_accepts = NULL;
 	gsl_vector * accept_rate = NULL;
-	gsl_vector * old_steps = NULL;
 	double delta_reject_accept_t;
 
 	unsigned long iter = 0;
@@ -84,19 +82,13 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 		}
 		iter++;
 		if (iter % ITER_READJUST == 0) {
+			gsl_vector_free(accept_rate);
 			accept_rate = get_accept_rate(m);
 
-			if (old_accepts == NULL) {
-				old_accepts = accept_rate;
-				old_steps = dup_vector(get_steps(m));
-			}
 			dump_ul("------------------------------------------------ iteration", iter);
 			dump_v("params", get_params(m));
-			dump_v("acceptance rate: ", get_accept_rate(m));
+			dump_v("acceptance rate: ", accept_rate);
 			dump_v("steps", get_steps(m));
-
-			old_accepts = accept_rate;
-			old_steps = dup_vector(get_steps(m));
 
 			rescaled = 0;
 			for (i = 0; i < get_n_par(m); i++) {
@@ -163,7 +155,9 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 				markov_chain_step(m);
 				mcmc_check_best(m);
 			}
-			dump_v("New overall accept rate after reset", get_accept_rate(m));
+			gsl_vector_free(accept_rate);
+			accept_rate = get_accept_rate(m);
+			dump_v("New overall accept rate after reset", accept_rate);
 			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
 					- TARGET_ACCEPTANCE_RATE;
 			dump_d("Compared to desired rate", delta_reject_accept_t);

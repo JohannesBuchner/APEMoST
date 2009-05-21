@@ -74,7 +74,7 @@ static void report(const mcmc ** sinmod, const int n_beta) {
 #ifndef DUMP_ALL_CHAINS
 		break;
 #endif
-		if (i > n_beta)
+		if (i >= n_beta)
 			break;
 		i++;
 	}

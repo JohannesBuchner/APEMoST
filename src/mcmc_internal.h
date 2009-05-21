@@ -47,10 +47,4 @@ unsigned int countlines(const char * filename);
 /*double abs_double(const double x);*/
 #define abs_double(x) 	((x) < 0 ? -(x) : (x))
 
-/**
- * handle to stay inside the parameter space.
- */
-double handle_overflow(const double new_value, double min, double max,
-		unsigned int i);
-
 #endif /* MCMC_INTERNAL_H_ */
