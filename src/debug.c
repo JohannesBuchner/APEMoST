@@ -1,6 +1,6 @@
 #include "debug.h"
 
-void dump_vector(gsl_vector * v) {
+void dump_vector(const gsl_vector * v) {
 	unsigned int i;
 	printf("Vector%ud[", (unsigned int) v->size);
 	for (i = 0; i < v->size - 1; i++) {
@@ -9,7 +9,7 @@ void dump_vector(gsl_vector * v) {
 	printf("%f]", gsl_vector_get(v, v->size - 1));
 }
 
-void dump_vectorln(gsl_vector * v) {
+void dump_vectorln(const gsl_vector * v) {
 	dump_vector(v);
 	printf("\n");
 }
@@ -17,7 +17,7 @@ void dump_vectorln(gsl_vector * v) {
 /**
  * Dump the mcmc structure
  */
-void dump_mcmc(mcmc * m) {
+void dump_mcmc(const mcmc * m) {
 	unsigned int i;
 	IFDEBUG {
 		debug("dumping m      ---- ");

@@ -15,22 +15,22 @@ void set_beta(mcmc * m, double newbeta) {
 	((parallel_tempering_mcmc *) m->additional_data)->beta = newbeta;
 	((parallel_tempering_mcmc *) m->additional_data)->swapcount = 0;
 }
-double get_beta(mcmc * m) {
+double get_beta(const mcmc * m) {
 	return ((parallel_tempering_mcmc *) m->additional_data)->beta;
 }
 void inc_swapcount(mcmc * m) {
 	((parallel_tempering_mcmc *) m->additional_data)->swapcount++;
 }
-unsigned long get_swapcount(mcmc * m) {
+unsigned long get_swapcount(const mcmc * m) {
 	return ((parallel_tempering_mcmc *) m->additional_data)->swapcount;
 }
 
-void ctrl_c_handler(int signalnr) {
+static void ctrl_c_handler(int signalnr) {
 	printf("\nreceived Ctrl-C (%d). Stopping ... (please be patient)\n\n",
 			signalnr);
 	run = 0;
 }
-void sigusr_handler(int signalnr) {
+static void sigusr_handler(int signalnr) {
 	printf("\nreceived SIGUSR (%d). Will dump at next opportunity.\n\n",
 			signalnr);
 	signal(SIGUSR2, sigusr_handler);
@@ -40,14 +40,14 @@ void sigusr_handler(int signalnr) {
 
 #include <time.h>
 
-int get_duration() {
+static int get_duration() {
 	static clock_t stored = 0;
 	clock_t new = stored;
 	stored = clock();
 	return stored - new;
 }
 
-void print_current_positions(mcmc ** sinmod, int n_beta) {
+static void print_current_positions(const mcmc ** sinmod, const int n_beta) {
 	int i;
 	printf("printing chain parameters: \n");
 	for (i = 0; i < n_beta; i++) {
@@ -61,7 +61,7 @@ void print_current_positions(mcmc ** sinmod, int n_beta) {
 	fflush(stdout);
 }
 
-void report(mcmc ** sinmod, int n_beta) {
+static void report(const mcmc ** sinmod, const int n_beta) {
 	int i = 0;
 	char buf[100];
 	print_current_positions(sinmod, n_beta);
@@ -81,25 +81,26 @@ void report(mcmc ** sinmod, int n_beta) {
 	printf("done.\n");
 }
 
-int run;
-int dumpflag;
-
-double equidistant_beta(unsigned int i, unsigned int n_beta, double beta_0) {
+double equidistant_beta(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
 	return beta_0 + i * (1 - beta_0) / (n_beta - 1);
 }
-double equidistant_temperature(unsigned int i, unsigned int n_beta,
-		double beta_0) {
+double equidistant_temperature(const unsigned int i,
+		const unsigned int n_beta, const double beta_0) {
 	return 1 / (1 / beta_0 + i * (1 - 1 / beta_0) / (n_beta - 1));
 }
-double chebyshev_temperature(unsigned int i, unsigned int n_beta, double beta_0) {
+double chebyshev_temperature(const unsigned int i,
+		const unsigned int n_beta, const double beta_0) {
 	return 1 / (1 / beta_0 + (1 - 1 / beta_0) / 2 * (1 - cos(i * M_PI / (n_beta
 			- 1))));
 }
-double chebyshev_beta(unsigned int i, unsigned int n_beta, double beta_0) {
+double chebyshev_beta(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
 	return beta_0 + (1 - beta_0) / 2 * (1 - cos(i * M_PI / (n_beta - 1)));
 }
 
-double equidistant_stepwidth(unsigned int i, unsigned int n_beta, double beta_0) {
+double equidistant_stepwidth(const unsigned int i,
+		const unsigned int n_beta, const double beta_0) {
 	return beta_0 + pow(i / (n_beta - 1), 2) * (1 - beta_0);
 }
 
@@ -121,7 +122,7 @@ double equidistant_stepwidth(unsigned int i, unsigned int n_beta, double beta_0)
 #define BETA_DISTRIBUTION
 #endif
 
-double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
+static double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 #ifndef BETA_DISTRIBUTION
 #define BETA_DISTRIBUTION chebyshev_temperature
 #endif
@@ -131,12 +132,12 @@ double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 	return BETA_DISTRIBUTION(n_beta - i - 1, n_beta, beta_0);
 }
 
-void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
+static void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
 void parallel_tempering(const char * params_filename,
-		const char * data_filename, int n_beta, double beta_0,
-		unsigned long burn_in_iterations, double rat_limit,
-		unsigned long iter_limit, double mul, int n_swap) {
+		const char * data_filename, const int n_beta, const double beta_0,
+		const unsigned long burn_in_iterations, const double rat_limit,
+		const unsigned long iter_limit, const double mul, const int n_swap) {
 	int n_par;
 	int i;
 	const char ** params_descr;
@@ -246,7 +247,8 @@ void parallel_tempering(const char * params_filename,
 #define ADAPT
 #endif
 
-void adapt(mcmc ** sinmod, unsigned int n_beta, unsigned int n_swap) {
+static void adapt(mcmc ** sinmod, const unsigned int n_beta,
+		const unsigned int n_swap) {
 	unsigned int i;
 
 #ifdef RWM
@@ -285,8 +287,8 @@ void adapt(mcmc ** sinmod, unsigned int n_beta, unsigned int n_swap) {
 	i = n_beta + n_swap;
 }
 
-void dump(mcmc ** sinmod, unsigned int n_beta, unsigned long iter,
-		FILE * acceptance_file) {
+void dump(const mcmc ** sinmod, const unsigned int n_beta,
+		const unsigned long iter, FILE * acceptance_file) {
 	unsigned int i;
 	if (iter % PRINT_PROB_INTERVAL == 0) {
 		if (dumpflag) {
@@ -317,7 +319,7 @@ void dump(mcmc ** sinmod, unsigned int n_beta, unsigned long iter,
 	}
 }
 
-void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap) {
+static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	unsigned int subiter;
@@ -366,7 +368,7 @@ void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap) {
 		adapt(sinmod, n_beta, iter);
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
-		dump(sinmod, n_beta, iter, acceptance_file);
+		dump((const mcmc **)sinmod, n_beta, iter, acceptance_file);
 	}
 	if (fclose(acceptance_file) != 0) {
 		assert(0);
@@ -378,6 +380,6 @@ void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap) {
 		}
 	}
 #endif
-	report(sinmod, n_beta);
+	report((const mcmc **)sinmod, n_beta);
 }
 

@@ -52,20 +52,20 @@ typedef struct {
 
 } parallel_tempering_mcmc;
 
-void set_beta(mcmc * m, double newbeta);
+void set_beta(mcmc * m, const double newbeta);
 
-double get_beta(mcmc * m);
+double get_beta(const mcmc * m);
 
 void inc_swapcount(mcmc * m);
 
-unsigned long get_swapcount(mcmc * m);
+unsigned long get_swapcount(const mcmc * m);
 
 /**
  * begin a parallel tempering execution
  */
 void parallel_tempering(const char * params_filename,
-		const char * data_filename, int n_beta, double beta_0,
-		unsigned long burn_in_iterations, double rat_limit,
-		unsigned long iter_limit, double mul, int n_swap);
+		const char * data_filename, const int n_beta, const double beta_0,
+		const unsigned long burn_in_iterations, const double rat_limit,
+		const unsigned long iter_limit, const double mul, const int n_swap);
 
 #endif /* PARALLEL_TEMPERING_H_ */

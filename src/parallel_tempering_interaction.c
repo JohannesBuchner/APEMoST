@@ -4,7 +4,7 @@
 #include "mcmc_internal.h"
 #include "gsl_helper.h"
 
-int check_swap_probability(mcmc * a, mcmc * b) {
+static int check_swap_probability(mcmc * a, mcmc * b) {
 	double a_beta, b_beta;
 	double a_prob, b_prob;
 	double r, c;
@@ -76,7 +76,7 @@ int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta) {
 	return -1;
 }
 
-void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
+static void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	double r;
 	int b;
 	gsl_vector * temp;
@@ -102,24 +102,6 @@ void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	mcmc_check(sinmod[b]);
 }
 
-void reset_to_best(mcmc ** sinmod, int n_beta) {
-
-#ifdef RESET_TO_BEST
-	int a;
-	a = (int) (n_beta * RESET_TO_BEST * get_next_uniform_random(sinmod[0]));
-	if (a < n_beta) {
-		printf("Resetting chain %d to", a);
-		dump_vector(get_params_best(sinmod[a]));
-		set_prob(sinmod[a], get_prob_best(sinmod[a]));
-		set_params(sinmod[a], dup_vector(get_params_best(sinmod[a])));
-		calc_model(sinmod[a], NULL);
-	}
-#else
-	(void)sinmod;
-	(void)n_beta;
-#endif
-}
-
 void tempering_interaction(mcmc ** sinmod, unsigned int n_beta,
 		unsigned long iter) {
 	int candidate;
@@ -136,6 +118,5 @@ void tempering_interaction(mcmc ** sinmod, unsigned int n_beta,
 		parallel_tempering_do_swap(sinmod, n_beta, candidate);
 		inc_swapcount(sinmod[candidate]);
 	}
-	reset_to_best(sinmod, n_beta);
 }
 
