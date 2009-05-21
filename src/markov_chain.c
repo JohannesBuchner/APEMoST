@@ -8,21 +8,14 @@
 #include "gsl_helper.h"
 #include <gsl/gsl_sf.h>
 
-void restart_from_best(mcmc * m) {
+static void restart_from_best(mcmc * m) {
 	set_params(m, dup_vector(get_params_best(m)));
 	set_prob(m, -1E7);
 }
 
-double abs_double(double x) {
-	if (x < 0)
-		return -x;
-	else
-		return x;
-}
-
-void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
-		double rat_limit, unsigned int iter_limit, double mul,
-		double adjust_step) {
+void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
+		double rat_limit, const unsigned int iter_limit, double mul,
+		const double adjust_step) {
 	/* we aim a acceptance rate between 20 and 30% */
 	unsigned int i;
 
@@ -49,7 +42,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	mcmc_check(m);
 	for (iter = 0; iter < burn_in_iterations / 2; iter++) {
 		for (subiter = 0; subiter < 200; subiter++) {
-			markov_chain_step(m, 0);
+			markov_chain_step(m);
 		}
 		iter += subiter;
 		dump_ul("\tBurn-in Iteration", iter);
@@ -64,7 +57,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	gsl_vector_scale(m->params_step, 0.5);
 	for (; iter < burn_in_iterations; iter++) {
 		for (subiter = 0; subiter < 200; subiter++) {
-			markov_chain_step(m, 0);
+			markov_chain_step(m);
 		}
 		iter += subiter;
 		dump_ul("\tBurn-in Iteration", iter);
@@ -81,12 +74,12 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	gsl_vector_scale(m->params_step, adjust_step);
 	debug("Burn-in done.");
 
-	debug("Calibrating step widths ...(set cont=1 to abort)");
+	debug("Calibrating step widths ...");
 	reset_accept_rejects(m);
 
 	while (1) {
 		for (i = 0; i < get_n_par(m); i++) {
-			markov_chain_step_for(m, i, 1);
+			markov_chain_step_for(m, i);
 			mcmc_check_best(m);
 		}
 		iter++;
@@ -167,7 +160,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 			restart_from_best(m);
 			reset_accept_rejects(m);
 			for (subiter = 0; subiter < ITER_READJUST; subiter++) {
-				markov_chain_step(m, 0);
+				markov_chain_step(m);
 				mcmc_check_best(m);
 			}
 			dump_v("New overall accept rate after reset", get_accept_rate(m));
@@ -202,55 +195,49 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 	debug("calibration of markov-chain done.");
 }
 
-double mod_double(const double x, const double div) {
-	if (x < 0) {
-		return x - div * (int) (x / div - 1);
-	} else
-		return x - div * (int) (x / div);
-}
+void do_step_for(mcmc * m, const unsigned int i) {
+	const double step = gsl_vector_get(m->params_step, i);
+	const double old_value = gsl_vector_get(m->params, i);
+	double new_value = old_value + get_next_gauss_random(m, step);
+	const double max = gsl_vector_get(m->params_max, i);
+	const double min = gsl_vector_get(m->params_min, i);
+	/* dump_d("Jumping from", old_value); */
 
-double handle_overflow(double new_value, const double min, const double max,
-		const unsigned int i) {
 	unsigned int j = 0;
 	/** circular parameters **/
 	unsigned int parameters[] = { CIRCULAR_PARAMS, 0 };
-	if (new_value <= max && new_value >= min)
-		return new_value;
 
-	while (1) {
-		if (parameters[j] == 0) {
-			/* non-circular parameter */
-			if (new_value > max)
-				new_value = max - mod_double(new_value - max, max - min);
-			else if (new_value < min)
-				new_value = min + mod_double(min - new_value, max - min);
-			return new_value;
+	if (new_value > max || new_value < min) {
+		while (1) {
+			if (parameters[j] == 0) {
+				/* non-circular parameter */
+				/*
+				 if (new_value > max)
+				 return max - mod_double(new_value - max, max - min);
+				 else if (new_value < min)
+				 return min + mod_double(min - new_value, max - min);
+				 */
+				do {
+					new_value = old_value + get_next_gauss_random(m, step);
+				} while (new_value > max || new_value < min);
+				break;
+			}
+			if (parameters[j] == i + 1) {
+				/* circular parameter */
+				new_value = min + mod_double(new_value - min, max - min);
+				break;
+			}
+			j++;
 		}
-		if (parameters[j] == i + 1) {
-			/* circular parameter */
-			new_value = min + mod_double(new_value - min, max - min);
-			return new_value;
-		}
-		j++;
 	}
-}
 
-void do_step_for(mcmc * m, unsigned int i) {
-	double step = gsl_vector_get(m->params_step, i);
-	double old_value = gsl_vector_get(m->params, i);
-	double new_value = old_value + get_next_gauss_random(m, step);
-	double max = gsl_vector_get(m->params_max, i);
-	double min = gsl_vector_get(m->params_min, i);
-	/* dump_d("Jumping from", old_value); */
-
-	new_value = handle_overflow(new_value, min, max, i);
 	assert(new_value <= max);
 	assert(new_value >= min);
 	/* dump_d("To", new_value); */
 	set_params_for(m, new_value, i);
 }
 
-void do_step(mcmc * m) {
+static void do_step(mcmc * m) {
 	unsigned int i;
 	for (i = 0; i < get_n_par(m); i++) {
 		do_step_for(m, i);
@@ -260,7 +247,7 @@ void do_step(mcmc * m) {
 /**
  * @returns 1 if accept, 0 if rejecting
  */
-int check_accept(mcmc * m, double prob_old) {
+static int check_accept(mcmc * m, const double prob_old) {
 	double prob_new = get_prob(m);
 	double prob_still_accept;
 
@@ -291,12 +278,12 @@ int check_accept(mcmc * m, double prob_old) {
 	}
 }
 
-void revert(mcmc * m, gsl_vector * old_model, double prob_old) {
+static void revert(mcmc * m, gsl_vector * old_model, const double prob_old) {
 	set_model(m, old_model);
 	set_prob(m, prob_old);
 }
 
-void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
+void markov_chain_step_for(mcmc * m, const unsigned int index) {
 	double prob_old = get_prob(m);
 	gsl_vector * old_model = dup_vector(m->model);
 	double old_value = gsl_vector_get(m->params, index);
@@ -304,9 +291,7 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 	mcmc_check(m);
 	do_step_for(m, index);
 
-	if (calc_index <= 1) {
-		calc_model_for(m, index, old_value);
-	}
+	calc_model_for(m, index, old_value);
 
 	if (check_accept(m, prob_old) == 1) {
 		inc_params_accepts_for(m, index);
@@ -325,7 +310,7 @@ void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index) {
 #define MAXIMAL_STEPWIDTH 1000000
 #endif
 
-void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
+void rmw_adapt_stepwidth(mcmc * m, const double prob_old) {
 	unsigned int i;
 	double step;
 	double min;
@@ -352,7 +337,7 @@ void rmw_adapt_stepwidth(mcmc * m, double prob_old) {
 	}
 }
 
-void markov_chain_step(mcmc * m, int calc_index) {
+void markov_chain_step(mcmc * m) {
 	double prob_old = get_prob(m);
 	gsl_vector * old_model = dup_vector(m->model);
 	gsl_vector * old_values = dup_vector(m->params);
@@ -360,9 +345,7 @@ void markov_chain_step(mcmc * m, int calc_index) {
 	mcmc_check(m);
 	do_step(m);
 
-	if (calc_index <= 1) {
-		calc_model(m, old_values);
-	}
+	calc_model(m, old_values);
 
 	if (check_accept(m, prob_old) == 1) {
 		inc_params_accepts(m);

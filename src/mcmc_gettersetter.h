@@ -42,7 +42,7 @@ void set_x(mcmc * m, const gsl_vector * new_x);
 void set_x_copy(mcmc * m, const gsl_vector * new_x);
 void set_y(mcmc * m, const gsl_vector * new_y);
 void set_y_copy(mcmc * m, const gsl_vector * new_y);
-void set_steps_for(mcmc * m, const double new_steps, int i);
+void set_steps_for(mcmc * m, const double new_steps, const int i);
 void set_steps_all(mcmc * m, const double * new_steps);
 void set_params_accepts_for(mcmc * m, const long new_params_accept,
 		const unsigned int i);

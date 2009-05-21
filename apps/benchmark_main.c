@@ -16,7 +16,7 @@ int main(int argc, char ** argv) {
 	mcmc * m;
 	double prob;
 
-	assert(argc == 3);
+	assert(argc == 2 + 1);
 	assert(atoi(argv[1]) >= 0);
 	assert(atoi(argv[2]) >= 0);
 	n = atoi(argv[1]);
@@ -33,7 +33,7 @@ int main(int argc, char ** argv) {
 		for (j = 0; j < get_n_par(m); j++) {
 			calc_model_for(m, j, gsl_vector_get(get_params(m), j));
 			i++;
-			if((prob - get_prob(m)) / (prob + get_prob(m)) > 1e-7) {
+			if ((prob - get_prob(m)) / (prob + get_prob(m)) > 1e-7) {
 				dump_d("original prob", prob);
 				dump_d("new prob", get_prob(m));
 				assert(prob == get_prob(m));

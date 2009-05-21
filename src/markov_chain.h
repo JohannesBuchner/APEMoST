@@ -48,16 +48,14 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 /**
  * take a step using the markov-chain
  * @param m
- * @param calc_index 1 if the model should be recalculated, 0 otherwise
  */
-void markov_chain_step(mcmc * m, int calc_index);
+void markov_chain_step(mcmc * m);
 /**
  * take a step using the markov-chain for the indexth parameter
  * @param m
  * @param index the param to look at
- * @param calc_index 1 if the model should be recalculated, 0 otherwise
  */
-void markov_chain_step_for(mcmc * m, unsigned int index, int calc_index);
+void markov_chain_step_for(mcmc * m, const unsigned int index);
 
 /**
  * adapts the step width

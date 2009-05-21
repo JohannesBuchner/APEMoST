@@ -169,7 +169,7 @@ int test_random(void) {
 		ASSERT( v >= 0, "v >= 0");
 		ASSERT( v <= 1, "v <= 1");
 	}
-	ASSERTEQUALD(gsl_sf_log(1E-200), -460.0, "ln 0");
+	ASSERTEQUALD(gsl_sf_log(1E-200), -460.5170, "ln 0");
 	ASSERTEQUALD(gsl_sf_log(1.0), 0.0, "ln 1");
 	ASSERT(get_next_alog_urandom(m) <= 0.0, "ln 1");
 	mcmc_free(m);
@@ -183,26 +183,6 @@ int test_mod(void) {
 	ASSERTEQUALD(mod_double(0, 1.30), 0.00, "mod doubles");
 	ASSERTEQUALD(mod_double(6000.3214, 1.1324), 0.8662, "mod doubles");
 	ASSERTEQUALD(mod_double(-6000.3214, 1.1324), 0.2662, "mod doubles");
-	return 0;
-}
-
-int test_handle_overflow(void) {
-	/* cyclic */
-	ASSERTEQUALD(handle_overflow(3.14, 0.0, 3.00, 0), 0.14, "cyclic");
-	ASSERTEQUALD(handle_overflow(-3.14, 1, 2.00, 0), -0.14 + 2, "cyclic");
-	ASSERTEQUALD(handle_overflow(-3.14, -1, 3.00, 0), +1-0.14, "cyclic");
-	ASSERTEQUALD(handle_overflow(0, -1, 3.00, 0), 0.0, "cyclic: nothing");
-	ASSERTEQUALD(handle_overflow(6000.3214, 1.1324, 3.00, 0), 1.1324 + mod_double(6000.3214 - 1.1324, 3 - 1.1324), "cyclic: many +");
-	ASSERTEQUALD(handle_overflow(-6000.3214, 1.1324, 3.00, 0), 1.1324 + mod_double(-6000.3214 - 1.1324, 3 - 1.1324), "cyclic: many -");
-
-	/* non-cyclic */
-	ASSERTEQUALD(handle_overflow(3.14, 0.0, 3.00, 3), 3 - 0.14, "non-cyclic");
-	ASSERTEQUALD(handle_overflow(-3.14, -1, 3.00, 3), -1 + 2.14, "non-cyclic");
-	ASSERTEQUALD(handle_overflow(0, -1, 3.00, 3), 0.0, "non-cyclic: nothing");
-	/* these fail at the moment. we accept that because they are unlikely to
-	 * occur */
-	ASSERTEQUALD(handle_overflow(6000.3214, 1.1324, 3.00, 3), mod_double(6000.3214 - 1.1324, 3 - 1.1324), "non-cyclic: many +");
-	ASSERTEQUALD(handle_overflow(-6000.3214, 1.1324, 3.00, 3), mod_double(-6000.3214 - 1.1324, 3 - 1.1324), "non-cyclic: many -");
 	return 0;
 }
 
@@ -263,7 +243,6 @@ int (*tests_registration[])(void) = {
 	test_append,
 	test_random,
 	test_mod,
-	test_handle_overflow,
 	test_write,
 	test_write_prob,
 

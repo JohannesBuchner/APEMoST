@@ -357,7 +357,7 @@ static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap)
 #pragma omp parallel for
 		for (i = 0; i < n_beta; i++) {
 			for (subiter = 0; subiter < n_swap; subiter++) {
-				markov_chain_step(sinmod[i], 0);
+				markov_chain_step(sinmod[i]);
 				mcmc_check_best(sinmod[i]);
 				mcmc_append_current_parameters(sinmod[i]);
 #ifdef DUMP_PROBABILITIES

@@ -36,16 +36,21 @@ unsigned int countlines(const char * filename);
 /**
  * a modulo operator for double values
  */
-double mod_double(const double x, const double div);
+/*double mod_double(const double x, const double div);*/
+#define mod_double(x, div) 	((x) < 0 ? \
+	(x) - (div) * (int) ((x) / (div) - 1) : \
+	(x) - (div) * (int) ((x) / (div)))
 
 /**
  * the value with positive sign.
  */
-double abs_double(double x);
+/*double abs_double(const double x);*/
+#define abs_double(x) 	((x) < 0 ? -(x) : (x))
 
 /**
  * handle to stay inside the parameter space.
  */
-double handle_overflow(double new_value, double min, double max, unsigned int i);
+double handle_overflow(const double new_value, double min, double max,
+		unsigned int i);
 
 #endif /* MCMC_INTERNAL_H_ */
