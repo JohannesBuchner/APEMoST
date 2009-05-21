@@ -188,11 +188,12 @@ void parallel_tempering(const char * params_filename,
 		fflush(stdout);
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
+		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 
-		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
-				iter_limit, mul, DEFAULT_ADJUST_STEP);
+		/*markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
+		 iter_limit, mul, DEFAULT_ADJUST_STEP);*/
 	}
 	fflush(stdout);
 	printf("all chains calibrated.\n");
