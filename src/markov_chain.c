@@ -82,7 +82,8 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 		}
 		iter++;
 		if (iter % ITER_READJUST == 0) {
-			gsl_vector_free(accept_rate);
+			if (accept_rate != NULL)
+				gsl_vector_free(accept_rate);
 			accept_rate = get_accept_rate(m);
 
 			dump_ul("------------------------------------------------ iteration", iter);
