@@ -18,7 +18,7 @@
 
 #else
 
-#include <gc.h>
+#include <gc/gc.h>
 
 #define mem_malloc(x) GC_malloc(x)
 #define mem_calloc(n,x) GC_malloc((n)*(x))
