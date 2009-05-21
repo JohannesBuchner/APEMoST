@@ -95,6 +95,10 @@ double chebyshev_beta(unsigned int i, unsigned int n_beta, double beta_0) {
 	return beta_0 + (1 - beta_0) / 2 * (1 - cos(i * M_PI / (n_beta - 1)));
 }
 
+double equidistant_stepwidth(unsigned int i, unsigned int n_beta, double beta_0) {
+	return beta_0 + pow(i / (n_beta - 1), 2) * (1 - beta_0);
+}
+
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
  * Defines how the beta value should be assigned/distributed between the chains.
@@ -107,7 +111,7 @@ double chebyshev_beta(unsigned int i, unsigned int n_beta, double beta_0) {
  *
  * e.g.: BETA_DISTRIBUTION=equidistant_beta <br>
  * also available: equidistant_temperature, chebyshev_beta,
- * chebyshev_temperature
+ * chebyshev_temperature, equidistant_stepwidth
  *
  */
 #define BETA_DISTRIBUTION
