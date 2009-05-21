@@ -121,13 +121,22 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) > 1) {
 						printf(
-								"WARNING: step width of %s is quite big! %d times the param space\n",
+								"\nWARNING: step width of %s is quite big! %d times the param space\n",
 								get_params_descr(m)[i], (int) (gsl_vector_get(
 										m->params_step, i) / (gsl_vector_get(
 										m->params_max, i) - gsl_vector_get(
 										m->params_min, i))));
 						printf(
-								"WARNING: This can mean the parameter is independent.\n");
+								"\nWARNING: This can mean the parameter is independent.\n");
+					}
+					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
+							m->params_max, i)
+							- gsl_vector_get(m->params_min, i)) > 100000) {
+						fprintf(
+								stderr,
+								"calibration failed: step width of %s became too large.\n",
+								get_params_descr(m)[i]);
+						exit(1);
 					}
 					rescaled = 1;
 				}
@@ -140,7 +149,7 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) < 10E-10) {
 						printf(
-								"WARNING: step width of %s is quite small! %e times the param space\n",
+								"\nWARNING: step width of %s is quite small! %e times the param space\n",
 								get_params_descr(m)[i], gsl_vector_get(
 										m->params_step, i) / (gsl_vector_get(
 										m->params_max, i) - gsl_vector_get(
@@ -176,13 +185,14 @@ void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
 					rat_limit *= 0.99;
 				}
 			}
-			if (nchecks_without_rescaling > NO_RESCALING_LIMIT
+			if (nchecks_without_rescaling >= NO_RESCALING_LIMIT
 					&& reached_perfection == 1 && rescaled == 0) {
 				debug("quitting calibration because we did not need to rescale for several times");
 				break;
 			}
 			if (iter - burn_in_iterations > iter_limit) {
-				dump_i("calibration failed: limit of %d iterations reached.",
+				fprintf(stderr,
+						"calibration failed: limit of %d iterations reached.",
 						iter_limit);
 				exit(1);
 			}
