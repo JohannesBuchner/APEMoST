@@ -16,17 +16,16 @@ static double calc_prior(const mcmc * m) {
 	const gsl_vector * params = m->params;
 	double prior = 0;
 	double mode_height;
-	for (i = 1; i < get_n_par(m); i += 2) {
+	for (i = 2; i < get_n_par(m); i += 2) {
 		mode_height = gsl_vector_get(params, i + 1);
 		prior += gsl_sf_log(mode_height + HMIN);
 	}
-	return prior;
+	return prior / ( (get_n_par(m) - 1) / 2);
 }
 
 void calc_model(mcmc * m, const gsl_vector * old_values) {
 	unsigned int i;
 	unsigned int j;
-	double prob = 0;
 	double y = 0;
 	double mode_height;
 	double mode_freq;
@@ -34,6 +33,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	double freq;
 	const gsl_vector * params = m->params;
 	double prior = calc_prior(m);
+	double prob = gsl_vector_get(params, 1);
 	double lifetime = gsl_vector_get(params, 0);
 
 	(void) old_values;
@@ -43,7 +43,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	for (i = 0; i < m->x_dat->size; i++) {
 		y = 0;
 		freq = gsl_vector_get(m->x_dat, i);
-		for (j = 1; j < get_n_par(m); j += 2) {
+		for (j = 2; j < get_n_par(m); j += 2) {
 			mode_freq = gsl_vector_get(params, j);
 			mode_height = gsl_vector_get(params, j + 1);
 			distance = mode_freq - freq;
