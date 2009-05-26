@@ -103,6 +103,10 @@ double equidistant_stepwidth(const unsigned int i,
 		const unsigned int n_beta, const double beta_0) {
 	return beta_0 + pow(i / (n_beta - 1), 2) * (1 - beta_0);
 }
+double chebyshev_stepwidth(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
+	return beta_0 + (1 - beta_0) * pow((1 - cos(i * M_PI / (n_beta - 1))) / 2, 2);
+}
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
