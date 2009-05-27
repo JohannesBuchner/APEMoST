@@ -5,6 +5,7 @@ function die() {
 }
 
 TMP=$(mktemp)
+TMP2=$(mktemp)
 mcmcdir=~/Desktop/Arbeit
 matrix_man=$mcmcdir/matrix_man.exe
 
@@ -18,9 +19,9 @@ done
 echo counting misses 1>&2
 for j in Amplitude Phase Frequenz; do
 #	cut -f1 $j.all.hist.tab |grep -v $(cut -f1 $mcmcdir/idl/simplesin/correct-$j.all.dat) > $TMP
-	cat $j.all|$matrix_man addc i=1 -$(cut -f1 $mcmcdir/idl/simplesin/correct-$j.all.dat) > $TMP
+	cat $j.all|$matrix_man addc i=1 -$(cut -f1 $mcmcdir/idl/simplesin/correct-$j.all.dat) > $TMP2
 
-	$mcmcdir/sum_tool.exe -s $TMP   |
+	$mcmcdir/sum_tool.exe -s $TMP2   |
 		$matrix_man new     i=2 |
 		$matrix_man addc    i=2 $(cat $j.all|wc -l)|
 		$matrix_man invm    i=2 |
@@ -37,4 +38,5 @@ echo $(($chains*1000)) # stuck chains are expensive
 $mcmcdir/sum_tool.exe $TMP
 
 rm $TMP
+rm $TMP2
 
