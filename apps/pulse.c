@@ -47,7 +47,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 			mode_freq = gsl_vector_get(params, j);
 			mode_height = gsl_vector_get(params, j + 1);
 			distance = mode_freq - freq;
-			y += mode_height / (1 + 4 * distance * distance * M_PI * lifetime);
+			y += mode_height / (1 + 4 * distance * distance * M_PI * M_PI * lifetime * lifetime);
 		}
 		gsl_vector_set(m->model, i, y);
 
