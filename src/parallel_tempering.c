@@ -85,12 +85,12 @@ double equidistant_beta(const unsigned int i, const unsigned int n_beta,
 		const double beta_0) {
 	return beta_0 + i * (1 - beta_0) / (n_beta - 1);
 }
-double equidistant_temperature(const unsigned int i,
-		const unsigned int n_beta, const double beta_0) {
+double equidistant_temperature(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
 	return 1 / (1 / beta_0 + i * (1 - 1 / beta_0) / (n_beta - 1));
 }
-double chebyshev_temperature(const unsigned int i,
-		const unsigned int n_beta, const double beta_0) {
+double chebyshev_temperature(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
 	return 1 / (1 / beta_0 + (1 - 1 / beta_0) / 2 * (1 - cos(i * M_PI / (n_beta
 			- 1))));
 }
@@ -99,13 +99,14 @@ double chebyshev_beta(const unsigned int i, const unsigned int n_beta,
 	return beta_0 + (1 - beta_0) / 2 * (1 - cos(i * M_PI / (n_beta - 1)));
 }
 
-double equidistant_stepwidth(const unsigned int i,
-		const unsigned int n_beta, const double beta_0) {
+double equidistant_stepwidth(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
 	return beta_0 + pow(i / (n_beta - 1), 2) * (1 - beta_0);
 }
 double chebyshev_stepwidth(const unsigned int i, const unsigned int n_beta,
 		const double beta_0) {
-	return beta_0 + (1 - beta_0) * pow((1 - cos(i * M_PI / (n_beta - 1))) / 2, 2);
+	return beta_0 + (1 - beta_0) * pow((1 - cos(i * M_PI / (n_beta - 1))) / 2,
+			2);
 }
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
@@ -138,8 +139,19 @@ static double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0)
 
 static void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
+double calc_beta_0(mcmc * m) {
+	double max;
+	gsl_vector * range = dup_vector(m->params_max);
+	gsl_vector_sub(range, m->params_min);
+	gsl_vector_div(range, get_steps(m));
+	/* hottest chain should have sigma of 0.3 the parameter space */
+	max = 1 / gsl_vector_min(range);
+	gsl_vector_free(range);
+	return pow(max / 0.3, 2);
+}
+
 void parallel_tempering(const char * params_filename,
-		const char * data_filename, const int n_beta, const double beta_0,
+		const char * data_filename, const int n_beta, double beta_0,
 		const unsigned long burn_in_iterations, const double rat_limit,
 		const unsigned long iter_limit, const double mul, const int n_swap) {
 	int n_par;
@@ -152,36 +164,24 @@ void parallel_tempering(const char * params_filename,
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
 	for (i = 0; i < n_beta; i++) {
-		printf("\tChain %2d - beta = %f ", i, get_chain_beta(i, n_beta, beta_0));
-		/* That is kind of stupid (duplicate execution) and could be optimized.
-		 * not critical though. */
 		sinmod[i] = mcmc_load_params(params_filename);
-		if (i == 0)
+		if (i == 0) {
 			mcmc_load_data(sinmod[i], data_filename);
-		else
+			sinmod[i]->additional_data
+					= mem_malloc(sizeof(parallel_tempering_mcmc));
+			set_beta(sinmod[i], 1.0);
+		} else {
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
-		mcmc_check(sinmod[i]);
-		sinmod[i]->additional_data
-				= mem_malloc(sizeof(parallel_tempering_mcmc));
-		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
-		printf("\tsteps: ");
-		dump_vectorln(get_steps(sinmod[i]));
+		}
 		mcmc_check(sinmod[i]);
 	}
 	params_descr = get_params_descr(sinmod[0]);
 	n_par = get_n_par(sinmod[0]);
 
-	/* here was code for removing *_results.dat files.
-	 * this should be done externally before calling the program. */
-
-	printf("Initializing models\n");
-	fflush(stdout);
-	for (i = 0; i < n_beta; i++) {
-		calc_model(sinmod[i], NULL);
-		mcmc_check(sinmod[i]);
-	}
 	printf("Starting markov chain calibration\n");
 	fflush(stdout);
+	calc_model(sinmod[0], NULL);
+	mcmc_check(sinmod[0]);
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
 	printf("You can update your parameters file to the initial steps:\n");
@@ -192,29 +192,38 @@ void parallel_tempering(const char * params_filename,
 				sinmod[0]->params_min, i)));
 	}
 
-	printf("Setting startingpoint for the calibration of all hotter "
-		"distribution to \n  the best parameter values of the (beta=1)"
-		"-distribution\n");
+	printf("Calibrating chains\n");
 	fflush(stdout);
+
+	if (beta_0 < 0) {
+		beta_0 = calc_beta_0(sinmod[0]);
+		printf("automatic beta_0: %f\n", beta_0);
+	}
 
 #pragma omp parallel for
 	for (i = 0 + 1; i < n_beta; i++) {
-		printf("\tCalibrating chain %d\n", i);
+		printf("\tChain %2d - ", i);
 		fflush(stdout);
+		sinmod[i]->additional_data
+				= mem_malloc(sizeof(parallel_tempering_mcmc));
+		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
 		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
-
-		/*markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
-		 iter_limit, mul, DEFAULT_ADJUST_STEP);*/
+		printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
+		dump_vectorln(get_steps(sinmod[i]));
+		fflush(stdout);
+#ifdef CALIBRATE_ALLCHAINS
+		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
+				iter_limit, mul, DEFAULT_ADJUST_STEP);
+#endif
 	}
 	fflush(stdout);
 	printf("all chains calibrated.\n");
 	for (i = 0; i < n_beta; i++) {
-		printf("\tChain %2d - beta = %f ", i, get_beta(sinmod[i]));
-		printf("\tsteps: ");
+		printf("\tChain %2d - beta = %f \tsteps: ", i, get_beta(sinmod[i]));
 		dump_vectorln(get_steps(sinmod[i]));
 	}
 
@@ -372,7 +381,7 @@ static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap)
 		adapt(sinmod, n_beta, iter);
 		iter += n_swap;
 		tempering_interaction(sinmod, n_beta, iter);
-		dump((const mcmc **)sinmod, n_beta, iter, acceptance_file);
+		dump((const mcmc **) sinmod, n_beta, iter, acceptance_file);
 	}
 	if (fclose(acceptance_file) != 0) {
 		assert(0);
@@ -384,6 +393,6 @@ static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap)
 		}
 	}
 #endif
-	report((const mcmc **)sinmod, n_beta);
+	report((const mcmc **) sinmod, n_beta);
 }
 
