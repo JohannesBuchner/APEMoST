@@ -51,7 +51,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 		prob += gsl_sf_log(y) + gsl_vector_get(m->y_dat, i) / y;
 	}
 
-	set_prob(m, get_beta(m) * -1 * (prob + prior));
+	set_prob(m, - prior - get_beta(m) * prob);
 }
 
 void calc_model_for(mcmc * m, const unsigned int j, const double old_value) {

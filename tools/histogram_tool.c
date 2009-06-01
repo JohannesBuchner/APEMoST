@@ -35,7 +35,7 @@ void output_hist(gsl_histogram * h) {
 		gsl_histogram_get_range(h, i, &lower, &upper);
 		count = gsl_histogram_get(h, i);
 
-		printf("%f..%f\t:\t%10d\n", lower, upper, count);
+		printf("%.10f..%.10f\t:\t%10d\n", lower, upper, count);
 	}
 }
 

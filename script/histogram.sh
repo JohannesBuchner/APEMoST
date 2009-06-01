@@ -17,7 +17,7 @@ if [ "$1" == "--first" ]; then
 fi
 
 FILENAME=$1
-TEMPFILE=mktemp
+TEMPFILE=$(mktemp)
 
 if [ "$FILENAME" == "" ]; then
 	echo "SYNAPSIS: $0 [--last <n>|--first <n>] <filename>"
