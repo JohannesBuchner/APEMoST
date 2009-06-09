@@ -39,19 +39,19 @@
  * <li>#ITER_LIMIT</li>
  * <li>#MUL</li>
  * <li>#N_SWAP</li>
- * <li>#SIGMA</li>
  * <li>#N_PARAMETERS</li>
+ * <li>#SKIP_CALIBRATE_ALLCHAINS</li>
  * </ul>
  * \subsection alg Defining algorithm behaviour
  * <ul>
  * <li>#RANDOMSWAP</li>
- * <li>#RESET_TO_BEST</li>
  * <li>#ADAPT</li>
  * <li>#RWM</li>
  * </ul>
  * \subsection Running
  * <ul>
  * <li>#MAX_ITERATIONS</li>
+ * <li>#DUMP_ALL_CHAINS</li>
  * <li>#PRINT_PROB_INTERVAL</li>
  * <li>#DUMP_PROB_LENGTH</li>
  * <li>#PRINT_PROB_INTERVAL</li>
@@ -135,9 +135,12 @@
 #endif
 /**
  * After how many iterations should a swap occur?
+ *
+ * Performance evaluations suggest to set this to 2000/N_BETA.
+ * If < 0, this will be done for you.
  */
 #ifndef N_SWAP
-#define N_SWAP 30
+#define N_SWAP -30
 #endif
 
 #define PARAMS_FILENAME "params"

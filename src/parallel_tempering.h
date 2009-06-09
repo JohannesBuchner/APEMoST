@@ -17,6 +17,11 @@
  * Otherwise, only chain0 is dumped (beta = 1)
  */
 #define DUMP_ALL_CHAINS
+/**
+ * Enabling this will only calibrate the first two chains, not all of them.
+ * The stepwidths for the rest of the chains will be predicted.
+ */
+#define SKIP_CALIBRATE_ALLCHAINS
 #endif
 
 #ifndef DUMP_PROB_LENGTH

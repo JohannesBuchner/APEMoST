@@ -134,10 +134,12 @@ void set_model(mcmc * m, gsl_vector * new_model) {
 /**
  * Fix the number of parameters to the given value
  *
- * Setting this might lead the compiler to more optimization, a theory that
- * has not been proven for the program.
+ * Setting this might leads the compiler to more optimization.
  * If in doubt, do not set, as your program then can be used for any
  * problems regardless of number of parameters.
+ *
+ * my favorite trick: automatically count the lines in the current file
+ * CCFLAGS="-DN_PARAMETERS="$(cat params|wc -l)"
  */
 #define N_PARAMETERS
 #endif

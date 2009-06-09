@@ -121,7 +121,7 @@ double chebyshev_stepwidth(const unsigned int i, const unsigned int n_beta,
  *
  * e.g.: BETA_DISTRIBUTION=equidistant_beta <br>
  * also available: equidistant_temperature, chebyshev_beta,
- * chebyshev_temperature, equidistant_stepwidth
+ * chebyshev_temperature, equidistant_stepwidth, chebyshev_stepwidth
  *
  */
 #define BETA_DISTRIBUTION
@@ -153,7 +153,7 @@ double calc_beta_0(mcmc * m) {
 void parallel_tempering(const char * params_filename,
 		const char * data_filename, const int n_beta, double beta_0,
 		const unsigned long burn_in_iterations, const double rat_limit,
-		const unsigned long iter_limit, const double mul, const int n_swap) {
+		const unsigned long iter_limit, const double mul, int n_swap) {
 	int n_par;
 	int i;
 	const char ** params_descr;
@@ -162,6 +162,11 @@ void parallel_tempering(const char * params_filename,
 
 	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
+	
+	if (n_swap < 0) {
+		n_swap = 2000/n_beta;
+		printf("automatic n_swap: %d\n", n_swap);
+	}
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
 	for (i = 0; i < n_beta; i++) {
