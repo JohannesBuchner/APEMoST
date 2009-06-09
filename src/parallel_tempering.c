@@ -158,6 +158,7 @@ void parallel_tempering(const char * params_filename,
 	int i;
 	const char ** params_descr;
 	mcmc ** sinmod;
+	float stepwidth_factor = 1;
 
 	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
@@ -199,9 +200,30 @@ void parallel_tempering(const char * params_filename,
 		beta_0 = calc_beta_0(sinmod[0]);
 		printf("automatic beta_0: %f\n", beta_0);
 	}
+	i = 1;
+#ifdef SKIP_CALIBRATE_ALLCHAINS
+	assert(n_beta >= 2);
+	sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
+	set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
+	gsl_vector_free(sinmod[i]->params_step);
+	sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
+	gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
+	set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
+	calc_model(sinmod[i], NULL);
+	printf("Calibrating second chain to infer stepwidth factor\n");
+	printf("\tChain %2d - ", i);
+	printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
+	dump_vectorln(get_steps(sinmod[i]));
+	fflush(stdout);
+	markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
+		iter_limit, mul, DEFAULT_ADJUST_STEP);
+	stepwidth_factor = gsl_vector_get(get_steps(sinmod[0]), 0) * 
+		pow(get_beta(sinmod[i]), -0.5) / gsl_vector_get(get_steps(sinmod[i]), 0);
+	printf("stepwidth factor: %f\n", stepwidth_factor);
+#endif
 
 #pragma omp parallel for
-	for (i = 0 + 1; i < n_beta; i++) {
+	for (i = 1; i < n_beta; i++) {
 		printf("\tChain %2d - ", i);
 		fflush(stdout);
 		sinmod[i]->additional_data
@@ -209,13 +231,14 @@ void parallel_tempering(const char * params_filename,
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
-		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
+		gsl_vector_scale(sinmod[i]->params_step, stepwidth_factor * 
+			pow(get_beta(sinmod[i]), -0.5));
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 		printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
 		dump_vectorln(get_steps(sinmod[i]));
 		fflush(stdout);
-#ifdef CALIBRATE_ALLCHAINS
+#ifndef SKIP_CALIBRATE_ALLCHAINS
 		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
 #endif
