@@ -158,7 +158,7 @@ void parallel_tempering(const char * params_filename,
 	int i;
 	const char ** params_descr;
 	mcmc ** sinmod;
-	float stepwidth_factor = 1;
+	gsl_vector * stepwidth_factors;
 
 	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
@@ -183,6 +183,8 @@ void parallel_tempering(const char * params_filename,
 	}
 	params_descr = get_params_descr(sinmod[0]);
 	n_par = get_n_par(sinmod[0]);
+	stepwidth_factors = gsl_vector_alloc(n_par);
+	gsl_vector_set_all(stepwidth_factors, 1);
 
 	printf("Starting markov chain calibration\n");
 	fflush(stdout);
@@ -206,26 +208,27 @@ void parallel_tempering(const char * params_filename,
 		printf("automatic beta_0: %f\n", beta_0);
 	}
 	i = 1;
-#ifdef SKIP_CALIBRATE_ALLCHAINS
-	assert(n_beta >= 2);
-	sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
-	set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
-	gsl_vector_free(sinmod[i]->params_step);
-	sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
-	gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
-	set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
-	calc_model(sinmod[i], NULL);
-	printf("Calibrating second chain to infer stepwidth factor\n");
-	printf("\tChain %2d - ", i);
-	printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
-	dump_vectorln(get_steps(sinmod[i]));
-	fflush(stdout);
-	markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
-		iter_limit, mul, DEFAULT_ADJUST_STEP);
-	stepwidth_factor = gsl_vector_get(get_steps(sinmod[0]), 0) * 
-		pow(get_beta(sinmod[i]), -0.5) / gsl_vector_get(get_steps(sinmod[i]), 0);
-	printf("stepwidth factor: %f\n", stepwidth_factor);
-#endif
+	if(n_beta >= 2) {
+		sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
+		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
+		gsl_vector_free(sinmod[i]->params_step);
+		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
+		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
+		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
+		calc_model(sinmod[i], NULL);
+		printf("Calibrating second chain to infer stepwidth factor\n");
+		printf("\tChain %2d - ", i);
+		printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
+		dump_vectorln(get_steps(sinmod[i]));
+		fflush(stdout);
+		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
+			iter_limit, mul, DEFAULT_ADJUST_STEP);
+		gsl_vector_scale(stepwidth_factors, pow(get_beta(sinmod[i]), -0.5));
+		gsl_vector_mul(stepwidth_factors, get_steps(sinmod[0]));
+		gsl_vector_div(stepwidth_factors, get_steps(sinmod[i]));
+	}
+	printf("stepwidth factors: ");
+	dump_vectorln(stepwidth_factors);
 
 #pragma omp parallel for
 	for (i = 1; i < n_beta; i++) {
@@ -236,8 +239,9 @@ void parallel_tempering(const char * params_filename,
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
-		gsl_vector_scale(sinmod[i]->params_step, stepwidth_factor * 
+		gsl_vector_scale(sinmod[i]->params_step, 
 			pow(get_beta(sinmod[i]), -0.5));
+		gsl_vector_mul(sinmod[i]->params_step, stepwidth_factors);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 		printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
