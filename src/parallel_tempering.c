@@ -119,40 +119,45 @@ double hot_chains(const unsigned int i, const unsigned int n_beta,
  *
  * beta = 1 / temperature.
  *
- * You can choose equidistant (linear) distribution of the temperature or beta.
+ * You can choose equidistant (linear) alignment of the temperature or beta.
  * Or, what often proves to be a good choice, you can use Chebyshev nodes
- * for the distribution of the temperature or beta.
+ * for the values of the temperature or beta.
  *
- * e.g.: BETA_DISTRIBUTION=equidistant_beta <br>
+ * e.g.: BETA_ALIGNMENT=equidistant_beta <br>
  * also available: equidistant_temperature, chebyshev_beta,
  * chebyshev_temperature, equidistant_stepwidth, chebyshev_stepwidth
  *
  */
-#define BETA_DISTRIBUTION
+#define BETA_ALIGNMENT
 #endif
 
 static double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
-#ifndef BETA_DISTRIBUTION
-#define BETA_DISTRIBUTION chebyshev_temperature
+#ifndef BETA_ALIGNMENT
+#define BETA_ALIGNMENT chebyshev_beta
 #endif
 	if (n_beta == 1)
 		return 1.0;
 	/* this reverts the order so that beta(0) = 1.0. */
-	return BETA_DISTRIBUTION(n_beta - i - 1, n_beta, beta_0);
+	return BETA_ALIGNMENT(n_beta - i - 1, n_beta, beta_0);
 }
 
 static void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
+
+/**
+ * hottest chain stepwidth in units of parameter space
+ */
+#define BETA_0_STEPWIDTH 1.0
 
 double calc_beta_0(mcmc * m, gsl_vector * stepwidth_factors) {
 	double max;
 	gsl_vector * range = dup_vector(m->params_max);
 	gsl_vector_sub(range, m->params_min);
-	gsl_vector_mul(range, stepwidth_factors);
+	gsl_vector_scale(range, BETA_0_STEPWIDTH);
 	gsl_vector_div(range, get_steps(m));
-	/* hottest chain should have sigma of 1.0 the parameter space */
-	max = 1 / gsl_vector_min(range);
+	gsl_vector_div(range, stepwidth_factors);
+	max = pow(gsl_vector_max(range), -0.5);
 	gsl_vector_free(range);
-	return pow(max / 1.0, 2);
+	return max;
 }
 
 void parallel_tempering(const char * params_filename,
@@ -209,9 +214,14 @@ void parallel_tempering(const char * params_filename,
 	fflush(stdout);
 
 	i = 1;
-	if(n_beta >= 2) {
-		sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
-		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
+	if (n_beta >= 2) {
+		sinmod[i]->additional_data = mem_malloc(
+			sizeof(parallel_tempering_mcmc));
+		if (beta_0 < 0)
+			set_beta(sinmod[i], get_chain_beta(i, n_beta, 
+				calc_beta_0(sinmod[0], stepwidth_factors)));
+		else
+			set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
 		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
@@ -234,6 +244,7 @@ void parallel_tempering(const char * params_filename,
 		beta_0 = calc_beta_0(sinmod[0], stepwidth_factors);
 		printf("automatic beta_0: %f\n", beta_0);
 	}
+	fflush(stdout);
 
 #pragma omp parallel for
 	for (i = 1; i < n_beta; i++) {

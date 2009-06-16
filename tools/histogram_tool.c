@@ -30,12 +30,22 @@ void output_hist(gsl_histogram * h) {
 	double upper;
 	unsigned int count;
 	unsigned int i;
+	unsigned int j;
 
 	for (i = 0; i < gsl_histogram_bins(h); i++) {
 		gsl_histogram_get_range(h, i, &lower, &upper);
 		count = gsl_histogram_get(h, i);
 
-		printf("%.10f..%.10f\t:\t%10d\n", lower, upper, count);
+		printf("%.10f\t%.10f\t%d\t", lower, upper, count);
+		for(j=0;j<count;j+=100)
+			printf("C");
+		printf(" ");
+		for(j-=100;j<count;j+=10)
+			printf("X");
+		printf(" ");
+		for(j-=10;j<count;j+=10)
+			printf("I");
+		printf("\n");
 	}
 }
 

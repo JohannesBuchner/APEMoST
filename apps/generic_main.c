@@ -31,7 +31,7 @@
  * The possible parameters and their values:
  * \subsection tuning Fine-tuning the algorithm
  * <ul>
- * <li>#BETA_DISTRIBUTION</li>
+ * <li>#BETA_ALIGNMENT</li>
  * <li>#N_BETA</li>
  * <li>#BETA_0</li>
  * <li>#BURN_IN_ITERATIONS</li>
@@ -194,7 +194,7 @@ void check(const char * progname) {
 	checkfile(DATA_FILENAME);
 
 	printf("\nFine-tuning the algorithm:\n");
-	printf("\tBETA_DISTRIBUTION: %s\n", TOSTRING(BETA_DISTRIBUTION));
+	printf("\tBETA_ALIGNMENT: %s\n", TOSTRING(BETA_ALIGNMENT));
 	OUTPUT_PARAMI(N_BETA);
 	OUTPUT_PARAMD(BETA_0);
 	OUTPUT_PARAMI(BURN_IN_ITERATIONS);

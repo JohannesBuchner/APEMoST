@@ -119,8 +119,8 @@ void run(char * filename, unsigned long nmaxvalues, double min, double max) {
 	qsort(values->data, nvalues, sizeof(double), double_comp);
 	debug("data sorted!");
 
-	/* 1% of parameter space */
-	empty_space_needed = (max - min) / 100;
+	/* 0.1% of parameter space */
+	empty_space_needed = (max - min) / 1000;
 	dump_d("empty_space_needed", empty_space_needed);
 	dump_d("min", min);
 	dump_d("max", max);
