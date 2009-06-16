@@ -95,7 +95,7 @@
  * Number of chains to use for parallel tempering
  */
 #ifndef N_BETA
-#define N_BETA 16
+#define N_BETA 20
 #endif
 /**
  * Position where the smallest/hottest chain should start.
