@@ -108,6 +108,10 @@ double chebyshev_stepwidth(const unsigned int i, const unsigned int n_beta,
 	return beta_0 + (1 - beta_0) * pow((1 - cos(i * M_PI / (n_beta - 1))) / 2,
 			2);
 }
+double hot_chains(const unsigned int i, const unsigned int n_beta,
+		const double beta_0) {
+	return beta_0 + 0*i*n_beta;
+}
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
@@ -139,15 +143,16 @@ static double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0)
 
 static void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
-double calc_beta_0(mcmc * m) {
+double calc_beta_0(mcmc * m, gsl_vector * stepwidth_factors) {
 	double max;
 	gsl_vector * range = dup_vector(m->params_max);
 	gsl_vector_sub(range, m->params_min);
+	gsl_vector_mul(range, stepwidth_factors);
 	gsl_vector_div(range, get_steps(m));
-	/* hottest chain should have sigma of 0.3 the parameter space */
+	/* hottest chain should have sigma of 1.0 the parameter space */
 	max = 1 / gsl_vector_min(range);
 	gsl_vector_free(range);
-	return pow(max / 0.3, 2);
+	return pow(max / 1.0, 2);
 }
 
 void parallel_tempering(const char * params_filename,
@@ -203,10 +208,6 @@ void parallel_tempering(const char * params_filename,
 	printf("Calibrating chains\n");
 	fflush(stdout);
 
-	if (beta_0 < 0) {
-		beta_0 = calc_beta_0(sinmod[0]);
-		printf("automatic beta_0: %f\n", beta_0);
-	}
 	i = 1;
 	if(n_beta >= 2) {
 		sinmod[i]->additional_data = mem_malloc(sizeof(parallel_tempering_mcmc));
@@ -229,6 +230,10 @@ void parallel_tempering(const char * params_filename,
 	}
 	printf("stepwidth factors: ");
 	dump_vectorln(stepwidth_factors);
+	if (beta_0 < 0) {
+		beta_0 = calc_beta_0(sinmod[0], stepwidth_factors);
+		printf("automatic beta_0: %f\n", beta_0);
+	}
 
 #pragma omp parallel for
 	for (i = 1; i < n_beta; i++) {
@@ -404,7 +409,10 @@ static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap)
 			for (subiter = 0; subiter < n_swap; subiter++) {
 				markov_chain_step(sinmod[i]);
 				mcmc_check_best(sinmod[i]);
-				mcmc_append_current_parameters(sinmod[i]);
+#ifdef DUMP_ALL_CHAINS
+				if (i == 0)
+#endif
+					mcmc_append_current_parameters(sinmod[i]);
 #ifdef DUMP_PROBABILITIES
 				fprintf(probabilities_file[i], "%6e\n", get_prob(sinmod[i]));
 #endif
