@@ -93,6 +93,8 @@
 
 /**
  * Number of chains to use for parallel tempering
+ * 
+ * <= 12 is not recommended
  */
 #ifndef N_BETA
 #define N_BETA 20
@@ -125,7 +127,7 @@
  * the step widths?
  */
 #ifndef ITER_LIMIT
-#define ITER_LIMIT 20000
+#define ITER_LIMIT 100000
 #endif
 /**
  * Factor used for scaling the step widths
