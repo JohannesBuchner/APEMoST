@@ -201,6 +201,7 @@ void parallel_tempering(const char * params_filename,
 	mcmc_check(sinmod[0]);
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
+	mcmc_open_dump_files(sinmod[0], "-chain", 0);
 	printf("You can update your parameters file to the initial steps:\n");
 	for (i = 0; i < n_par; i++) {
 		printf("\t%s\t%f\n", get_params_descr(sinmod[0])[i], gsl_vector_get(
@@ -221,6 +222,7 @@ void parallel_tempering(const char * params_filename,
 					sinmod[0], stepwidth_factors)));
 		else
 			set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
+		set_beta(sinmod[i], 0.8);
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
 		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
@@ -268,6 +270,9 @@ void parallel_tempering(const char * params_filename,
 #ifndef SKIP_CALIBRATE_ALLCHAINS
 		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
+#endif
+#ifdef DUMP_ALL_CHAINS
+		mcmc_open_dump_files(sinmod[i], "-chain", i);
 #endif
 	}
 	gsl_vector_free(stepwidth_factors);

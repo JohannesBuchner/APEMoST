@@ -47,7 +47,7 @@ void mcmc_dump_y_dat(const mcmc * m) {
 	mcmc_dump(m->x_dat, m->y_dat, "y_dat.dat.dump");
 }
 
-void mcmc_open_dump_files(mcmc * m, const char * suffix) {
+void mcmc_open_dump_files(mcmc * m, const char * suffix, int index) {
 	unsigned int i;
 	char ** filenames = (char**) mem_calloc(m->n_par, sizeof(char*));
 
@@ -56,7 +56,7 @@ void mcmc_open_dump_files(mcmc * m, const char * suffix) {
 	for (i = 0; i < get_n_par(m); i++) {
 		filenames[i] = (char*) mem_calloc(strlen(m->params_descr[i]) + strlen(
 						suffix) + strlen(".prob.dump") + 1, sizeof(char));
-		sprintf(filenames[i], "%s%s.prob.dump", m->params_descr[i], suffix);
+		sprintf(filenames[i], "%s%s-%d.prob.dump", m->params_descr[i], suffix, index);
 		IFVERBOSE
 			dump_s("writing probability/distribution to file", filenames[i]);
 		m->files[i] = fopen(filenames[i], "w");

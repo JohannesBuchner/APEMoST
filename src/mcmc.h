@@ -89,7 +89,7 @@ void mcmc_dump_close(mcmc * m);
 /**
  * open output files
  */
-void mcmc_open_dump_files(mcmc * m, const char * suffix);
+void mcmc_open_dump_files(mcmc * m, const char * suffix, int index);
 
 /**
  * append current parameters to files, unflushed.

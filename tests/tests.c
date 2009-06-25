@@ -170,7 +170,7 @@ int test_write(void) {
 
 int test_write_prob(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
-	mcmc_open_dump_files(m, "");
+	mcmc_open_dump_files(m, "", 0);
 	debug("add starting points, ...");
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
@@ -179,15 +179,15 @@ int test_write_prob(void) {
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
 	mcmc_dump_flush(m);
-	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 2, "" );
-	ASSERTEQUALI(countlines("Frequenz.prob.dump"), 2, "" );
+	ASSERTEQUALI(countlines("Amplitude-0.prob.dump"), 2, "" );
+	ASSERTEQUALI(countlines("Frequenz-0.prob.dump"), 2, "" );
 	debug("and minima as visited parameter values");
 	require(gsl_vector_memcpy(m->params, m->params_max));
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
 	mcmc_dump_flush(m);
-	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
-	ASSERTEQUALI(countlines("Frequenz.prob.dump"), 3, "" );
+	ASSERTEQUALI(countlines("Amplitude-0.prob.dump"), 3, "" );
+	ASSERTEQUALI(countlines("Frequenz-0.prob.dump"), 3, "" );
 	m = mcmc_free(m);
 	return 0;
 }

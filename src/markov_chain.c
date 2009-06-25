@@ -82,8 +82,6 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 		}
 		iter++;
 		if (iter % ITER_READJUST == 0) {
-			if (accept_rate != NULL)
-				gsl_vector_free(accept_rate);
 			accept_rate = get_accept_rate(m);
 
 			dump_ul("------------------------------------------------ iteration", iter);
@@ -199,23 +197,22 @@ void do_step_for(mcmc * m, const unsigned int i) {
 	const double min = gsl_vector_get(m->params_min, i);
 	/* dump_d("Jumping from", old_value); */
 
+#if CIRCULAR_PARAMS == 0
+	while (new_value > max || new_value < min) {
+		new_value = old_value + get_next_gauss_random(m, step);
+	}
+#else
 	unsigned int j = 0;
 	/** circular parameters **/
-	unsigned int parameters[] = { CIRCULAR_PARAMS, 0 };
+	unsigned int parameters[] = {CIRCULAR_PARAMS, 0};
 
 	if (new_value > max || new_value < min) {
 		while (1) {
 			if (parameters[j] == 0) {
 				/* non-circular parameter */
-				/*
-				 if (new_value > max)
-				 return max - mod_double(new_value - max, max - min);
-				 else if (new_value < min)
-				 return min + mod_double(min - new_value, max - min);
-				 */
 				do {
 					new_value = old_value + get_next_gauss_random(m, step);
-				} while (new_value > max || new_value < min);
+				}while (new_value > max || new_value < min);
 				break;
 			}
 			if (parameters[j] == i + 1) {
@@ -226,7 +223,7 @@ void do_step_for(mcmc * m, const unsigned int i) {
 			j++;
 		}
 	}
-
+#endif
 	assert(new_value <= max);
 	assert(new_value >= min);
 	/* dump_d("To", new_value); */

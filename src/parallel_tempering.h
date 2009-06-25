@@ -24,14 +24,6 @@
 #define SKIP_CALIBRATE_ALLCHAINS
 #endif
 
-#ifndef DUMP_PROB_LENGTH
-/**
- * How many probability values should be dumped?
- * Set to -1 if you want to dump all of them.
- */
-#define DUMP_PROB_LENGTH  1000*3
-#endif
-
 #ifndef PRINT_PROB_INTERVAL
 /**
  * After how many iterations do you want the program to write out
