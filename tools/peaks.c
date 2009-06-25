@@ -120,7 +120,7 @@ void run(char * filename, unsigned long nmaxvalues, double min, double max) {
 	debug("data sorted!");
 
 	/* 0.1% of parameter space */
-	empty_space_needed = (max - min) / 1000;
+	empty_space_needed = (max - min) / 100;
 	dump_d("empty_space_needed", empty_space_needed);
 	dump_d("min", min);
 	dump_d("max", max);

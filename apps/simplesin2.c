@@ -5,9 +5,6 @@
 #include "parallel_tempering.h"
 #include "debug.h"
 
-/**
- * TODO: document
- */
 #ifndef SIGMA
 #define SIGMA 0.5
 #endif
@@ -29,8 +26,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	(void) old_values;
 	/*dump_v("recalculating model for parameter values", m->params);*/
 	for (i = 0; i < m->x_dat->size; i++) {
-		y = apply_formula(m, i, param0, param1) - gsl_vector_get(
-				m->y_dat, i);
+		y = apply_formula(m, i, param0, param1) - gsl_vector_get(m->y_dat, i);
 		square_sum += y * y;
 	}
 	set_prob(m, get_beta(m) * square_sum / (-2 * SIGMA * SIGMA));

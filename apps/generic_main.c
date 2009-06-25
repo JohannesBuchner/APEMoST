@@ -53,7 +53,6 @@
  * <li>#MAX_ITERATIONS</li>
  * <li>#DUMP_ALL_CHAINS</li>
  * <li>#PRINT_PROB_INTERVAL</li>
- * <li>#DUMP_PROB_LENGTH</li>
  * <li>#PRINT_PROB_INTERVAL</li>
  * </ul>
  * \subsection Others
@@ -87,13 +86,11 @@
  *
  * <code>$ kill -SIGUSR1 $(pidof simplesin.exe)</code>
  *
- * @see DUMP_PROB_LENGTH
- *
  */
 
 /**
  * Number of chains to use for parallel tempering
- * 
+ *
  * <= 12 is not recommended
  */
 #ifndef N_BETA
@@ -222,7 +219,6 @@ void check(const char * progname) {
 	printf("\tMAX_ITERATIONS: Run indefinitely long\n");
 #endif
 	OUTPUT_PARAMI(PRINT_PROB_INTERVAL);
-	OUTPUT_PARAMI(DUMP_PROB_LENGTH);
 
 	printf("\nDebugging Parameters:\n");
 	printf("\tDEBUG: Debug output: ");

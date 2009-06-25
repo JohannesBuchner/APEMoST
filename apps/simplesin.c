@@ -5,9 +5,6 @@
 #include "parallel_tempering.h"
 #include "debug.h"
 
-/**
- * TODO: document
- */
 #ifndef SIGMA
 #define SIGMA 0.5
 #endif

@@ -15,9 +15,9 @@ fi
 TMP=$(mktemp)
 cat params|cut -f4|while read param; do 
 	echo -n $param "     "; 
-	min=$(grep -w $param params|cut -f2); 
-	max=$(grep -w $param params|cut -f3); 
-	$cat $param-chain0.prob.dump > $TMP
+	min=$(grep -w "$param" params|cut -f2); 
+	max=$(grep -w "$param" params|cut -f3); 
+	$cat $param-chain-0.prob.dump > $TMP
 	$mcmcdir/peaks.exe $min $max $TMP|head -n2|tail -n1
 done
 
