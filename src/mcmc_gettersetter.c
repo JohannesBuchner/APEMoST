@@ -62,10 +62,6 @@ const char ** get_params_descr(const mcmc * m) {
 	return m->params_descr;
 }
 
-gsl_histogram * get_hist(const mcmc * m, int index, int nbins) {
-	return calc_hist(m->params_distr[index], nbins);
-}
-
 void inc_params_accepts_for(mcmc * m, const unsigned int i) {
 	m->params_accepts[i]++;
 }
@@ -153,7 +149,7 @@ unsigned int get_n_par(const mcmc * m) {
 #endif
 
 void set_params_best(mcmc * m, gsl_vector * new_params_best) {
-	m->params_best = new_params_best;
+	gsl_vector_memcpy(m->params_best, new_params_best);
 }
 
 void set_params_for(mcmc * m, const double new_param, const unsigned int i) {

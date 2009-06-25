@@ -16,18 +16,6 @@
 mcmc * mcmc_init(const unsigned int n_pars);
 
 /**
- * prepare the calculation of (next) iteration, i.e., allocate space
- * @param m
- * @param iter index of new iteration
- */
-void mcmc_prepare_iteration(mcmc * m, const unsigned long iter);
-
-/**
- * @see calc_hist
- */
-gsl_histogram * get_hist(mcmc * m, int i, int nbins);
-
-/**
  * count the lines (\n) in the file
  * @param filename
  */

@@ -91,11 +91,11 @@ static void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	r = get_prob_best(sinmod[a]);
 	if (r > get_prob_best(sinmod[b])) {
 		set_prob_best(sinmod[b], r);
-		set_params_best(sinmod[b], dup_vector(get_params_best(sinmod[a])));
+		set_params_best(sinmod[b], get_params_best(sinmod[a]));
 	} else {
 		r = get_prob_best(sinmod[b]);
 		set_prob_best(sinmod[a], r);
-		set_params_best(sinmod[a], dup_vector(get_params_best(sinmod[b])));
+		set_params_best(sinmod[a], get_params_best(sinmod[b]));
 	}
 
 	mcmc_check(sinmod[a]);

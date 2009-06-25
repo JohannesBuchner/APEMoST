@@ -6,78 +6,6 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
-/**
- * for allocation, we don't want to call alloc too often, rather grow in steps
- */
-#define ALLOCATION_CHUNKS 1
-
-/**
- * we have to provide at leas new_iter + 1 space.
- * @param new_iter iteration
- */
-static unsigned long get_new_size(unsigned long new_iter) {
-	if (ALLOCATION_CHUNKS > 1)
-		return ((new_iter + 1) / ALLOCATION_CHUNKS + 1) * ALLOCATION_CHUNKS;
-	else
-		return new_iter + 1;
-}
-
-/**
- * make space available as set in m->size
- */
-static void resize(mcmc * m, unsigned long new_size) {
-	unsigned long orig_size = m->size;
-	unsigned long i;
-	/* TODO: we can not allocate more than the int-space
-	 * if we have more iterations than that, we need to move our data to the
-	 * disk.
-	 */
-	IFSEGV
-		dump_i("resizing params_distr to", (int)new_size);
-	if (new_size < orig_size) {
-		IFSEGV
-			debug("shrinking -> freeing vectors");
-
-		for (i = orig_size; i > new_size; i--) {
-			IFSEGV
-				dump_ul("freeing vector", i - 1);
-			gsl_vector_free(m->params_distr[i - 1]);
-		}
-	}
-	IFSEGV
-		debug("reallocating space");
-	m->params_distr = (gsl_vector**) realloc(m->params_distr, (int) new_size
-			* sizeof(gsl_vector*));
-	IFSEGV
-		dump_p("params_distr", (void*)m->params_distr);
-	if (new_size != 0) {
-		assert(m->params_distr != NULL);
-		IFSEGV
-			dump_p("params_distr[0]", (void*)m->params_distr[0]);
-	}
-
-	if (new_size > orig_size) {
-		IFSEGV
-			debug("growing -> allocating vectors");
-		for (i = orig_size; i < new_size; i++) {
-			IFSEGV
-				dump_ul("allocating vector", i);
-			m->params_distr[i] = gsl_vector_alloc(get_n_par(m));
-			assert(m->params_distr[i] != NULL);
-		}
-	}
-	m->size = new_size;
-	IFSEGV
-		debug("done resizing");
-}
-
-void mcmc_prepare_iteration(mcmc * m, const unsigned long iter) {
-	unsigned long new_size = get_new_size(iter);
-	if (m->size != new_size) {
-		resize(m, new_size);
-	}
-}
-
 void init_seed(mcmc * m) {
 	gsl_rng_env_setup();
 	m->random = gsl_rng_alloc(gsl_rng_default);
@@ -90,12 +18,12 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	m = (mcmc*) mem_malloc(sizeof(mcmc));
 	assert(m != NULL);
 	m->n_iter = 0;
-	m->size = 0;
 	m->n_par = n_pars;
 	m->accept = 0;
 	m->reject = 0;
 	m->prob = -1e+10;
 	m->prob_best = -1e+10;
+	m->files = NULL;
 
 	init_seed(m);
 
@@ -103,9 +31,6 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	assert(m->params != NULL);
 	m->params_best = gsl_vector_alloc(m->n_par);
 	assert(m->params_best != NULL);
-	m->params_distr = NULL;
-	mcmc_prepare_iteration(m, 0);
-	assert(m->params_distr != NULL);
 
 	m->params_accepts = (long*) mem_calloc(m->n_par, sizeof(long));
 	assert(m->params_accepts != NULL);
@@ -131,6 +56,7 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 mcmc * mcmc_free(mcmc * m) {
 	unsigned int i;
 
+	mcmc_dump_close(m);
 	gsl_rng_free(m->random);
 	IFSEGV
 		debug("freeing params");
@@ -138,9 +64,6 @@ mcmc * mcmc_free(mcmc * m) {
 	IFSEGV
 		debug("freeing params_best");
 	gsl_vector_free(m->params_best);
-	IFSEGV
-		debug("freeing params_distr");
-	resize(m, 0);
 
 	IFSEGV
 		debug("freeing params_descr");
@@ -183,7 +106,6 @@ void mcmc_check(const mcmc * m) {
 	assert(m->params->size == m->n_par);
 	assert(m->params_best != NULL);
 	assert(m->params_best->size == m->n_par);
-	assert(m->size >= m->n_iter);
 	assert(m->params_step != NULL);
 }
 

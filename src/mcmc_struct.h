@@ -34,12 +34,9 @@ typedef struct {
 	 */
 	gsl_vector * params_best;
 	/**
-	 * pointer to 2D-array containing the resulting values for each parameter.
-	 * for each iteration, and parameter, the values of the calculation are
-	 * kept.
-	 * size = iter, n_par
+	 * files where visited nodes are written to.
 	 */
-	gsl_vector ** params_distr;
+	FILE ** files;
 	/**
 	 * descriptions of parameters
 	 * size = n_par
@@ -89,8 +86,6 @@ typedef struct {
 	 */
 	gsl_vector * model;
 
-	/** number of iterations for which space is allocated (params_distr) */
-	unsigned long size;
 	/** number of iterations calculated */
 	unsigned long n_iter;
 

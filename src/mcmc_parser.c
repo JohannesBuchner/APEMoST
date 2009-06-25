@@ -107,6 +107,7 @@ static void load_data(mcmc * m, const char * filename) {
 			exit(1);
 		}
 	}
+	assert(fclose(input) == 0);
 	dump_i("loaded data points", npoints);
 
 }

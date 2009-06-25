@@ -85,19 +85,6 @@ int test_create(void) {
 	return 0;
 }
 
-int test_alloc(void) {
-	unsigned int amount = 1000;
-	unsigned int i;
-	mcmc * m = mcmc_init(3);
-	debug("allocating a lot\n");
-
-	for (i = 0; i < amount; i++) {
-		mcmc_prepare_iteration(m, i);
-	}
-	m = mcmc_free(m);
-	return 0;
-}
-
 int test_load(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
 	ASSERT(m != NULL, "loaded");
@@ -128,21 +115,6 @@ int test_load(void) {
 	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1), -0.9900871130450772, "y 1");
 	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1521), -0.3527955490681067, "y last");
 
-	m = mcmc_free(m);
-	return 0;
-}
-
-int test_resize(void) {
-	mcmc * m = mcmc_init(3);
-	int i = 0;
-	int j = 0;
-	for (j = 0; j < 5; j++) {
-		for (; i % 64 != 63; i++) {
-			mcmc_prepare_iteration(m, i);
-		}
-		i++;
-		dump_i("tested iterations", i);
-	}
 	m = mcmc_free(m);
 	return 0;
 }
@@ -198,6 +170,7 @@ int test_write(void) {
 
 int test_write_prob(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
+	mcmc_open_dump_files(m, "");
 	debug("add starting points, ...");
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
@@ -205,14 +178,14 @@ int test_write_prob(void) {
 	require(gsl_vector_memcpy(m->params, m->params_max));
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
+	mcmc_dump_flush(m);
+	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 2, "" );
+	ASSERTEQUALI(countlines("Frequenz.prob.dump"), 2, "" );
 	debug("and minima as visited parameter values");
 	require(gsl_vector_memcpy(m->params, m->params_max));
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
-	mcmc_dump_probabilities(m, 1, "");
-	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 1, "" );
-	ASSERTEQUALI(countlines("Frequenz.prob.dump"), 1, "" );
-	mcmc_dump_probabilities(m, -1, "");
+	mcmc_dump_flush(m);
 	ASSERTEQUALI(countlines("Amplitude.prob.dump"), 3, "" );
 	ASSERTEQUALI(countlines("Frequenz.prob.dump"), 3, "" );
 	m = mcmc_free(m);
@@ -237,9 +210,7 @@ int (*tests_registration[])(void) = {
 	/* this is test 1 *//*test_tests, */
 	test_hist,
 	test_create,
-	test_alloc,
 	test_load,
-	test_resize,
 	test_append,
 	test_random,
 	test_mod,

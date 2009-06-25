@@ -63,13 +63,11 @@ static void print_current_positions(const mcmc ** sinmod, const int n_beta) {
 
 static void report(const mcmc ** sinmod, const int n_beta) {
 	int i = 0;
-	char buf[100];
 	print_current_positions(sinmod, n_beta);
 	printf("\nwriting out visited parameters ");
 	while (1) {
 		printf(".");
-		sprintf(buf, "-chain%d", i);
-		mcmc_dump_probabilities(sinmod[i], -1, buf);
+		mcmc_dump_flush(sinmod[i]);
 		fflush(stdout);
 #ifndef DUMP_ALL_CHAINS
 		break;
@@ -110,7 +108,7 @@ double chebyshev_stepwidth(const unsigned int i, const unsigned int n_beta,
 }
 double hot_chains(const unsigned int i, const unsigned int n_beta,
 		const double beta_0) {
-	return beta_0 + 0*i*n_beta;
+	return beta_0 + 0* i * n_beta;
 }
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
@@ -127,6 +125,7 @@ double hot_chains(const unsigned int i, const unsigned int n_beta,
  * also available: equidistant_temperature, chebyshev_beta,
  * chebyshev_temperature, equidistant_stepwidth, chebyshev_stepwidth
  *
+ * default: chebyshev_beta
  */
 #define BETA_ALIGNMENT
 #endif
@@ -172,9 +171,9 @@ void parallel_tempering(const char * params_filename,
 
 	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
-	
+
 	if (n_swap < 0) {
-		n_swap = 2000/n_beta;
+		n_swap = 2000 / n_beta;
 		printf("automatic n_swap: %d\n", n_swap);
 	}
 
@@ -216,10 +215,10 @@ void parallel_tempering(const char * params_filename,
 	i = 1;
 	if (n_beta >= 2) {
 		sinmod[i]->additional_data = mem_malloc(
-			sizeof(parallel_tempering_mcmc));
+				sizeof(parallel_tempering_mcmc));
 		if (beta_0 < 0)
-			set_beta(sinmod[i], get_chain_beta(i, n_beta, 
-				calc_beta_0(sinmod[0], stepwidth_factors)));
+			set_beta(sinmod[i], get_chain_beta(i, n_beta, calc_beta_0(
+					sinmod[0], stepwidth_factors)));
 		else
 			set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		gsl_vector_free(sinmod[i]->params_step);
@@ -233,17 +232,21 @@ void parallel_tempering(const char * params_filename,
 		dump_vectorln(get_steps(sinmod[i]));
 		fflush(stdout);
 		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
-			iter_limit, mul, DEFAULT_ADJUST_STEP);
+				iter_limit, mul, DEFAULT_ADJUST_STEP);
 		gsl_vector_scale(stepwidth_factors, pow(get_beta(sinmod[i]), -0.5));
 		gsl_vector_mul(stepwidth_factors, get_steps(sinmod[0]));
 		gsl_vector_div(stepwidth_factors, get_steps(sinmod[i]));
+		mem_free(sinmod[i]->additional_data);
 	}
+
 	printf("stepwidth factors: ");
 	dump_vectorln(stepwidth_factors);
+
 	if (beta_0 < 0) {
 		beta_0 = calc_beta_0(sinmod[0], stepwidth_factors);
 		printf("automatic beta_0: %f\n", beta_0);
 	}
+
 	fflush(stdout);
 
 #pragma omp parallel for
@@ -255,8 +258,7 @@ void parallel_tempering(const char * params_filename,
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
 		gsl_vector_free(sinmod[i]->params_step);
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
-		gsl_vector_scale(sinmod[i]->params_step, 
-			pow(get_beta(sinmod[i]), -0.5));
+		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
 		gsl_vector_mul(sinmod[i]->params_step, stepwidth_factors);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
@@ -268,6 +270,7 @@ void parallel_tempering(const char * params_filename,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
 #endif
 	}
+	gsl_vector_free(stepwidth_factors);
 	fflush(stdout);
 	printf("all chains calibrated.\n");
 	for (i = 0; i < n_beta; i++) {
@@ -423,7 +426,7 @@ static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap)
 #ifdef DUMP_ALL_CHAINS
 				if (i == 0)
 #endif
-					mcmc_append_current_parameters(sinmod[i]);
+				mcmc_append_current_parameters(sinmod[i]);
 #ifdef DUMP_PROBABILITIES
 				fprintf(probabilities_file[i], "%6e\n", get_prob(sinmod[i]));
 #endif

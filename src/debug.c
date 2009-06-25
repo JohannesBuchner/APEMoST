@@ -45,8 +45,6 @@ void dump_mcmc(const mcmc * m) {
 			dump_p("y_dat", (void*)m->y_dat);
 		IFSEGV
 			dump_p("model", (void*)m->model);
-		IFVERBOSE
-			dump_size("size", m->size);
 		dump_ul("iter", m->n_iter);
 		debug("dumping m done ---- ");
 	}

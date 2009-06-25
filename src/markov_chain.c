@@ -27,9 +27,9 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 	unsigned long subiter;
 	int nchecks_without_rescaling = 0;
 	int rescaled;
-	gsl_vector * original_steps = dup_vector(get_steps(m));
+	gsl_vector * original_steps = get_steps(m);
 	m->params_step = dup_vector(m->params_max);
-	gsl_vector_sub(m->params_step, dup_vector(m->params_min));
+	gsl_vector_sub(m->params_step, m->params_min);
 	gsl_vector_scale(m->params_step, 0.1);
 
 	if (rat_limit < 0)
@@ -159,6 +159,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 			gsl_vector_free(accept_rate);
 			accept_rate = get_accept_rate(m);
 			dump_v("New overall accept rate after reset", accept_rate);
+			gsl_vector_free(accept_rate);
 			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
 					- TARGET_ACCEPTANCE_RATE;
 			dump_d("Compared to desired rate", delta_reject_accept_t);

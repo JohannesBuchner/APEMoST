@@ -77,6 +77,27 @@ void mcmc_dump_model(const mcmc * m);
 void mcmc_dump_y_dat(const mcmc * m);
 
 /**
+ * flush output files
+ */
+void mcmc_dump_flush(const mcmc * m);
+
+/**
+ * close output files
+ */
+void mcmc_dump_close(mcmc * m);
+
+/**
+ * open output files
+ */
+void mcmc_open_dump_files(mcmc * m, const char * suffix);
+
+/**
+ * append current parameters to files, unflushed.
+ */
+void mcmc_dump_current(const mcmc * m);
+
+
+/**
  * write probability/distribution (params_distr) out to files.
  *
  * The files are named after the parameter names, with .prob.dump appended.
