@@ -271,14 +271,12 @@ static int check_accept(mcmc * m, const double prob_old) {
 	}
 }
 
-static void revert(mcmc * m, gsl_vector * old_model, const double prob_old) {
-	set_model(m, old_model);
+static void revert(mcmc * m, const double prob_old) {
 	set_prob(m, prob_old);
 }
 
 void markov_chain_step_for(mcmc * m, const unsigned int index) {
 	double prob_old = get_prob(m);
-	gsl_vector * old_model = dup_vector(m->model);
 	double old_value = gsl_vector_get(m->params, index);
 
 	mcmc_check(m);
@@ -288,9 +286,8 @@ void markov_chain_step_for(mcmc * m, const unsigned int index) {
 
 	if (check_accept(m, prob_old) == 1) {
 		inc_params_accepts_for(m, index);
-		gsl_vector_free(old_model);
 	} else {
-		revert(m, old_model, prob_old);
+		revert(m, prob_old);
 		set_params_for(m, old_value, index);
 		inc_params_rejects_for(m, index);
 	}
@@ -332,7 +329,6 @@ void rmw_adapt_stepwidth(mcmc * m, const double prob_old) {
 
 void markov_chain_step(mcmc * m) {
 	double prob_old = get_prob(m);
-	gsl_vector * old_model = dup_vector(m->model);
 	gsl_vector * old_values = dup_vector(m->params);
 
 	mcmc_check(m);
@@ -342,10 +338,9 @@ void markov_chain_step(mcmc * m) {
 
 	if (check_accept(m, prob_old) == 1) {
 		inc_params_accepts(m);
-		gsl_vector_free(old_model);
 		gsl_vector_free(old_values);
 	} else {
-		revert(m, old_model, prob_old);
+		revert(m, prob_old);
 		set_params(m, old_values);
 		inc_params_rejects(m);
 	}

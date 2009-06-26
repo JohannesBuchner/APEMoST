@@ -46,7 +46,6 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	m->params_descr = (const char**) mem_calloc(m->n_par, sizeof(char*));
 
 	m->data = NULL;
-	m->model = NULL;
 	IFSEGV
 		debug("allocating mcmc struct done");
 	return m;
@@ -82,8 +81,6 @@ mcmc * mcmc_free(mcmc * m) {
 	gsl_vector_free(m->params_max);
 	if (m->data != NULL)
 		gsl_matrix_free((gsl_matrix*) m->data);
-	if (m->model != NULL)
-		gsl_vector_free(m->model);
 	mem_free(m);
 	m = NULL;
 	return NULL;
@@ -93,11 +90,8 @@ void mcmc_check(const mcmc * m) {
 	(void) m;
 	assert(m != NULL);
 	assert(m->n_par > 0);
-	assert(m->model != NULL);
-	assert(m->model->size > 0);
 	assert(m->data != NULL);
 	assert(m->data->size2 > 0);
-	assert(m->data->size1 == m->model->size);
 	assert(m->params != NULL);
 	assert(m->params->size == m->n_par);
 	assert(m->params_best != NULL);

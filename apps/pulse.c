@@ -46,7 +46,6 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 			distance = mode_freq - freq;
 			y += mode_height / (1 + 4 * distance * distance * M_PI * M_PI * lifetime * lifetime);
 		}
-		gsl_vector_set(m->model, i, y);
 
 		prob += gsl_sf_log(y) + gsl_matrix_get(m->data, i, 1) / y;
 	}

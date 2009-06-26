@@ -108,7 +108,6 @@ int test_load(void) {
 	ASSERT(strcmp(m->params_descr[2], "Phase")==0, "description");
 
 	ASSERT(m->data->size1 == 1522, "data size");
-	ASSERT(m->model->size == m->data->size1, "model size");
 	ASSERTEQUALD(gsl_vector_get(&x_data.vector, 0), 1.7355217099999998, "x 0");
 	ASSERTEQUALD(gsl_vector_get(&x_data.vector, 1), 1.7356002600000000, "x 1");
 	ASSERTEQUALD(gsl_vector_get(&x_data.vector, 1521), 46.8043750000000003, "x last");
@@ -161,12 +160,9 @@ int test_mod(void) {
 
 int test_write(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
-	gsl_vector_const_view x_data = gsl_matrix_const_column(m->data, 0);
 	gsl_vector_const_view y_data = gsl_matrix_const_column(m->data, 1);
-	debug("lets cheat and say we got the sum x-data + y-data as model");
-	gsl_vector_memcpy(m->model, &x_data.vector);
-	gsl_vector_add(m->model, &y_data.vector);
-	mcmc_dump_model(m);
+	debug("lets cheat and say we got the y-data as model");
+	mcmc_dump_y_dat(m, &y_data.vector, "model.dump");
 	m = mcmc_free(m);
 	return 0;
 }

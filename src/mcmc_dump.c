@@ -39,9 +39,9 @@ static void mcmc_dump(const gsl_matrix * data, const gsl_vector * y_dat,
 	IFVERBOSE
 		debug("writing dump to file done");
 }
-
-void mcmc_dump_model(const mcmc * m) {
-	mcmc_dump(m->data, m->model, "model.dat.dump");
+void mcmc_dump_y_dat(mcmc * m, const gsl_vector * y_dat,
+		const char * filename) {
+	mcmc_dump(m->data, y_dat, filename);
 }
 
 void mcmc_open_dump_files(mcmc * m, const char * suffix, int index) {

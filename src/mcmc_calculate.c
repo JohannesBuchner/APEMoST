@@ -19,7 +19,6 @@ void mcmc_check_best(mcmc * m) {
 		dump_v("found a better solution", m->params);
 		m->prob_best = m->prob;
 		set_params_best(m, m->params);
-		mcmc_dump_model(m);
 	}
 }
 

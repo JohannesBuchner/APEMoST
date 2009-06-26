@@ -77,8 +77,6 @@ static void load_data(mcmc * m, const char * filename) {
 	gsl_matrix * data;
 	dump_i("lines", npoints);
 	dump_i("dimensions", ndim);
-	m->model = gsl_vector_alloc(npoints);
-	assert(m->model != NULL);
 
 	data = gsl_matrix_alloc(npoints, ndim);
 
@@ -113,8 +111,6 @@ void mcmc_reuse_data(mcmc * m, const mcmc * m_orig) {
 	debug("reusing data from other struct");
 	assert(m_orig->data != NULL);
 	m->data = m_orig->data;
-	m->model = gsl_vector_alloc(m->data->size1);
-	assert(m->model != NULL);
 	mcmc_check(m);
 }
 

@@ -37,8 +37,6 @@ void dump_mcmc(const mcmc * m) {
 		dump_v("max", m->params_max);
 		dump_v("step-size", m->params_step);
 
-		IFSEGV
-			dump_p("model", (void*)m->model);
 		dump_ul("iter", m->n_iter);
 		debug("dumping m done ---- ");
 	}

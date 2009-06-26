@@ -121,11 +121,6 @@ void set_steps_for(mcmc * m, const double new_step, const int i) {
 	gsl_vector_set(m->params_step, i, new_step);
 }
 
-void set_model(mcmc * m, gsl_vector * new_model) {
-	gsl_vector_free(m->model);
-	m->model = new_model;
-}
-
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
  * Fix the number of parameters to the given value

@@ -73,9 +73,7 @@ void mcmc_check(const mcmc * m);
  */
 void mcmc_append_current_parameters(mcmc * m);
 
-void mcmc_dump_model(const mcmc * m);
-void mcmc_dump_y_dat(const mcmc * m);
-
+void mcmc_dump_y_dat(mcmc * m, const gsl_vector * y_dat, const char * filename);
 /**
  * flush output files
  */
@@ -95,7 +93,6 @@ void mcmc_open_dump_files(mcmc * m, const char * suffix, int index);
  * append current parameters to files, unflushed.
  */
 void mcmc_dump_current(const mcmc * m);
-
 
 /**
  * write probability/distribution (params_distr) out to files.

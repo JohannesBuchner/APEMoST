@@ -77,12 +77,6 @@ typedef struct {
 	 * etc.
 	 */
 	const gsl_matrix * data;
-	/** pointer to 1D-array containing the model values corresponding to the
-	 * observed abscissa values.
-	 * This is a synthetic (calculated) y_dat value for the current parameters.
-	 * size = x-size
-	 */
-	gsl_vector * model;
 
 	/** number of iterations calculated */
 	unsigned long n_iter;
