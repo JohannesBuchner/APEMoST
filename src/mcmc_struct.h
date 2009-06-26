@@ -3,6 +3,7 @@
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
 
 /**
@@ -68,17 +69,14 @@ typedef struct {
 	 */
 	gsl_vector * params_max;
 	/**
-	 * pointer to 1D-array containing the abscissa of the observations (e.g.,
-	 * date, frequency, wavelength)
-	 * size = x-size
+	 * arbitrary sized array containing the observation as found in the
+	 * file "data"
+	 *
+	 * column 0 is the x-data
+	 * column 1 is the y-data
+	 * etc.
 	 */
-	const gsl_vector * x_dat;
-	/**
-	 * pointer to 1D-array containing the ordinate of the observations (e.g.,
-	 * intensity, power, radial vel.).
-	 * size = x-size.
-	 */
-	const gsl_vector * y_dat;
+	const gsl_matrix * data;
 	/** pointer to 1D-array containing the model values corresponding to the
 	 * observed abscissa values.
 	 * This is a synthetic (calculated) y_dat value for the current parameters.

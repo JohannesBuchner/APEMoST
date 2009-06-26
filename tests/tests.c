@@ -87,6 +87,8 @@ int test_create(void) {
 
 int test_load(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
+	gsl_vector_const_view x_data = gsl_matrix_const_column(m->data, 0);
+	gsl_vector_const_view y_data = gsl_matrix_const_column(m->data, 1);
 	ASSERT(m != NULL, "loaded");
 	ASSERTEQUALI(m->n_par, 3, "number of parameters");
 	ASSERTEQUALD(gsl_vector_get(m->params, 0), 0.7, "start");
@@ -105,15 +107,14 @@ int test_load(void) {
 	ASSERTEQUALD(gsl_vector_get(m->params_step, 2), 0.01*6.1, "step");
 	ASSERT(strcmp(m->params_descr[2], "Phase")==0, "description");
 
-	ASSERT(m->x_dat->size == 1522, "x_dat size");
-	ASSERT(m->y_dat->size == m->x_dat->size, "y_dat size");
-	ASSERT(m->model->size == m->x_dat->size, "model size");
-	ASSERTEQUALD(gsl_vector_get(m->x_dat, 0), 1.7355217099999998, "x 0");
-	ASSERTEQUALD(gsl_vector_get(m->x_dat, 1), 1.7356002600000000, "x 1");
-	ASSERTEQUALD(gsl_vector_get(m->x_dat, 1521), 46.8043750000000003, "x last");
-	ASSERTEQUALD(gsl_vector_get(m->y_dat, 0), 0.4731745866773314, "y 0");
-	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1), -0.9900871130450772, "y 1");
-	ASSERTEQUALD(gsl_vector_get(m->y_dat, 1521), -0.3527955490681067, "y last");
+	ASSERT(m->data->size1 == 1522, "data size");
+	ASSERT(m->model->size == m->data->size1, "model size");
+	ASSERTEQUALD(gsl_vector_get(&x_data.vector, 0), 1.7355217099999998, "x 0");
+	ASSERTEQUALD(gsl_vector_get(&x_data.vector, 1), 1.7356002600000000, "x 1");
+	ASSERTEQUALD(gsl_vector_get(&x_data.vector, 1521), 46.8043750000000003, "x last");
+	ASSERTEQUALD(gsl_vector_get(&y_data.vector, 0), 0.4731745866773314, "y 0");
+	ASSERTEQUALD(gsl_vector_get(&y_data.vector, 1), -0.9900871130450772, "y 1");
+	ASSERTEQUALD(gsl_vector_get(&y_data.vector, 1521), -0.3527955490681067, "y last");
 
 	m = mcmc_free(m);
 	return 0;
@@ -160,9 +161,11 @@ int test_mod(void) {
 
 int test_write(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
+	gsl_vector_const_view x_data = gsl_matrix_const_column(m->data, 0);
+	gsl_vector_const_view y_data = gsl_matrix_const_column(m->data, 1);
 	debug("lets cheat and say we got the sum x-data + y-data as model");
-	gsl_vector_memcpy(m->model, m->y_dat);
-	gsl_vector_add(m->model, m->x_dat);
+	gsl_vector_memcpy(m->model, &x_data.vector);
+	gsl_vector_add(m->model, &y_data.vector);
 	mcmc_dump_model(m);
 	m = mcmc_free(m);
 	return 0;
@@ -207,16 +210,9 @@ void calc_model_for(mcmc * m, const unsigned int index, const double old_value) 
 
 /* register of all tests */
 int (*tests_registration[])(void) = {
-	/* this is test 1 *//*test_tests, */
-	test_hist,
-	test_create,
-	test_load,
-	test_append,
-	test_random,
-	test_mod,
-	test_write,
-	test_write_prob,
+/* this is test 1 *//*test_tests, */
+test_hist, test_create, test_load, test_append, test_random, test_mod,
+		test_write, test_write_prob,
 
-	/* register more tests before here */
-	NULL,
-};
+		/* register more tests before here */
+		NULL, };

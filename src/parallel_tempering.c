@@ -291,8 +291,8 @@ void parallel_tempering(const char * params_filename,
 	for (i = 0; i < n_beta; i++) {
 		mem_free(sinmod[i]->additional_data);
 		if (i != 0) {
-			set_x(sinmod[i], NULL);
-			set_y(sinmod[i], NULL);
+			/* this was reused, thus avoid double free */
+			set_data(sinmod[i], NULL);
 		}
 		sinmod[i] = mcmc_free(sinmod[i]);
 		mem_free(sinmod[i]);

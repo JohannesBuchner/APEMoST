@@ -9,7 +9,6 @@
 #include "debug.h"
 #include "utils.h"
 
-#define NCOLUMNS 5
 #define MAX_LINE_LENGTH 256
 
 static int strnlen(char * s, int maxlen) {
@@ -51,15 +50,15 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	debug("setting values");
 	gsl_vector_set(m->params, i, start);
 	gsl_vector_set(m->params_best, i, start);
-	if(min > max) {
+	if (min > max) {
 		fprintf(stderr, "min(%f) < max(%f)\n", min, max);
 		return 1;
 	}
-	if(start > max) {
+	if (start > max) {
 		fprintf(stderr, "start(%f) > max(%f)\n", start, max);
 		return 1;
 	}
-	if(start < min) {
+	if (start < min) {
 		fprintf(stderr, "start(%f) < min(%f)\n", start, min);
 		return 1;
 	}
@@ -71,45 +70,30 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	return 0;
 }
 
-static int load_datapoint(mcmc * m, FILE * input, int i) {
-	double x;
-	double y;
-	int col;
-
-	col = fscanf(input, "%lf%lf", &x, &y);
-	if (col != 2) {
-		fprintf(stderr, "only %d fields matched.\n", col);
-		return 1;
-	}
-	gsl_vector_set((gsl_vector *) m->x_dat, i, x);
-	gsl_vector_set((gsl_vector *) m->y_dat, i, y);
-	return 0;
-}
-
 static void load_data(mcmc * m, const char * filename) {
 	FILE * input;
-	int i = 0;
 	int npoints = countlines(filename);
+	int ndim = get_column_count(filename);
+	gsl_matrix * data;
 	dump_i("lines", npoints);
-
-	m->x_dat = gsl_vector_alloc(npoints);
-	assert(m->x_dat != NULL);
-	m->y_dat = gsl_vector_alloc(npoints);
-	assert(m->y_dat != NULL);
+	dump_i("dimensions", ndim);
 	m->model = gsl_vector_alloc(npoints);
 	assert(m->model != NULL);
 
+	data = gsl_matrix_alloc(npoints, ndim);
+
 	input = openfile(filename);
-	for (i = 0; i < npoints; i++) {
-		if (load_datapoint(m, input, i) != 0) {
-			fprintf(stderr, "Line %d of %s is of incorrect format.\n", i + 1,
-					filename);
-			exit(1);
-		}
+	if (gsl_matrix_fscanf(input, data) != 0) {
+		fprintf(stderr,
+				"error reading input data. Perhaps inconsistent format?\n");
+		fprintf(stderr, "tried to read %d x %d.\n", ndim, npoints);
+		exit(3);
 	}
 	assert(fclose(input) == 0);
-	dump_i("loaded data points", npoints);
 
+	m->data = data;
+
+	dump_i("loaded data points", npoints);
 }
 
 char * my_strdup(const char * s) {
@@ -127,11 +111,9 @@ void mcmc_load_data(mcmc * m, const char * datafilename) {
 
 void mcmc_reuse_data(mcmc * m, const mcmc * m_orig) {
 	debug("reusing data from other struct");
-	m->x_dat = m_orig->x_dat;
-	assert(m->x_dat != NULL);
-	m->y_dat = m_orig->y_dat;
-	assert(m->y_dat != NULL);
-	m->model = gsl_vector_alloc(m->y_dat->size);
+	assert(m_orig->data != NULL);
+	m->data = m_orig->data;
+	m->model = gsl_vector_alloc(m->data->size1);
 	assert(m->model != NULL);
 	mcmc_check(m);
 }

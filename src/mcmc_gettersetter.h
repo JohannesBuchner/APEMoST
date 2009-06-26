@@ -12,8 +12,6 @@ long get_params_accepts_for(const mcmc * m, int i);
 long get_params_rejects_for(const mcmc * m, int i);
 gsl_vector * get_params(const mcmc * m);
 gsl_vector * get_params_best(const mcmc * m);
-const gsl_vector * get_x(const mcmc * m);
-const gsl_vector * get_y(const mcmc * m);
 #ifdef N_PARAMETERS
 #define get_n_par(m) N_PARAMETERS
 #else
@@ -38,10 +36,7 @@ void set_params_descr_for(mcmc * m, const char * new_par_descr,
 		const unsigned int i);
 void set_random(mcmc * m, gsl_rng * newrandom);
 void set_prob(mcmc * m, const double new_prob);
-void set_x(mcmc * m, const gsl_vector * new_x);
-void set_x_copy(mcmc * m, const gsl_vector * new_x);
-void set_y(mcmc * m, const gsl_vector * new_y);
-void set_y_copy(mcmc * m, const gsl_vector * new_y);
+void set_data(mcmc * m, const gsl_matrix * new_data);
 void set_steps_for(mcmc * m, const double new_steps, const int i);
 void set_steps_all(mcmc * m, const double * new_steps);
 void set_params_accepts_for(mcmc * m, const long new_params_accept,

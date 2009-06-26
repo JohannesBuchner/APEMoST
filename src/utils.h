@@ -20,4 +20,8 @@ FILE * openfile(const char * filename);
  */
 unsigned int countlines(const char * filename);
 
+/**
+ * how many columns does this file have? (looks at first line only)
+ */
+unsigned int get_column_count(const char * filename);
 #endif

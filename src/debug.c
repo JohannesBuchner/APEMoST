@@ -38,12 +38,6 @@ void dump_mcmc(const mcmc * m) {
 		dump_v("step-size", m->params_step);
 
 		IFSEGV
-			dump_p("x_dat", (void*) m->x_dat);
-		if (m->x_dat != NULL)
-			dump_size("x-size", m->x_dat->size);
-		IFSEGV
-			dump_p("y_dat", (void*)m->y_dat);
-		IFSEGV
 			dump_p("model", (void*)m->model);
 		dump_ul("iter", m->n_iter);
 		debug("dumping m done ---- ");

@@ -191,18 +191,11 @@ void set_random(mcmc * m, gsl_rng * newrandom) {
 void set_prob(mcmc * m, const double new_prob) {
 	m->prob = new_prob;
 }
-const gsl_vector * get_x(const mcmc * m) {
-	return m->x_dat;
+const gsl_matrix * get_data(const mcmc * m) {
+	return m->data;
 }
-const gsl_vector * get_y(const mcmc * m) {
-	return m->y_dat;
-}
-void set_x(mcmc * m, const gsl_vector * new_x) {
-	m->x_dat = new_x;
-}
-
-void set_y(mcmc * m, const gsl_vector * new_y) {
-	m->y_dat = new_y;
+void set_data(mcmc * m, const gsl_matrix * new_data) {
+	m->data = new_data;
 }
 
 gsl_vector * get_steps(const mcmc * m) {

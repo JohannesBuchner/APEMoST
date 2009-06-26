@@ -16,22 +16,23 @@
 #define ASSURE_DUMP_ENABLED
 #endif
 
-static void mcmc_dump(const gsl_vector * x_dat, const gsl_vector * y_dat,
+static void mcmc_dump(const gsl_matrix * data, const gsl_vector * y_dat,
 		const char * filename) {
 	unsigned long i;
+	unsigned int j;
 	int r;
-	double x, y;
 	FILE * output;
 	ASSURE_DUMP_ENABLED;
-	assert(x_dat->size == y_dat->size);
+	assert(data->size1 == y_dat->size);
 	output = fopen(filename, "w");
 	assert(output != NULL);
 	IFVERBOSE
 		dump_s("writing dump to file", filename);
-	for (i = 0; i < x_dat->size; i++) {
-		x = gsl_vector_get(x_dat, i);
-		y = gsl_vector_get(y_dat, i);
-		fprintf(output, DUMP_FORMAT "\t" DUMP_FORMAT "\n", x, y);
+	for (i = 0; i < data->size1; i++) {
+		for (j = 0; j < data->size2; j++) {
+			fprintf(output, DUMP_FORMAT "\t", gsl_matrix_get(data, i, j));
+		}
+		fprintf(output, DUMP_FORMAT "\n", gsl_vector_get(y_dat, i));
 	}
 	r = fclose(output);
 	assert (r == 0);
@@ -40,11 +41,7 @@ static void mcmc_dump(const gsl_vector * x_dat, const gsl_vector * y_dat,
 }
 
 void mcmc_dump_model(const mcmc * m) {
-	mcmc_dump(m->x_dat, m->model, "model.dat.dump");
-}
-
-void mcmc_dump_y_dat(const mcmc * m) {
-	mcmc_dump(m->x_dat, m->y_dat, "y_dat.dat.dump");
+	mcmc_dump(m->data, m->model, "model.dat.dump");
 }
 
 void mcmc_open_dump_files(mcmc * m, const char * suffix, int index) {

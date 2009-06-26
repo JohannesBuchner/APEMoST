@@ -37,9 +37,9 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 
 	(void) old_values;
 	assert((get_n_par(m) - 2) % 2 == 0);
-	for (i = 0; i < m->x_dat->size; i++) {
+	for (i = 0; i < x_dat->size; i++) {
 		y = 0;
-		freq = gsl_vector_get(m->x_dat, i);
+		freq = gsl_matrix_get(m->data, i, 0);
 		for (j = 2; j < get_n_par(m); j += 2) {
 			mode_freq = gsl_vector_get(params, j);
 			mode_height = gsl_vector_get(params, j + 1);
@@ -48,7 +48,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 		}
 		gsl_vector_set(m->model, i, y);
 
-		prob += gsl_sf_log(y) + gsl_vector_get(m->y_dat, i) / y;
+		prob += gsl_sf_log(y) + gsl_matrix_get(m->data, i, 1) / y;
 	}
 
 	set_prob(m, - prior - get_beta(m) * prob);

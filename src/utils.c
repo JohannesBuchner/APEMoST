@@ -1,5 +1,6 @@
 
 #include "utils.h"
+#include <ctype.h>
 
 FILE * openfile(const char * filename) {
 	FILE * input = fopen(filename, "r");
@@ -27,4 +28,28 @@ unsigned int countlines(const char * filename) {
 	r = fclose(input);
 	assert (r == 0);
 	return nlines;
+}
+
+unsigned int get_column_count(const char * filename) {
+	FILE * input;
+	char buf[10000];
+	unsigned int count = 0;
+	int i = 0;
+	int at_whitespace = 1;
+
+	input = openfile(filename);
+	fgets(buf, 10000, input);
+	while (buf[i] != 0) {
+		if (isspace(buf[i])) {
+			if (at_whitespace == 0)
+				count++;
+			at_whitespace = 1;
+		} else {
+			at_whitespace = 0;
+		}
+		i++;
+	}
+	if (at_whitespace == 0)
+		count++;
+	return count;
 }
