@@ -1,4 +1,4 @@
-## Makefile for mcmc
+## Makefile for APEMoST
 ## 
 ## You can call it like this if you have segfaults
 ##  $ LD_PRELOAD=libduma.so.0.0.0 CCFLAGS="-DDEBUG -DSEGV" make tests
