@@ -52,7 +52,7 @@ void mcmc_open_dump_files(mcmc * m, const char * suffix, int index) {
 	ASSURE_DUMP_ENABLED;
 	for (i = 0; i < get_n_par(m); i++) {
 		filenames[i] = (char*) mem_calloc(strlen(m->params_descr[i]) + strlen(
-						suffix) + strlen(".prob.dump") + 1, sizeof(char));
+						suffix) + strlen(".prob.dump") + 10, sizeof(char));
 		sprintf(filenames[i], "%s%s-%d.prob.dump", m->params_descr[i], suffix, index);
 		IFVERBOSE
 			dump_s("writing probability/distribution to file", filenames[i]);
