@@ -101,7 +101,8 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 							m->params_step, i) / mul);
 					IFDEBUG
 						printf("\t scaling up   ^");
-					if (rescaled == 0) rescaled = -1;	
+					if (rescaled == 0)
+						rescaled = -1;
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) > 1) {
@@ -116,10 +117,12 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 						printf(
 								"\n SETTING PARAMETER STEP TO PARAMETER RANGE P_MAX - P_MIN\n");
 						gsl_vector_set(m->params_step, i, gsl_vector_get(m->params_max, i)
-							- gsl_vector_get(m->params_min, i));		
-						if (rescaled == -1) rescaled = 0;	
+							- gsl_vector_get(m->params_min, i));
+						if (rescaled == -1)
+							rescaled = 0;
 					}
-					if (rescaled == -1) rescaled = 1;
+					if (rescaled == -1)
+						rescaled = 1;
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) > 100000) {
@@ -206,7 +209,6 @@ void do_step_for(mcmc * m, const unsigned int i) {
 	/* dump_d("Jumping from", old_value); */
 
 #if CIRCULAR_PARAMS == 0
-   
 	while (new_value > max || new_value < min) {
 		new_value = old_value + get_next_gauss_random(m, step);
 		printf("Value borders reached ... looking for new starting point for %d \n", m);
@@ -215,10 +217,9 @@ void do_step_for(mcmc * m, const unsigned int i) {
 	unsigned int j = 0;
 	/** circular parameters **/
 	unsigned int parameters[] = {CIRCULAR_PARAMS, 0};
-
-   
+ 
 	if (new_value > max || new_value < min) {
-    	while (1) {
+	while (1) {
 			if (parameters[j] == 0) {
 			   /* non-circular parameter */
 				do {
@@ -232,7 +233,6 @@ void do_step_for(mcmc * m, const unsigned int i) {
 				break;
 			}
 			j++;
-			
 		}
 	}
 #endif
