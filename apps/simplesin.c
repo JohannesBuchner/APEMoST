@@ -12,7 +12,7 @@
 double apply_formula(mcmc * m, unsigned int i, double amplitude, double frequency,
 		double phase) {
 	double x = gsl_matrix_get(m->data, i, 0);
-	double y = amplitude * gsl_sf_sin(2.0 * M_PI * frequency * x + phase);
+	double y = amplitude * gsl_sf_sin(2.0 * M_PI * (frequency * x + phase));
 	return y;
 }
 

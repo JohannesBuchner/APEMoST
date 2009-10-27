@@ -378,11 +378,11 @@ void dump(const mcmc ** sinmod, const unsigned int n_beta,
 			dump_ul("acceptance rate: rejects", get_params_rejects_sum(sinmod[0]));
 			dump_mcmc(sinmod[0]);
 		} else {
-			printf("iteration: %lu, a/r: %lu/%lu v:", iter,
+		   printf("iteration: %lu, a/r: %lu/%lu, acceptance rate = %f, v:", iter,
 					get_params_accepts_sum(sinmod[0]), get_params_rejects_sum(
-							sinmod[0]));
+							sinmod[0]), (double) get_params_accepts_sum(sinmod[0])/(double) (get_params_accepts_sum(sinmod[0]) + get_params_rejects_sum(sinmod[0])));
 			dump_vector(get_params(sinmod[0]));
-			printf(" [%d/%lu ticks]\r", get_duration(), CLOCKS_PER_SEC);
+			printf(" [%d/%lu ticks]\r", get_duration(), (long unsigned int) CLOCKS_PER_SEC);
 			fflush(stdout);
 		}
 	}

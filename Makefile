@@ -6,9 +6,9 @@
 ## You might want to compile your gsl with -DHAVE_INLINE 
 ## 
 
-CFLAGS=-O3 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
+CFLAGS= -I/opt/local/include -L/opt/local/lib -O3 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm -lgc
-CC=gcc
+CC=gcc-4.2
 COMMON_SOURCES=src/gsl_helper.c src/debug.c src/utils.c
 MCMC_SOURCES=src/mcmc*.c
 MARKOV_CHAIN_SOURCES=src/markov_chain*.c
