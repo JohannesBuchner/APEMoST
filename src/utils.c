@@ -38,7 +38,10 @@ unsigned int get_column_count(const char * filename) {
 	int at_whitespace = 1;
 
 	input = openfile(filename);
-	fgets(buf, 10000, input);
+	if (fgets(buf, 10000, input) == NULL) {
+		fprintf("error: file %s is empty!", filename);
+		exit(1);
+	}
 	while (buf[i] != 0) {
 		if (isspace(buf[i])) {
 			if (at_whitespace == 0)

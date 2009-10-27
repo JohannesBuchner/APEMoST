@@ -121,8 +121,6 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 						if (rescaled == -1)
 							rescaled = 0;
 					}
-					if (rescaled == -1)
-						rescaled = 1;
 					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
 							m->params_max, i)
 							- gsl_vector_get(m->params_min, i)) > 100000) {
@@ -132,7 +130,8 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 								get_params_descr(m)[i]);
 						exit(1);
 					}
-					
+					if (rescaled == -1)
+						rescaled = 1;
 				}
 				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
 					gsl_vector_set(m->params_step, i, gsl_vector_get(
@@ -211,21 +210,21 @@ void do_step_for(mcmc * m, const unsigned int i) {
 #if CIRCULAR_PARAMS == 0
 	while (new_value > max || new_value < min) {
 		new_value = old_value + get_next_gauss_random(m, step);
-		printf("Value borders reached ... looking for new starting point for %d \n", m);
+		printf("Value borders reached ... looking for new starting point for %d \n", i);
 	}
 #else
 	unsigned int j = 0;
 	/** circular parameters **/
 	unsigned int parameters[] = {CIRCULAR_PARAMS, 0};
- 
+
 	if (new_value > max || new_value < min) {
-	while (1) {
+		while (1) {
 			if (parameters[j] == 0) {
-			   /* non-circular parameter */
+				/* non-circular parameter */
 				do {
 					new_value = old_value + get_next_gauss_random(m, step);
 				}while (new_value > max || new_value < min);
-				break;				
+				break;
 			}
 			if (parameters[j] == i + 1) {
 				/* circular parameter */
