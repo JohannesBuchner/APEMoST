@@ -1,4 +1,3 @@
-#include <signal.h>
 #include <omp.h>
 
 #include "mcmc.h"
@@ -8,33 +7,11 @@
 #include "debug.h"
 #include "define_defaults.h"
 #include "gsl_helper.h"
+#include "parallel_tempering_run.h"
 
-int run;
-int dumpflag;
+void register_signal_handlers();
 
-static void ctrl_c_handler(int signalnr) {
-	printf("\nreceived Ctrl-C (%d). Stopping ... (please be patient)\n\n",
-			signalnr);
-	run = 0;
-}
-static void sigusr_handler(int signalnr) {
-	printf("\nreceived SIGUSR (%d). Will dump at next opportunity.\n\n",
-			signalnr);
-	signal(SIGUSR2, sigusr_handler);
-	signal(SIGUSR1, sigusr_handler);
-	dumpflag = 1;
-}
-
-#include <time.h>
-
-static int get_duration() {
-	static clock_t stored = 0;
-	clock_t new = stored;
-	stored = clock();
-	return stored - new;
-}
-
-static void report(const mcmc ** sinmod, const int n_beta) {
+void report(const mcmc ** sinmod, const int n_beta) {
 	int i = 0;
 	print_current_positions(sinmod, n_beta);
 	printf("\nwriting out visited parameters ");
@@ -51,7 +28,7 @@ static void report(const mcmc ** sinmod, const int n_beta) {
 	}
 	printf("done.\n");
 }
-static void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
+void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
 void write_params_file(mcmc * m) {
 	unsigned int i;
@@ -113,7 +90,10 @@ void write_calibration_summary(mcmc ** sinmod, unsigned int n_chains) {
 		fprintf(stderr, "Could not write to file calibration_summary\n");
 	}
 }
-
+/*
+	parallel_tempering(PARAMS_FILENAME, DATA_FILENAME, N_BETA, BETA_0,
+			BURN_IN_ITERATIONS, RAT_LIMIT, ITER_LIMIT, MUL, N_SWAP);
+*/
 void parallel_tempering(const char * params_filename,
 		const char * data_filename, const int n_beta, double beta_0,
 		const unsigned long burn_in_iterations, const double rat_limit,
@@ -233,9 +213,7 @@ void parallel_tempering(const char * params_filename,
 	}
 	write_calibration_summary(sinmod, n_beta);
 
-	signal(SIGINT, ctrl_c_handler);
-	signal(SIGUSR2, sigusr_handler);
-	signal(SIGUSR1, sigusr_handler);
+	register_signal_handlers();
 
 	analyse(sinmod, n_beta, n_swap);
 	for (i = 0; i < n_beta; i++) {
@@ -266,7 +244,7 @@ void parallel_tempering(const char * params_filename,
 #define ADAPT
 #endif
 
-static void adapt(mcmc ** sinmod, const unsigned int n_beta,
+void adapt(mcmc ** sinmod, const unsigned int n_beta,
 		const unsigned int n_swap) {
 	unsigned int i;
 
@@ -333,13 +311,13 @@ void dump(const mcmc ** sinmod, const unsigned int n_beta,
 			sinmod[0]), (double) get_params_accepts_sum(sinmod[0])/
 			(double) (get_params_accepts_sum(sinmod[0]) + get_params_rejects_sum(sinmod[0])));
 			dump_vector(get_params(sinmod[0]));
-			printf(" [%d/%lu ticks]\r", get_duration(), (long unsigned int) CLOCKS_PER_SEC);
+			printf(" [%d/%lu ticks]\r", get_duration(), get_ticks_per_second());
 			fflush(stdout);
 		}
 	}
 }
 
-static void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
+void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	unsigned int subiter;
