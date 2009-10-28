@@ -32,7 +32,6 @@ void print_current_positions(const mcmc ** sinmod, const int n_beta) {
 	fflush(stdout);
 }
 
-
 double equidistant_beta(const unsigned int i, const unsigned int n_beta,
 		const double beta_0) {
 	return beta_0 + i * (1 - beta_0) / (n_beta - 1);

@@ -52,7 +52,6 @@
 #define N_SWAP -30
 #endif
 
-
 #ifndef PARAMS_FILENAME
 #define PARAMS_FILENAME "params"
 #endif
