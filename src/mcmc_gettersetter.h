@@ -18,6 +18,7 @@ double get_params_min_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params_max(const mcmc * m);
 double get_params_max_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params_best(const mcmc * m);
+double get_params_best_for(const mcmc * m, const unsigned int i);
 #ifdef N_PARAMETERS
 #define get_n_par(m) N_PARAMETERS
 #else

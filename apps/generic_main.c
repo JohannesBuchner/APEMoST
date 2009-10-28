@@ -89,32 +89,46 @@
  */
 
 #include "define_defaults.h"
-
-void usage(const char * progname);
-void check(const char * progname);
+char * progname;
+void usage();
+void check();
 
 int main(int argc, char ** argv) {
 	if (argc > 1) {
-		if (0 == strcmp(argv[1], "--help") || 0 == strcmp(argv[1], "-h")) {
-			usage(argv[0]);
-		} else if (0 == strcmp(argv[1], "--check")) {
-			check(argv[0]);
+		progname = argv[0];
+		if (0 == strcmp(argv[1], "help") || 0 == strcmp(argv[1], "-h")) {
+			usage();
+		} else if (0 == strcmp(argv[1], "check")) {
+			check();
+		} else if (0 == strcmp(argv[1], "calibrate_first")) {
+			calibrate_first();
+		} else if (0 == strcmp(argv[1], "calibrate_rest")) {
+			calibrate_rest();
+		} else if (0 == strcmp(argv[1], "run")) {
+			prepare_and_run_sampler();
+		/*} else if (0 == strcmp(argv[1], "analyze")) {
+			analyze();*/
 		} else {
 			fprintf(stderr, "You are doing it wrong.\n");
 			usage(argv[0]);
 		}
 	} else {
-		parallel_tempering(PARAMS_FILENAME, DATA_FILENAME, N_BETA, BETA_0,
-				BURN_IN_ITERATIONS, RAT_LIMIT, ITER_LIMIT, MUL, N_SWAP);
+		fprintf(stderr, "You are doing it wrong.\n");
+		usage(argv[0]);
 	}
 	return 0;
 }
 
-void usage(const char * progname) {
+void usage() {
 	fprintf(stderr, "%s: SYNAPSIS\n\n"
-		"\t-h, --help\tthis clutter\n"
-		"\t--check\toutput which parameters and files will be used\n"
+		"\t-h, help\tthis clutter\n"
+		"\tcheck\toutput which parameters and files will be used\n"
 		"\t       \tand check if they are there\n"
+		"\tcalibrate_first\tcalibrate first chain (beta = 1)\n"
+		"\tcalibrate_rest\tcalibrate remaining chains (beta < 1)\n"
+		"\trun\tcreate and dump sampling data\n"
+		"\tanalyze\tanalyze the available data\n"
+		"\t       \tmarginal distribution, data probability"
 		"\n"
 		"Read the manual on how to setup a working directory and \n"
 		"what parameters can be set.\n", progname);
@@ -128,7 +142,7 @@ void checkfile(char * filename) {
 #define OUTPUT_PARAMD(P) printf("\t%s: %f\n", #P, P);
 #define OUTPUT_PARAMI(P) printf("\t%s: %d\n", #P, P);
 
-void check(const char * progname) {
+void check() {
 	printf("%s: Checking environment:\n", progname);
 
 	printf("\nFiles:\n");

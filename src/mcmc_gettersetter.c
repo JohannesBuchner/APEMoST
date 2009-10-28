@@ -42,7 +42,7 @@ unsigned long get_params_rejects_global(const mcmc * m) {
 	return m->reject;
 }
 double get_accept_rate_global(const mcmc * m) {
-	return get_params_accepts_global(m) / (double) 
+	return get_params_accepts_global(m) / (double)
 			(get_params_accepts_global(m) + get_params_rejects_global(m));
 }
 
@@ -131,7 +131,7 @@ void set_steps_for(mcmc * m, const double new_step, const unsigned int i) {
 }
 
 void set_steps_for_normalized(mcmc * m, const double new_step, const unsigned int i) {
-	gsl_vector_set(m->params_step, i, new_step * 
+	gsl_vector_set(m->params_step, i, new_step *
 		(get_params_max_for(m, i) - get_params_min_for(m, i)));
 }
 
@@ -187,7 +187,7 @@ double get_params_max_for(const mcmc * m, unsigned int i) {
 gsl_vector * get_params_best(const mcmc * m) {
 	return m->params_best;
 }
-double get_params_best_for(const mcmc * m, unsigned int i) {
+double get_params_best_for(const mcmc * m, const unsigned int i) {
 	return gsl_vector_get(m->params_best, i);
 }
 
@@ -232,7 +232,7 @@ double get_steps_for(const mcmc * m, const unsigned int i) {
 	return gsl_vector_get(m->params_step, i);
 }
 double get_steps_for_normalized(const mcmc * m, const unsigned int i) {
-	return get_steps_for(m, i) / (get_params_max_for(m, i) - 
+	return get_steps_for(m, i) / (get_params_max_for(m, i) -
 			get_params_min_for(m, i));
 }
 

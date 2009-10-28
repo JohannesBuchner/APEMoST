@@ -44,5 +44,26 @@ double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0);
 
 double calc_beta_0(mcmc * m, gsl_vector * stepwidth_factors);
 
+typedef struct {
+	/**
+	 * likelihood of acceptance
+	 */
+	double beta;
+
+	/**
+	 * times this was swapped
+	 */
+	unsigned long swapcount;
+
+} parallel_tempering_mcmc;
+
+void set_beta(mcmc * m, const double newbeta);
+
+double get_beta(const mcmc * m);
+
+void inc_swapcount(mcmc * m);
+
+unsigned long get_swapcount(const mcmc * m);
+
 #endif
 

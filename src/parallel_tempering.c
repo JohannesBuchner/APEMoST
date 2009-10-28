@@ -11,6 +11,8 @@
 
 void register_signal_handlers();
 
+void run_sampler(mcmc ** sinmod, int n_beta, unsigned int n_swap);
+
 void report(const mcmc ** sinmod, const int n_beta) {
 	int i = 0;
 	print_current_positions(sinmod, n_beta);
@@ -28,24 +30,23 @@ void report(const mcmc ** sinmod, const int n_beta) {
 	}
 	printf("done.\n");
 }
-void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
 void write_params_file(mcmc * m) {
 	unsigned int i;
 	FILE * f = fopen(PARAMS_FILENAME "_suggested", "w");
 	if (f != NULL) {
 		for (i = 0; i < get_n_par(m); i++) {
-			fprintf(f, "%f\t%f\t%f\t%s\t%f\n", 
-					gsl_vector_get(get_params_best(m), i),
-					gsl_vector_get(get_params_min(m), i),
-					gsl_vector_get(get_params_max(m), i),
-					get_params_descr(m)[i], 
+			fprintf(f, "%f\t%f\t%f\t%s\t%f\n", gsl_vector_get(
+					get_params_best(m), i),
+					gsl_vector_get(get_params_min(m), i), gsl_vector_get(
+							get_params_max(m), i), get_params_descr(m)[i],
 					gsl_vector_get(get_steps(m), i));
 		}
 		fclose(f);
 		printf("new suggested parameters file has been written\n");
 	} else {
-		fprintf(stderr, "Could not write to file " PARAMS_FILENAME "_suggested\n");
+		fprintf(stderr,
+				"Could not write to file " PARAMS_FILENAME "_suggested\n");
 	}
 }
 
@@ -60,8 +61,8 @@ void write_calibration_summary(mcmc ** sinmod, unsigned int n_chains) {
 		fprintf(f, "\nBETA TABLE\n");
 		fprintf(f, "Chain # | Calculated | Calibrated\n");
 		for (i = 0; i < n_chains; i++) {
-			fprintf(f, "Chain %d | %f | %f\n", i, 
-					get_chain_beta(i, n_chains, beta_0), get_beta(sinmod[i]));
+			fprintf(f, "Chain %d | %f | %f\n", i, get_chain_beta(i, n_chains,
+					beta_0), get_beta(sinmod[i]));
 		}
 		fprintf(f, "\nSTEPWIDTH TABLE\n");
 		fprintf(f, "Chain # | Calibrated stepwidths... \n");
@@ -90,27 +91,14 @@ void write_calibration_summary(mcmc ** sinmod, unsigned int n_chains) {
 		fprintf(stderr, "Could not write to file calibration_summary\n");
 	}
 }
-/*
-	parallel_tempering(PARAMS_FILENAME, DATA_FILENAME, N_BETA, BETA_0,
-			BURN_IN_ITERATIONS, RAT_LIMIT, ITER_LIMIT, MUL, N_SWAP);
-*/
-void parallel_tempering(const char * params_filename,
-		const char * data_filename, const int n_beta, double beta_0,
-		const unsigned long burn_in_iterations, const double rat_limit,
-		const unsigned long iter_limit, const double mul, int n_swap) {
-	int n_par;
-	int i;
-	const char ** params_descr;
+mcmc ** setup_chains() {
+	unsigned int i;
 	mcmc ** sinmod;
-	gsl_vector * stepwidth_factors;
-
+	const char * params_filename = PARAMS_FILENAME;
+	const char * data_filename = DATA_FILENAME;
+	const unsigned int n_beta = N_BETA;
 	sinmod = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(sinmod != NULL);
-
-	if (n_swap < 0) {
-		n_swap = 2000 / n_beta;
-		printf("automatic n_swap: %d\n", n_swap);
-	}
 
 	printf("Initializing parallel tempering for %d chains\n", n_beta);
 	for (i = 0; i < n_beta; i++) {
@@ -124,11 +112,107 @@ void parallel_tempering(const char * params_filename,
 			mcmc_reuse_data(sinmod[i], sinmod[0]);
 		}
 		mcmc_check(sinmod[i]);
+		sinmod[i]->additional_data = mem_malloc(
+				sizeof(parallel_tempering_mcmc));
+		set_beta(sinmod[i], 1);
 	}
-	params_descr = get_params_descr(sinmod[0]);
-	n_par = get_n_par(sinmod[0]);
-	stepwidth_factors = gsl_vector_alloc(n_par);
-	gsl_vector_set_all(stepwidth_factors, 1);
+	return sinmod;
+}
+
+#define CALIBRATION_FILE "calibration_results"
+
+/**
+ * read betas, stepwidths and start values of all chains
+ *
+ * @return lines read
+ **/
+void read_calibration_file(mcmc ** sinmod, unsigned int n_chains) {
+	unsigned int i;
+	unsigned int j;
+	unsigned int err = 0;
+	unsigned int n_par = get_n_par(sinmod[0]);
+	double v;
+	FILE * f;
+
+	f = fopen(CALIBRATION_FILE, "r");
+	if (f == NULL) {
+		fprintf(f, "could not read calibration file %s\n", CALIBRATION_FILE);
+		exit(1);
+	}
+
+	for (i = 0; i < n_chains && !feof(f); i++) {
+		if (fscanf(f, "%lf", &v) != 1)
+			err++;
+		set_beta(sinmod[i], v);
+		for (j = 0; j < n_par && !feof(f) && err == 0; j++) {
+			if (fscanf(f, "%lf", &v) != 1)
+				err++;
+			set_steps_for(sinmod[i], v, j);
+		}
+		for (j = 0; j < n_par && !feof(f) && err == 0; j++) {
+			if (fscanf(f, "%lf", &v) != 1)
+				err++;
+			set_params_for(sinmod[i], v, j);
+		}
+		if (feof(f) && j < n_par) {
+			fprintf(f, "could not read %d chain calibrations. \nError with "
+				"line %d.\n", n_chains, i + 1);
+		}
+	}
+
+	fclose(f);
+}
+void write_calibrations_file(mcmc ** sinmod, const unsigned int n_chains) {
+	FILE * f;
+	unsigned int i;
+	unsigned int j;
+	unsigned int n_par = get_n_par(sinmod[0]);
+
+	f = fopen(CALIBRATION_FILE, "w");
+	if (f == NULL) {
+		perror("error writing to calibration results file");
+		exit(1);
+	}
+	for (j = 0; j < n_chains; j++) {
+		fprintf(f, "%f", get_beta(sinmod[j]));
+		for (i = 0; i < n_par; i++) {
+			/* FIXME: precision */
+			fprintf(f, "\t%f", get_steps_for(sinmod[j], i));
+		}
+		for (i = 0; i < n_par; i++) {
+			/* FIXME: precision */
+			fprintf(f, "\t%f", get_params_best_for(sinmod[j], i));
+		}
+		fprintf(f, "\n");
+	}
+	fclose(f);
+	printf("wrote calibration results for %d chains to %s\n", n_chains,
+			CALIBRATION_FILE);
+
+}
+
+/**
+ * needs:
+ * params file
+ * BURN_IN_ITERATIONS
+ * start values (in params file)
+ **
+ * does:
+ * calibrate first chain (beta = 1)
+ * writes beta, stepwidths and start values as first line in file
+ *   calibration_result
+ **
+ * provides:
+ * stepwidths of first chain (calibration_result)
+ * new params file (params_suggest)
+ * new start values (calibration_result)
+ **/
+void calibrate_first() {
+	mcmc ** sinmod = setup_chains();
+	const double rat_limit = RAT_LIMIT;
+	const unsigned long burn_in_iterations = BURN_IN_ITERATIONS;
+	const unsigned long iter_limit = ITER_LIMIT;
+	const double mul = MUL;
 
 	printf("Starting markov chain calibration\n");
 	fflush(stdout);
@@ -136,17 +220,50 @@ void parallel_tempering(const char * params_filename,
 	mcmc_check(sinmod[0]);
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
-	mcmc_open_dump_files(sinmod[0], "-chain", 0);
-	
+	write_calibrations_file(sinmod, 1);
 	write_params_file(sinmod[0]);
+}
+
+/**
+ * needs:
+ * params file
+ * BURN_IN_ITERATIONS
+ * first line in calibration_result
+ * BETA_ALIGNMENT
+ * BETA_0
+ * SKIP_CALIBRATE_ALLCHAINS
+ **
+ * does:
+ * calibrate remaining chains (beta < 1)
+ * writes all betas, stepwidths and start values in file calibration_result
+ **
+ * provides:
+ * stepwidths of first chain (calibration_result)
+ * new params file (params_suggest)
+ * new start values (calibration_result)
+ **/
+void calibrate_rest() {
+	int n_beta = N_BETA;
+	const double rat_limit = RAT_LIMIT;
+	double beta_0 = BETA_0;
+	const unsigned long burn_in_iterations = BURN_IN_ITERATIONS;
+	const unsigned long iter_limit = ITER_LIMIT;
+	const double mul = MUL;
+	unsigned int n_par;
+	int i;
+	gsl_vector * stepwidth_factors;
+	mcmc ** sinmod = setup_chains();
+
+	read_calibration_file(sinmod, 1);
 
 	printf("Calibrating chains\n");
 	fflush(stdout);
+	n_par = get_n_par(sinmod[0]);
+	stepwidth_factors = gsl_vector_alloc(n_par);
+	gsl_vector_set_all(stepwidth_factors, 1);
 
 	i = 1;
-	if (n_beta >= 2) {
-		sinmod[i]->additional_data = mem_malloc(
-				sizeof(parallel_tempering_mcmc));
+	if (n_beta > 1) {
 		if (beta_0 < 0)
 			set_beta(sinmod[i], get_chain_beta(i, n_beta, calc_beta_0(
 					sinmod[0], stepwidth_factors)));
@@ -200,9 +317,6 @@ void parallel_tempering(const char * params_filename,
 		markov_chain_calibrate(sinmod[i], burn_in_iterations, rat_limit,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
 #endif
-#ifdef DUMP_ALL_CHAINS
-		mcmc_open_dump_files(sinmod[i], "-chain", i);
-#endif
 	}
 	gsl_vector_free(stepwidth_factors);
 	fflush(stdout);
@@ -212,10 +326,33 @@ void parallel_tempering(const char * params_filename,
 		dump_vectorln(get_steps(sinmod[i]));
 	}
 	write_calibration_summary(sinmod, n_beta);
+	write_calibrations_file(sinmod, n_beta);
 
 	register_signal_handlers();
+}
 
-	analyse(sinmod, n_beta, n_swap);
+void prepare_and_run_sampler() {
+	unsigned int n_beta = N_BETA;
+	unsigned int i;
+	int n_swap = N_SWAP;
+
+	mcmc ** sinmod = setup_chains();
+
+	read_calibration_file(sinmod, n_beta);
+
+	for (i = 0; i < n_beta; i++) {
+		mcmc_open_dump_files(sinmod[i], "-chain", i);
+	}
+
+	if (n_swap < 0) {
+		n_swap = 2000 / n_beta;
+		printf("automatic n_swap: %d\n", n_swap);
+	}
+
+	run_sampler(sinmod, n_beta, n_swap);
+
+	report((const mcmc **) sinmod, n_beta);
+
 	for (i = 0; i < n_beta; i++) {
 		mem_free(sinmod[i]->additional_data);
 		if (i != 0) {
@@ -244,8 +381,7 @@ void parallel_tempering(const char * params_filename,
 #define ADAPT
 #endif
 
-void adapt(mcmc ** sinmod, const unsigned int n_beta,
-		const unsigned int n_swap) {
+void adapt(mcmc ** sinmod, const unsigned int n_beta, const unsigned int n_swap) {
 	unsigned int i;
 
 #ifdef RWM
@@ -280,6 +416,7 @@ void adapt(mcmc ** sinmod, const unsigned int n_beta,
 		}
 	}
 #endif
+	/* avoid unused warnings if adapt is disabled */
 	(void) sinmod;
 	i = n_beta + n_swap;
 }
@@ -306,10 +443,11 @@ void dump(const mcmc ** sinmod, const unsigned int n_beta,
 			dump_ul("acceptance rate: rejects", get_params_rejects_sum(sinmod[0]));
 			dump_mcmc(sinmod[0]);
 		} else {
-		   printf("iteration: %lu, a/r: %lu/%lu = %f, v:", iter,
-			get_params_accepts_sum(sinmod[0]), get_params_rejects_sum(
-			sinmod[0]), (double) get_params_accepts_sum(sinmod[0])/
-			(double) (get_params_accepts_sum(sinmod[0]) + get_params_rejects_sum(sinmod[0])));
+			printf("iteration: %lu, a/r: %lu/%lu = %f, v:", iter,
+					get_params_accepts_sum(sinmod[0]), get_params_rejects_sum(
+							sinmod[0]), (double) get_params_accepts_sum(
+							sinmod[0]) / (double) (get_params_accepts_sum(
+							sinmod[0]) + get_params_rejects_sum(sinmod[0])));
 			dump_vector(get_params(sinmod[0]));
 			printf(" [%d/%lu ticks]\r", get_duration(), get_ticks_per_second());
 			fflush(stdout);
@@ -317,13 +455,12 @@ void dump(const mcmc ** sinmod, const unsigned int n_beta,
 	}
 }
 
-void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
+void run_sampler(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
 	int i;
 	unsigned long iter = sinmod[0]->n_iter;
 	unsigned int subiter;
 	FILE * acceptance_file;
 
-#ifdef DUMP_PROBABILITIES
 	FILE ** probabilities_file = (FILE**) mem_calloc(n_beta, sizeof(FILE*));
 	char buf[100];
 	assert(probabilities_file != NULL);
@@ -336,7 +473,6 @@ void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
 			exit(1);
 		}
 	}
-#endif
 	assert(n_beta < 100);
 
 	acceptance_file = fopen("acceptance_rate.dump", "w");
@@ -357,13 +493,8 @@ void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
 			for (subiter = 0; subiter < n_swap; subiter++) {
 				markov_chain_step(sinmod[i]);
 				mcmc_check_best(sinmod[i]);
-#ifdef DUMP_ALL_CHAINS
-				if (i == 0)
-#endif
 				mcmc_append_current_parameters(sinmod[i]);
-#ifdef DUMP_PROBABILITIES
 				fprintf(probabilities_file[i], "%6e\n", get_prob(sinmod[i]));
-#endif
 			}
 		}
 		adapt(sinmod, n_beta, iter);
@@ -374,13 +505,10 @@ void analyse(mcmc ** sinmod, const int n_beta, const unsigned int n_swap) {
 	if (fclose(acceptance_file) != 0) {
 		assert(0);
 	}
-#ifdef DUMP_PROBABILITIES
 	for (i = 0; i < n_beta; i++) {
 		if (fclose(probabilities_file[i]) != 0) {
 			assert(0);
 		}
 	}
-#endif
-	report((const mcmc **) sinmod, n_beta);
 }
 

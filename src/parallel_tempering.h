@@ -2,6 +2,7 @@
 #define PARALLEL_TEMPERING_H_
 
 #include "mcmc.h"
+#include "parallel_tempering_beta.h"
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
@@ -36,33 +37,12 @@
 #define PRINT_PROB_INTERVAL 1000
 #endif
 
-typedef struct {
-	/**
-	 * likelihood of acceptance
-	 */
-	double beta;
+/** applications can run the follwing functions */
 
-	/**
-	 * times this was swapped
-	 */
-	unsigned long swapcount;
+void calibrate_first();
 
-} parallel_tempering_mcmc;
+void prepare_and_run_sampler();
 
-void set_beta(mcmc * m, const double newbeta);
-
-double get_beta(const mcmc * m);
-
-void inc_swapcount(mcmc * m);
-
-unsigned long get_swapcount(const mcmc * m);
-
-/**
- * begin a parallel tempering execution
- */
-void parallel_tempering(const char * params_filename,
-		const char * data_filename, const int n_beta, const double beta_0,
-		const unsigned long burn_in_iterations, const double rat_limit,
-		const unsigned long iter_limit, const double mul, const int n_swap);
+void calibrate_rest();
 
 #endif /* PARALLEL_TEMPERING_H_ */
