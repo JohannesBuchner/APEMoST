@@ -97,15 +97,12 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 							rat_limit + 0.05, rat_limit - 0.05, gsl_vector_get(
 									accept_rate, i), i);
 				if (gsl_vector_get(accept_rate, i) > rat_limit + 0.05) {
-					gsl_vector_set(m->params_step, i, gsl_vector_get(
-							m->params_step, i) / mul);
+					set_steps_for(m, get_steps_for(m, i) / mul, i);
 					IFDEBUG
 						printf("\t scaling up   ^");
 					if (rescaled == 0)
 						rescaled = -1;
-					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
-							m->params_max, i)
-							- gsl_vector_get(m->params_min, i)) > 1) {
+					if (get_steps_for_normalized(m, i) > 1) {
 						printf(
 								"\nWARNING: step width of %s is quite big! %d times the param space\n",
 								get_params_descr(m)[i], (int) (gsl_vector_get(
@@ -115,15 +112,12 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 						printf(
 								"\nWARNING: This can mean the parameter is independent.\n");
 						printf(
-								"\n SETTING PARAMETER STEP TO PARAMETER RANGE P_MAX - P_MIN\n");
-						gsl_vector_set(m->params_step, i, gsl_vector_get(m->params_max, i)
-							- gsl_vector_get(m->params_min, i));
+								"\n SETTING PARAMETER STEP TO PARAMETER RANGE\n");
+						set_steps_for_normalized(m, 1, i);
 						if (rescaled == -1)
 							rescaled = 0;
 					}
-					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
-							m->params_max, i)
-							- gsl_vector_get(m->params_min, i)) > 100000) {
+					if (get_steps_for_normalized(m, i) > 10000) {
 						fprintf(
 								stderr,
 								"calibration failed: step width of %s became too large.\n",
@@ -134,19 +128,13 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 						rescaled = 1;
 				}
 				if (gsl_vector_get(accept_rate, i) < rat_limit - 0.05) {
-					gsl_vector_set(m->params_step, i, gsl_vector_get(
-							m->params_step, i) * mul);
+					set_steps_for(m, get_steps_for(m, i) * mul, i);
 					IFDEBUG
 						printf("\t scaling down v");
-					if (gsl_vector_get(m->params_step, i) / (gsl_vector_get(
-							m->params_max, i)
-							- gsl_vector_get(m->params_min, i)) < 10E-10) {
+					if (get_steps_for_normalized(m, i) < 10E-10) {
 						printf(
 								"\nWARNING: step width of %s is quite small! %e times the param space\n",
-								get_params_descr(m)[i], gsl_vector_get(
-										m->params_step, i) / (gsl_vector_get(
-										m->params_max, i) - gsl_vector_get(
-										m->params_min, i)));
+								get_params_descr(m)[i], get_steps_for_normalized(m, i));
 					}
 					rescaled = 1;
 				}
@@ -167,8 +155,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 			accept_rate = get_accept_rate(m);
 			dump_v("New overall accept rate after reset", accept_rate);
 			gsl_vector_free(accept_rate);
-			delta_reject_accept_t = m->accept * 1.0 / (m->accept + m->reject)
-					- TARGET_ACCEPTANCE_RATE;
+			delta_reject_accept_t = get_accept_rate_global(m) - TARGET_ACCEPTANCE_RATE;
 			dump_d("Compared to desired rate", delta_reject_accept_t);
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				reached_perfection = 1;
@@ -210,7 +197,9 @@ void do_step_for(mcmc * m, const unsigned int i) {
 #if CIRCULAR_PARAMS == 0
 	while (new_value > max || new_value < min) {
 		new_value = old_value + get_next_gauss_random(m, step);
-		printf("Value borders reached ... looking for new starting point for %d \n", i);
+		IFVERBOSE
+			printf("Value borders reached; looking for new starting point"
+				" for %d \n", i);
 	}
 #else
 	unsigned int j = 0;

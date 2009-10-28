@@ -22,12 +22,16 @@ long get_params_rejects_sum(const mcmc * m) {
 	return sum;
 }
 
-long get_params_accepts_for(const mcmc * m, const int i) {
+long get_params_accepts_for(const mcmc * m, const unsigned int i) {
 	return m->params_accepts[i];
 }
 
-long get_params_rejects_for(const mcmc * m, const int i) {
+long get_params_rejects_for(const mcmc * m, const unsigned int i) {
 	return m->params_rejects[i];
+}
+double get_accept_rate_for(const mcmc * m, const unsigned int i) {
+	return get_params_accepts_for(m, i) / (double) (
+			get_params_accepts_for(m, i) + get_params_rejects_for(m, i));
 }
 
 unsigned long get_params_accepts_global(const mcmc * m) {
@@ -37,8 +41,13 @@ unsigned long get_params_accepts_global(const mcmc * m) {
 unsigned long get_params_rejects_global(const mcmc * m) {
 	return m->reject;
 }
+double get_accept_rate_global(const mcmc * m) {
+	return get_params_accepts_global(m) / (double) 
+			(get_params_accepts_global(m) + get_params_rejects_global(m));
+}
 
-gsl_vector * get_vector_from_array(const long * array, const unsigned int size) {
+gsl_vector * get_vector_from_array(const long * array, const unsigned int size)
+{
 	unsigned int i;
 	gsl_vector * v = gsl_vector_alloc(size);
 	assert(v != NULL);
@@ -99,7 +108,7 @@ void reset_accept_rejects(mcmc * m) {
 	m->accept = 0;
 }
 
-void set_prob_best(mcmc * m, double new_prob_best) {
+void set_prob_best(mcmc * m, const double new_prob_best) {
 	m->prob_best = new_prob_best;
 }
 
@@ -117,8 +126,13 @@ void set_minmax_for(mcmc * m, const double new_min, const double new_max,
 	gsl_vector_set(m->params_max, i, new_max);
 }
 
-void set_steps_for(mcmc * m, const double new_step, const int i) {
+void set_steps_for(mcmc * m, const double new_step, const unsigned int i) {
 	gsl_vector_set(m->params_step, i, new_step);
+}
+
+void set_steps_for_normalized(mcmc * m, const double new_step, const unsigned int i) {
+	gsl_vector_set(m->params_step, i, new_step * 
+		(get_params_max_for(m, i) - get_params_min_for(m, i)));
 }
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
@@ -143,7 +157,7 @@ unsigned int get_n_par(const mcmc * m) {
 }
 #endif
 
-void set_params_best(mcmc * m, gsl_vector * new_params_best) {
+void set_params_best(mcmc * m, const gsl_vector * new_params_best) {
 	gsl_vector_memcpy(m->params_best, new_params_best);
 }
 
@@ -156,8 +170,25 @@ gsl_vector * get_params(const mcmc * m) {
 	return m->params;
 }
 
+gsl_vector * get_params_min(const mcmc * m) {
+	return m->params_min;
+}
+
+double get_params_min_for(const mcmc * m, unsigned int i) {
+	return gsl_vector_get(m->params_min, i);
+}
+gsl_vector * get_params_max(const mcmc * m) {
+	return m->params_max;
+}
+double get_params_max_for(const mcmc * m, unsigned int i) {
+	return gsl_vector_get(m->params_max, i);
+}
+
 gsl_vector * get_params_best(const mcmc * m) {
 	return m->params_best;
+}
+double get_params_best_for(const mcmc * m, unsigned int i) {
+	return gsl_vector_get(m->params_best, i);
 }
 
 void set_params(mcmc * m, gsl_vector * new_params) {
@@ -197,6 +228,14 @@ gsl_vector * get_steps(const mcmc * m) {
 	return m->params_step;
 }
 
+double get_steps_for(const mcmc * m, const unsigned int i) {
+	return gsl_vector_get(m->params_step, i);
+}
+double get_steps_for_normalized(const mcmc * m, const unsigned int i) {
+	return get_steps_for(m, i) / (get_params_max_for(m, i) - 
+			get_params_min_for(m, i));
+}
+
 void free_gsl_vector_array(gsl_vector ** arr) {
 	int i = 0;
 	if (arr != NULL) {
@@ -218,7 +257,7 @@ double get_next_uniform_plusminus_random(const mcmc * m) {
 double get_next_uniform_random(const mcmc * m) {
 	return gsl_rng_uniform(get_random(m));
 }
-double get_next_gauss_random(const mcmc * m, double sigma) {
+double get_next_gauss_random(const mcmc * m, const double sigma) {
 	return gsl_ran_gaussian(get_random(m), sigma);
 }
 double get_next_alog_urandom(const mcmc * m) {

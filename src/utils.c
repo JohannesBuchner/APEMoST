@@ -39,7 +39,7 @@ unsigned int get_column_count(const char * filename) {
 
 	input = openfile(filename);
 	if (fgets(buf, 10000, input) == NULL) {
-		fprintf("error: file %s is empty!", filename);
+		fprintf(stderr, "error: file %s is empty!", filename);
 		exit(1);
 	}
 	while (buf[i] != 0) {

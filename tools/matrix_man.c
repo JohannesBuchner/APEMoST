@@ -355,8 +355,7 @@ void row_man(int argc, char ** argv) {
 	while (!feof(input)) {
 		line++;
 		current = gsl_vector_alloc(300);
-		fgets(buf, 10000, input);
-		if (feof(input))
+		if (fgets(buf, 10000, input) == NULL || feof(input))
 			break;
 		count = 0;
 		i = 0;

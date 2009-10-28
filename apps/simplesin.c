@@ -10,9 +10,9 @@
 #endif
 
 double apply_formula(mcmc * m, unsigned int i, double amplitude, double frequency,
-		double phase) {
+		double phase, double offset) {
 	double x = gsl_matrix_get(m->data, i, 0);
-	double y = amplitude * gsl_sf_sin(2.0 * M_PI * (frequency * x + phase));
+	double y = amplitude * gsl_sf_sin(2.0 * M_PI * (frequency * x + phase)) + offset;
 	return y;
 }
 
@@ -21,6 +21,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	double amplitude = gsl_vector_get(m->params, 0);
 	double frequency = gsl_vector_get(m->params, 1);
 	double phase     = gsl_vector_get(m->params, 2);
+	double offset     = gsl_vector_get(m->params, 3);
 	double y;
 	double deltay;
 	double square_sum = 0;
@@ -29,7 +30,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	/*dump_v("recalculating model for parameter values", m->params);*/
 	for (i = 0; i < m->data->size1; i++) {
 		y = gsl_matrix_get(m->data, i, 1);
-		deltay = apply_formula(m, i, amplitude, frequency, phase) - y;
+		deltay = apply_formula(m, i, amplitude, frequency, phase, offset) - y;
 		square_sum += deltay * deltay;
 	}
 	set_prob(m, get_beta(m) * square_sum / (-2 * SIGMA * SIGMA));

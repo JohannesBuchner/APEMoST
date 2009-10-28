@@ -36,12 +36,6 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 		fprintf(stderr, "only %d fields matched.\n", col);
 		return 1;
 	}
-	if (step < 0 || step > 1) {
-		fprintf(stderr,
-				"start (column 1) must be between 0 and 1. currently: %f.\n",
-				start);
-		return 1;
-	}
 	if (!(descr != NULL && strnlen(descr, MAX_LINE_LENGTH) > 0 && strnlen(
 			descr, MAX_LINE_LENGTH) < MAX_LINE_LENGTH)) {
 		fprintf(stderr, "description invalid: %s\n", descr);
@@ -62,10 +56,14 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 		fprintf(stderr, "start(%f) < min(%f)\n", start, min);
 		return 1;
 	}
+	if (step < 0) {
+		step = (max - min) * 0.1;
+		fprintf(stderr, "auto step size, 10%% of parameter space: %f\n", step);
+	}
 	gsl_vector_set(m->params_min, i, min);
 	gsl_vector_set(m->params_max, i, max);
 	m->params_descr[i] = descr;
-	gsl_vector_set(m->params_step, i, step * (max - min));
+	gsl_vector_set(m->params_step, i, step /* * (max - min) */);
 	debug("setting values done.");
 	return 0;
 }

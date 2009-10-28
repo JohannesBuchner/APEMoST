@@ -1,29 +1,16 @@
 #include <signal.h>
-#include <gsl/gsl_sf.h>
 #include <omp.h>
 
 #include "mcmc.h"
-#include "gsl_helper.h"
 #include "parallel_tempering.h"
+#include "parallel_tempering_beta.h"
 #include "parallel_tempering_interaction.h"
 #include "debug.h"
+#include "define_defaults.h"
+#include "gsl_helper.h"
 
 int run;
 int dumpflag;
-
-void set_beta(mcmc * m, double newbeta) {
-	((parallel_tempering_mcmc *) m->additional_data)->beta = newbeta;
-	((parallel_tempering_mcmc *) m->additional_data)->swapcount = 0;
-}
-double get_beta(const mcmc * m) {
-	return ((parallel_tempering_mcmc *) m->additional_data)->beta;
-}
-void inc_swapcount(mcmc * m) {
-	((parallel_tempering_mcmc *) m->additional_data)->swapcount++;
-}
-unsigned long get_swapcount(const mcmc * m) {
-	return ((parallel_tempering_mcmc *) m->additional_data)->swapcount;
-}
 
 static void ctrl_c_handler(int signalnr) {
 	printf("\nreceived Ctrl-C (%d). Stopping ... (please be patient)\n\n",
@@ -47,20 +34,6 @@ static int get_duration() {
 	return stored - new;
 }
 
-static void print_current_positions(const mcmc ** sinmod, const int n_beta) {
-	int i;
-	printf("printing chain parameters: \n");
-	for (i = 0; i < n_beta; i++) {
-		printf("\tchain %d: swapped %lu times: ", i, get_swapcount(sinmod[i]));
-		printf("\tchain %d: current %f: ", i, get_prob(sinmod[i]));
-		dump_vectorln(get_params(sinmod[i]));
-		printf("\tchain %d: best %f: ", i, get_prob_best(sinmod[i]));
-		dump_vectorln(get_params_best(sinmod[i]));
-
-	}
-	fflush(stdout);
-}
-
 static void report(const mcmc ** sinmod, const int n_beta) {
 	int i = 0;
 	print_current_positions(sinmod, n_beta);
@@ -78,85 +51,67 @@ static void report(const mcmc ** sinmod, const int n_beta) {
 	}
 	printf("done.\n");
 }
-
-double equidistant_beta(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return beta_0 + i * (1 - beta_0) / (n_beta - 1);
-}
-double equidistant_temperature(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return 1 / (1 / beta_0 + i * (1 - 1 / beta_0) / (n_beta - 1));
-}
-double chebyshev_temperature(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return 1 / (1 / beta_0 + (1 - 1 / beta_0) / 2 * (1 - cos(i * M_PI / (n_beta
-			- 1))));
-}
-double chebyshev_beta(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return beta_0 + (1 - beta_0) / 2 * (1 - cos(i * M_PI / (n_beta - 1)));
-}
-
-double equidistant_stepwidth(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return beta_0 + pow(i * 1.0 / (n_beta - 1), 2) * (1 - beta_0);
-}
-double chebyshev_stepwidth(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return beta_0 + (1 - beta_0) * pow((1 - cos(i * M_PI / (n_beta - 1))) / 2,
-			2);
-}
-double hot_chains(const unsigned int i, const unsigned int n_beta,
-		const double beta_0) {
-	return beta_0 + 0* i * n_beta;
-}
-
-#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
-/**
- * Defines how the beta value should be assigned/distributed between the chains.
- *
- * beta = 1 / temperature.
- *
- * You can choose equidistant (linear) alignment of the temperature or beta.
- * Or, what often proves to be a good choice, you can use Chebyshev nodes
- * for the values of the temperature or beta.
- *
- * e.g.: BETA_ALIGNMENT=equidistant_beta <br>
- * also available: equidistant_temperature, chebyshev_beta,
- * chebyshev_temperature, equidistant_stepwidth, chebyshev_stepwidth
- *
- * default: chebyshev_beta
- */
-#define BETA_ALIGNMENT
-#endif
-
-static double get_chain_beta(unsigned int i, unsigned int n_beta, double beta_0) {
-#ifndef BETA_ALIGNMENT
-#define BETA_ALIGNMENT chebyshev_beta
-#endif
-	if (n_beta == 1)
-		return 1.0;
-	/* this reverts the order so that beta(0) = 1.0. */
-	return BETA_ALIGNMENT(n_beta - i - 1, n_beta, beta_0);
-}
-
 static void analyse(mcmc ** sinmod, int n_beta, unsigned int n_swap);
 
-/**
- * hottest chain stepwidth in units of parameter space
- */
-#define BETA_0_STEPWIDTH 1.0
+void write_params_file(mcmc * m) {
+	unsigned int i;
+	FILE * f = fopen(PARAMS_FILENAME "_suggested", "w");
+	if (f != NULL) {
+		for (i = 0; i < get_n_par(m); i++) {
+			fprintf(f, "%f\t%f\t%f\t%s\t%f\n", 
+					gsl_vector_get(get_params_best(m), i),
+					gsl_vector_get(get_params_min(m), i),
+					gsl_vector_get(get_params_max(m), i),
+					get_params_descr(m)[i], 
+					gsl_vector_get(get_steps(m), i));
+		}
+		fclose(f);
+		printf("new suggested parameters file has been written\n");
+	} else {
+		fprintf(stderr, "Could not write to file " PARAMS_FILENAME "_suggested\n");
+	}
+}
 
-double calc_beta_0(mcmc * m, gsl_vector * stepwidth_factors) {
-	double max;
-	gsl_vector * range = dup_vector(m->params_max);
-	gsl_vector_sub(range, m->params_min);
-	gsl_vector_scale(range, BETA_0_STEPWIDTH);
-	gsl_vector_div(range, get_steps(m));
-	gsl_vector_div(range, stepwidth_factors);
-	max = pow(gsl_vector_max(range), -0.5);
-	gsl_vector_free(range);
-	return max;
+void write_calibration_summary(mcmc ** sinmod, unsigned int n_chains) {
+	unsigned int i;
+	unsigned int j;
+	double beta_0 = get_beta(sinmod[0]);
+	unsigned int n_pars = get_n_par(sinmod[0]);
+	FILE * f = fopen("calibration_summary", "w");
+	if (f != NULL) {
+		fprintf(f, "Summary of calibrations\n");
+		fprintf(f, "\nBETA TABLE\n");
+		fprintf(f, "Chain # | Calculated | Calibrated\n");
+		for (i = 0; i < n_chains; i++) {
+			fprintf(f, "Chain %d | %f | %f\n", i, 
+					get_chain_beta(i, n_chains, beta_0), get_beta(sinmod[i]));
+		}
+		fprintf(f, "\nSTEPWIDTH TABLE\n");
+		fprintf(f, "Chain # | Calibrated stepwidths... \n");
+		for (i = 0; i < n_chains; i++) {
+			fprintf(f, "%d", i);
+			for (j = 0; j < n_pars; j++) {
+				fprintf(f, "\t%f", get_steps_for(sinmod[i], j));
+			}
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\nSTEPWIDTH ESTIMATE TABLE\n");
+		fprintf(f, "If you find that the estimate deviates much or "
+			"systematically from the");
+		fprintf(f, "calibrated stepwidths, please contact the authors.\n");
+		fprintf(f, "Chain # | Calculated stepwidths... \n");
+		for (i = 0; i < n_chains; i++) {
+			fprintf(f, "%d", i);
+			for (j = 0; j < n_pars; j++) {
+				fprintf(f, "\t%f", get_steps_for(sinmod[i], j));
+			}
+			fprintf(f, "\n");
+		}
+		fclose(f);
+		printf("calibration summary has been written\n");
+	} else {
+		fprintf(stderr, "Could not write to file calibration_summary\n");
+	}
 }
 
 void parallel_tempering(const char * params_filename,
@@ -202,13 +157,8 @@ void parallel_tempering(const char * params_filename,
 	markov_chain_calibrate(sinmod[0], burn_in_iterations, rat_limit,
 			iter_limit, mul, DEFAULT_ADJUST_STEP);
 	mcmc_open_dump_files(sinmod[0], "-chain", 0);
-	printf("You can update your parameters file to the initial steps:\n");
-	for (i = 0; i < n_par; i++) {
-		printf("\t%s\t%f\n", get_params_descr(sinmod[0])[i], gsl_vector_get(
-				get_steps(sinmod[0]), i) / (gsl_vector_get(
-				sinmod[0]->params_max, i) - gsl_vector_get(
-				sinmod[0]->params_min, i)));
-	}
+	
+	write_params_file(sinmod[0]);
 
 	printf("Calibrating chains\n");
 	fflush(stdout);
@@ -222,10 +172,9 @@ void parallel_tempering(const char * params_filename,
 					sinmod[0], stepwidth_factors)));
 		else
 			set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
-		set_beta(sinmod[i], 0.8);
-		gsl_vector_free(sinmod[i]->params_step);
+		gsl_vector_free(get_steps(sinmod[i]));
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
-		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
+		gsl_vector_scale(get_steps(sinmod[i]), pow(get_beta(sinmod[i]), -0.5));
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 		printf("Calibrating second chain to infer stepwidth factor\n");
@@ -258,10 +207,10 @@ void parallel_tempering(const char * params_filename,
 		sinmod[i]->additional_data
 				= mem_malloc(sizeof(parallel_tempering_mcmc));
 		set_beta(sinmod[i], get_chain_beta(i, n_beta, beta_0));
-		gsl_vector_free(sinmod[i]->params_step);
+		gsl_vector_free(get_steps(sinmod[i]));
 		sinmod[i]->params_step = dup_vector(get_steps(sinmod[0]));
-		gsl_vector_scale(sinmod[i]->params_step, pow(get_beta(sinmod[i]), -0.5));
-		gsl_vector_mul(sinmod[i]->params_step, stepwidth_factors);
+		gsl_vector_scale(get_steps(sinmod[i]), pow(get_beta(sinmod[i]), -0.5));
+		gsl_vector_mul(get_steps(sinmod[i]), stepwidth_factors);
 		set_params(sinmod[i], dup_vector(get_params_best(sinmod[0])));
 		calc_model(sinmod[i], NULL);
 		printf("beta = %f\tsteps: ", get_beta(sinmod[i]));
@@ -282,6 +231,7 @@ void parallel_tempering(const char * params_filename,
 		printf("\tChain %2d - beta = %f \tsteps: ", i, get_beta(sinmod[i]));
 		dump_vectorln(get_steps(sinmod[i]));
 	}
+	write_calibration_summary(sinmod, n_beta);
 
 	signal(SIGINT, ctrl_c_handler);
 	signal(SIGUSR2, sigusr_handler);
