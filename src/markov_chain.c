@@ -13,27 +13,14 @@ static void restart_from_best(mcmc * m) {
 	set_prob(m, -1E7);
 }
 
-void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
-		double rat_limit, const unsigned int iter_limit, double mul,
-		const double adjust_step) {
-	/* we aim a acceptance rate between 20 and 30% */
-	unsigned int i;
-
-	int reached_perfection = 0;
-	gsl_vector * accept_rate = NULL;
-	double delta_reject_accept_t;
-
-	unsigned long iter = 0;
+void burn_in(mcmc * m, const unsigned int burn_in_iterations) {
+	unsigned long iter;
 	unsigned long subiter;
-	int nchecks_without_rescaling = 0;
-	int rescaled;
+
 	gsl_vector * original_steps = get_steps(m);
 	m->params_step = dup_vector(m->params_max);
 	gsl_vector_sub(m->params_step, m->params_min);
 	gsl_vector_scale(m->params_step, 0.1);
-
-	if (rat_limit < 0)
-		rat_limit = pow(0.25, 1.0 / get_n_par(m));
 
 	debug("Beginning calibration of MCMC ...");
 	debug("Starting burn-in ...");
@@ -69,9 +56,263 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 	gsl_vector_memcpy(get_steps(m), original_steps);
 	gsl_vector_free(original_steps);
 	mcmc_check(m);
-	gsl_vector_scale(m->params_step, adjust_step);
 	debug("Burn-in done.");
 
+}
+
+void clear_bit(char * bitfield, unsigned int i) {
+	bitfield[i / 8] &= ~(1 << (i % 8));
+}
+void set_bit(char * bitfield, unsigned int i) {
+	bitfield[i / 8] |= (1 << (i % 8));
+}
+int get_bit(char * bitfield, unsigned int i) {
+	return bitfield[i / 8] & (1 << (i % 8));
+}
+
+#ifndef ACCURACY_DEVIATION_FACTOR
+/**
+ * How good should the acceptance rate be calculated in dependence of
+ * deviation from the desired value?
+ * accuracy = factor * deviation
+ */
+#define ACCURACY_DEVIATION_FACTOR 0.25
+#endif
+/**
+ * Get acceptance rate.
+ * The closer the acceptance rate is to the desired acceptance rate, the more
+ * accurately will it be assessed.
+ * @return iterations used
+ */
+unsigned int assess_acceptance_rate(mcmc * m, unsigned int param,
+		double desired_acceptance_rate, double min_accuracy,
+		double * acceptance_rate, double * accuracy) {
+	unsigned int i = 0;
+	unsigned int j;
+	unsigned int n = 40;
+	unsigned int accepts = 0;
+	double stdev = 0;
+	unsigned int maxdev = 0;
+	double accept_rate;
+	double required_accuracy = min_accuracy;
+	char * acceptslog = NULL;
+
+	reset_accept_rejects(m);
+
+	while (1) {
+		IFVERBOSE
+			printf("calculating %d steps.\n", n);
+		acceptslog = (char*) realloc(acceptslog, n * sizeof(char));
+		assert(acceptslog != NULL);
+
+		for (; i < n; i++) {
+			accepts = get_params_accepts_for(m, param);
+			markov_chain_step_for(m, param);
+			mcmc_check_best(m);
+			if (accepts == get_params_accepts_for(m, param)) {
+				/* had a reject -> set bit to 0 */
+				clear_bit(acceptslog, i);
+			} else {
+				/* had a accept -> set bit to 1 */
+				set_bit(acceptslog, i);
+			}
+		}
+		accept_rate = accepts / (double) n;
+		IFVERBOSE
+			printf("accept rate: %f (%d/%d)\n", accept_rate, accepts, n);
+
+		/* get max deviation */
+		accepts = 0;
+		stdev = 0;
+		maxdev = 0 + 1;
+		for (j = 0; j < n; j++) {
+			if (get_bit(acceptslog, j) != 0) {
+				accepts++;
+			}
+			stdev += pow(accepts - accept_rate * j, 2);
+			if (abs(accepts - accept_rate * j) > maxdev) {
+				maxdev = abs(accepts - accept_rate * j);
+			}
+		}
+		stdev = sqrt(stdev / n) * 2;
+
+		/*
+		 * if we are way off, we don't need to be that accurate.
+		 * if we are close, we want to be more accurate
+		 * 30% could also be 10% to be more cautious
+		 */
+		required_accuracy = abs_double(accept_rate - desired_acceptance_rate)
+				* ACCURACY_DEVIATION_FACTOR;
+		if (required_accuracy < 0.005)
+			required_accuracy = 0.005;
+		if (required_accuracy < min_accuracy) {
+			required_accuracy = min_accuracy;
+		}
+
+		/*
+		 * we assume we have a deviation of maxdev at the end.
+		 * how many values do we need to get below required_accuracy
+		 */
+		*acceptance_rate = accept_rate;
+		*accuracy = maxdev / 1. / n;
+		IFVERBOSE
+			printf("accuracy wanted: %f, got: %f\n", required_accuracy,
+					*accuracy);
+
+		if (*accuracy <= required_accuracy) {
+			break;
+		}
+		/*
+		 * we need (maxdev / min_accuracy) values to achieve min_accuracy
+		 */
+		assert(maxdev / required_accuracy >= n);
+		n = ((unsigned int) ((maxdev / 1. / required_accuracy) / 8) + 1) * 8;
+	}
+	return n;
+}
+
+#ifndef MAX_ACCURACY_IMPROVEMENT
+#define MAX_ACCURACY_IMPROVEMENT 2.8
+#endif
+
+#ifndef SCALE_LIN_WORST
+#define SCALE_LIN_WORST 5
+#endif
+#ifndef SCALE_MIN
+#define SCALE_MIN 0.4
+#endif
+
+void markov_chain_calibrate_alt(mcmc * m,
+		const unsigned int burn_in_iterations, double desired_acceptance_rate,
+		const unsigned int iter_limit, double mul, const double adjust_step) {
+
+	/*
+	 void markov_chain_calibrate_fast(mcmc * m, const unsigned int burn_in_iterations,
+	 double desired_acceptance_rate) {
+	 */
+	unsigned int i;
+	unsigned int j;
+	double current_acceptance_rate;
+	double accuracy;
+	unsigned int n_par = get_n_par(m);
+	double scale = 1.2;
+	double movedirection;
+	double move;
+	double max_deviation;
+	double worst_accuracy = 0;
+	double worst_accuracy_previous = 0;
+	double best_worst_accuracy = 1;
+	unsigned int iter = 0;
+	FILE * progress_plot_file = fopen("calibration_progress.data", "w");
+
+	mul = iter_limit + adjust_step; /* avoiding unused */
+
+	if (desired_acceptance_rate < 0)
+		desired_acceptance_rate = pow(0.25, 1.0 /* / get_n_par(m) */);
+
+	burn_in(m, burn_in_iterations);
+
+	/*
+	 * we use assess_acceptance_rate for a n-dim point in the stepwidth-space
+	 * we want to minimize | acceptance_rate - rat_limit|.
+	 * if acceptance_rate >> rat_limit, we should increase the stepwidth
+	 * if acceptance_rate << rat_limit, we should decrease the stepwidth
+	 */
+
+	while (1) {
+		max_deviation = 0;
+		/* assess current situation */
+		for (j = 0; j < 1; j++) {
+			printf("calculating for up to %f accuracy\n",
+					worst_accuracy_previous / MAX_ACCURACY_IMPROVEMENT);
+			worst_accuracy = 0;
+			for (i = 0; i < n_par; i++) {
+				/*
+				 * the idea is to reuse the accuracy of the worst parameter in the
+				 * previous round. So in this round, we only want an accuracy
+				 * improvement of 3 times that. Why? This is a n-dimensional
+				 * minimization problem and the parameters are not independent.
+				 * So it wouldn't help us if we determined the value of one
+				 * dimension extremely accurately, but be far away in another dim.
+				 */
+				iter += assess_acceptance_rate(m, i, desired_acceptance_rate,
+						worst_accuracy_previous / MAX_ACCURACY_IMPROVEMENT,
+						&current_acceptance_rate, &accuracy);
+				printf("%d: a/r: %f (+-%f); desired: %f; steps: %f\n", i,
+						current_acceptance_rate, accuracy,
+						desired_acceptance_rate, get_steps_for_normalized(m, i));
+
+				fprintf(progress_plot_file, "%d\t%d\t%f\t%f\t%f\n", i + 1,
+						iter, get_steps_for_normalized(m, i),
+						current_acceptance_rate, accuracy);
+
+				/* keep track of worst performer */
+				/*if (worst_accuracy < accuracy) {*/
+				worst_accuracy += accuracy;
+				/*}*/
+
+				movedirection = current_acceptance_rate
+						- desired_acceptance_rate;
+				/*
+				 * reduce scale if we have already settled down before.
+				 * We don't want the steps jumping around wildly
+				 */
+				scale = best_worst_accuracy * SCALE_LIN_WORST + SCALE_MIN;
+				assert(scale > 0);
+				move = movedirection * scale;
+				if (move < -1)
+					move = -0.9;
+				if (max_deviation < abs_double(movedirection)) {
+					max_deviation = abs_double(movedirection);
+				}
+				/* 10% too high => increase steps by 10% */
+				/* 10% too low  => decrease steps by 10% */
+
+				set_steps_for(m, get_steps_for(m, i) * (1 + move), i);
+
+				printf("%d: new steps: %f\n", i, get_steps_for_normalized(m, i));
+			}
+			if (iter > iter_limit * n_par) {
+				fprintf(stderr, "calibration failed: iteration limit reached\n");
+				exit(1);
+			}
+			worst_accuracy_previous = worst_accuracy / n_par;
+			if (worst_accuracy_previous < best_worst_accuracy) {
+				best_worst_accuracy = worst_accuracy;
+			}
+		}
+		printf("max deviation: %f; ", max_deviation);
+		dump_v("current values", get_params(m));
+
+		if (max_deviation < 0.01 && worst_accuracy < 0.02) {
+			printf("small deviation: %f; quitting\n", max_deviation);
+			break;
+		}
+	}
+	fclose(progress_plot_file);
+
+}
+
+void markov_chain_calibrate_orig(mcmc * m,
+		const unsigned int burn_in_iterations, double rat_limit,
+		const unsigned int iter_limit, double mul, const double adjust_step) {
+	/* we aim a acceptance rate between 20 and 30% */
+	unsigned int i;
+
+	int reached_perfection = 0;
+	gsl_vector * accept_rate = NULL;
+	double delta_reject_accept_t;
+
+	unsigned long iter = 0;
+	unsigned long subiter;
+	int nchecks_without_rescaling = 0;
+	int rescaled;
+
+	if (rat_limit < 0)
+		rat_limit = pow(0.25, 1.0 / get_n_par(m));
+
+	burn_in(m, burn_in_iterations);
+	gsl_vector_scale(m->params_step, adjust_step);
 	debug("Calibrating step widths ...");
 	reset_accept_rejects(m);
 
@@ -111,8 +352,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 										m->params_min, i))));
 						printf(
 								"\nWARNING: This can mean the parameter is independent.\n");
-						printf(
-								"\n SETTING PARAMETER STEP TO PARAMETER RANGE\n");
+						printf("\n SETTING PARAMETER STEP TO PARAMETER RANGE\n");
 						set_steps_for_normalized(m, 1, i);
 						if (rescaled == -1)
 							rescaled = 0;
@@ -134,7 +374,8 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 					if (get_steps_for_normalized(m, i) < 10E-10) {
 						printf(
 								"\nWARNING: step width of %s is quite small! %e times the param space\n",
-								get_params_descr(m)[i], get_steps_for_normalized(m, i));
+								get_params_descr(m)[i],
+								get_steps_for_normalized(m, i));
 					}
 					rescaled = 1;
 				}
@@ -155,12 +396,14 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 			accept_rate = get_accept_rate(m);
 			dump_v("New overall accept rate after reset", accept_rate);
 			gsl_vector_free(accept_rate);
-			delta_reject_accept_t = get_accept_rate_global(m) - TARGET_ACCEPTANCE_RATE;
+			delta_reject_accept_t = get_accept_rate_global(m)
+					- TARGET_ACCEPTANCE_RATE;
 			dump_d("Compared to desired rate", delta_reject_accept_t);
 			if (abs_double(delta_reject_accept_t) < 0.01) {
 				reached_perfection = 1;
 				debug("calibration reached the desired acceptance rate");
-				printf("\n %d steps without rescaling \n", nchecks_without_rescaling);
+				printf("\n %d steps without rescaling \n",
+						nchecks_without_rescaling);
 			} else {
 				reached_perfection = 0;
 				if (delta_reject_accept_t < 0) {
@@ -174,7 +417,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 				debug("quitting calibration because we did not need to rescale for several times");
 				break;
 			}
-			if (iter - burn_in_iterations > iter_limit) {
+			if (iter > iter_limit) {
 				fprintf(stderr,
 						"calibration failed: limit of %d iterations reached.",
 						iter_limit);
@@ -184,6 +427,18 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 	}
 	reset_accept_rejects(m);
 	debug("calibration of markov-chain done.");
+}
+
+void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
+		double desired_acceptance_rate, const unsigned int iter_limit,
+		double mul, const double adjust_step) {
+#ifdef CALIBRATE_ALTERNATE
+	markov_chain_calibrate_alt
+#else
+	markov_chain_calibrate_orig
+#endif
+	(m, burn_in_iterations, desired_acceptance_rate, iter_limit, mul,
+			adjust_step);
 }
 
 void do_step_for(mcmc * m, const unsigned int i) {
