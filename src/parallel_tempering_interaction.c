@@ -26,7 +26,7 @@ static int check_swap_probability(mcmc * a, mcmc * b) {
 /**
  * chooses a chain to swap by random. Swaps occur with probability 1/n_swap
  */
-int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta,
+int parallel_tempering_decide_swap_random(mcmc ** chains, int n_beta,
 		int n_swap) {
 	double swap_probability;
 	int a, b;
@@ -35,12 +35,12 @@ int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta,
 		return -1;
 	IFVERBOSE
 		debug("checking if we do a swap");
-	swap_probability = get_next_uniform_random(sinmod[0]);
+	swap_probability = get_next_uniform_random(chains[0]);
 	if (swap_probability < 1.0 / n_swap) {
-		a = (int) (n_beta * 1000 * get_next_uniform_random(sinmod[0]))
+		a = (int) (n_beta * 1000 * get_next_uniform_random(chains[0]))
 				% (n_beta - 1);
 		b = (a + 1) % n_beta;
-		if (check_swap_probability(sinmod[a], sinmod[b]) == 1)
+		if (check_swap_probability(chains[a], chains[b]) == 1)
 			return a;
 	}
 	return -1;
@@ -49,7 +49,7 @@ int parallel_tempering_decide_swap_random(mcmc ** sinmod, int n_beta,
 /**
  * chooses one chain after another to swap. Swaps occur every n_swap.
  */
-int parallel_tempering_decide_swap_nonrandom(mcmc ** sinmod, int n_beta,
+int parallel_tempering_decide_swap_nonrandom(mcmc ** chains, int n_beta,
 		int n_swap, int iter) {
 	int a;
 	assert(n_beta > 0);
@@ -57,7 +57,7 @@ int parallel_tempering_decide_swap_nonrandom(mcmc ** sinmod, int n_beta,
 		return -1;
 	if (iter % n_swap == 0) {
 		a = iter / n_swap % (n_beta - 1);
-		if (check_swap_probability(sinmod[a], sinmod[a + 1]) == 1)
+		if (check_swap_probability(chains[a], chains[a + 1]) == 1)
 			return a;
 	}
 	return -1;
@@ -66,19 +66,19 @@ int parallel_tempering_decide_swap_nonrandom(mcmc ** sinmod, int n_beta,
 /**
  * chooses one chain to swap by random. Swap occurs every time.
  */
-int parallel_tempering_decide_swap_now(mcmc ** sinmod, int n_beta) {
+int parallel_tempering_decide_swap_now(mcmc ** chains, int n_beta) {
 	int a;
 	assert(n_beta > 0);
 	if (n_beta == 1)
 		return -1;
-	a = (int) (n_beta * 1000 * get_next_uniform_random(sinmod[0])) % (n_beta
+	a = (int) (n_beta * 1000 * get_next_uniform_random(chains[0])) % (n_beta
 			- 1);
-	if (check_swap_probability(sinmod[a], sinmod[a + 1]) == 1)
+	if (check_swap_probability(chains[a], chains[a + 1]) == 1)
 		return a;
 	return -1;
 }
 
-static void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
+static void parallel_tempering_do_swap(mcmc ** chains, int n_beta, int a) {
 	double r;
 	int b;
 	gsl_vector * temp;
@@ -86,39 +86,39 @@ static void parallel_tempering_do_swap(mcmc ** sinmod, int n_beta, int a) {
 	b = a + 1;
 	IFDEBUG
 		printf("swapping %d with %d\n", a, b);
-	temp = dup_vector(get_params(sinmod[a]));
-	set_params(sinmod[a], dup_vector(get_params(sinmod[b])));
-	set_params(sinmod[b], temp);
+	temp = dup_vector(get_params(chains[a]));
+	set_params(chains[a], dup_vector(get_params(chains[b])));
+	set_params(chains[b], temp);
 
-	r = get_prob_best(sinmod[a]);
-	if (r > get_prob_best(sinmod[b])) {
-		set_prob_best(sinmod[b], r);
-		set_params_best(sinmod[b], get_params_best(sinmod[a]));
+	r = get_prob_best(chains[a]);
+	if (r > get_prob_best(chains[b])) {
+		set_prob_best(chains[b], r);
+		set_params_best(chains[b], get_params_best(chains[a]));
 	} else {
-		r = get_prob_best(sinmod[b]);
-		set_prob_best(sinmod[a], r);
-		set_params_best(sinmod[a], get_params_best(sinmod[b]));
+		r = get_prob_best(chains[b]);
+		set_prob_best(chains[a], r);
+		set_params_best(chains[a], get_params_best(chains[b]));
 	}
 
-	mcmc_check(sinmod[a]);
-	mcmc_check(sinmod[b]);
+	mcmc_check(chains[a]);
+	mcmc_check(chains[b]);
 }
 
-void tempering_interaction(mcmc ** sinmod, unsigned int n_beta,
+void tempering_interaction(mcmc ** chains, unsigned int n_beta,
 		unsigned long iter) {
 	int candidate;
 	(void) iter;
 
 #ifdef RANDOMSWAP
-	candidate = parallel_tempering_decide_swap_random(sinmod, n_beta, 1);
+	candidate = parallel_tempering_decide_swap_random(chains, n_beta, 1);
 #else
-	candidate = parallel_tempering_decide_swap_now(sinmod, n_beta);
-	/*candidate = parallel_tempering_decide_swap_nonrandom(sinmod, n_beta, n_swap, iter);*/
+	candidate = parallel_tempering_decide_swap_now(chains, n_beta);
+	/*candidate = parallel_tempering_decide_swap_nonrandom(chains, n_beta, n_swap, iter);*/
 #endif
 	if (candidate != -1) {
 		/* wait for threads to reach iteration */
-		parallel_tempering_do_swap(sinmod, n_beta, candidate);
-		inc_swapcount(sinmod[candidate]);
+		parallel_tempering_do_swap(chains, n_beta, candidate);
+		inc_swapcount(chains[candidate]);
 	}
 }
 

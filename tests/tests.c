@@ -94,17 +94,17 @@ int test_load(void) {
 	ASSERTEQUALD(gsl_vector_get(m->params, 0), 0.7, "start");
 	ASSERTEQUALD(gsl_vector_get(m->params_min, 0), 0.4, "min");
 	ASSERTEQUALD(gsl_vector_get(m->params_max, 0), 3.0, "max");
-	ASSERTEQUALD(gsl_vector_get(m->params_step, 0), 0.01*2.6, "step");
+	ASSERTEQUALD(gsl_vector_get(m->params_step, 0), 0.3, "step");
 	ASSERT(strcmp(m->params_descr[0], "Amplitude")==0, "description");
 	ASSERTEQUALD(gsl_vector_get(m->params, 1), 5.2, "start");
 	ASSERTEQUALD(gsl_vector_get(m->params_min, 1), 4.0, "min");
 	ASSERTEQUALD(gsl_vector_get(m->params_max, 1), 24.0, "max");
-	ASSERTEQUALD(gsl_vector_get(m->params_step, 1), 0.01*20, "step");
+	ASSERTEQUALD(gsl_vector_get(m->params_step, 1), 0.01, "step");
 	ASSERT(strcmp(m->params_descr[1], "Frequenz")==0, "description");
 	ASSERTEQUALD(gsl_vector_get(m->params, 2), 5.4, "start");
 	ASSERTEQUALD(gsl_vector_get(m->params_min, 2), 0.0, "min");
 	ASSERTEQUALD(gsl_vector_get(m->params_max, 2), 6.1, "max");
-	ASSERTEQUALD(gsl_vector_get(m->params_step, 2), 0.01*6.1, "step");
+	ASSERTEQUALD(gsl_vector_get(m->params_step, 2), 0.01, "step");
 	ASSERT(strcmp(m->params_descr[2], "Phase")==0, "description");
 
 	ASSERT(m->data->size1 == 1522, "data size");

@@ -18,15 +18,15 @@ unsigned long get_swapcount(const mcmc * m) {
 	return ((parallel_tempering_mcmc *) m->additional_data)->swapcount;
 }
 
-void print_current_positions(const mcmc ** sinmod, const int n_beta) {
+void print_current_positions(const mcmc ** chains, const int n_beta) {
 	int i;
 	printf("printing chain parameters: \n");
 	for (i = 0; i < n_beta; i++) {
-		printf("\tchain %d: swapped %lu times: ", i, get_swapcount(sinmod[i]));
-		printf("\tchain %d: current %f: ", i, get_prob(sinmod[i]));
-		dump_vectorln(get_params(sinmod[i]));
-		printf("\tchain %d: best %f: ", i, get_prob_best(sinmod[i]));
-		dump_vectorln(get_params_best(sinmod[i]));
+		printf("\tchain %d: swapped %lu times: ", i, get_swapcount(chains[i]));
+		printf("\tchain %d: current %f: ", i, get_prob(chains[i]));
+		dump_vectorln(get_params(chains[i]));
+		printf("\tchain %d: best %f: ", i, get_prob_best(chains[i]));
+		dump_vectorln(get_params_best(chains[i]));
 
 	}
 	fflush(stdout);

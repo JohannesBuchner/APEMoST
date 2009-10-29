@@ -10,7 +10,7 @@ void set_beta(mcmc * m, double newbeta);
 double get_beta(const mcmc * m);
 void inc_swapcount(mcmc * m);
 unsigned long get_swapcount(const mcmc * m);
-void print_current_positions(const mcmc ** sinmod, const int n_beta);
+void print_current_positions(const mcmc ** chains, const int n_beta);
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**

@@ -5,11 +5,6 @@
 #include "mcmc.h"
 #include "debug.h"
 
-/**
- * if you find the precision too low, increase here.
- * if you find the program too slow, decrease here.
- */
-#define DUMP_FORMAT "%.15e"
 #ifdef NODUMP
 #define ASSURE_DUMP_ENABLED return;
 #else

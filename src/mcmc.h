@@ -7,6 +7,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+/**
+ * How many digits should be used for writing numbers out?
+ *
+ * If you find the precision too low, increase here.
+ * If you find the program too slow, decrease here.
+ */
+#define DUMP_FORMAT "%.15e"
+
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
  * Turns additional sanity checks off.

@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <time.h>
 
-int run;
+int run = 1;
 int dumpflag;
 
 void ctrl_c_handler(int signalnr) {

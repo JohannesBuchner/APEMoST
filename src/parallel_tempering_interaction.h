@@ -13,11 +13,11 @@
 /**
  * does swapping chains and other mixes.
  *
- * @param sinmod
+ * @param chains
  * @param iter number of iterations that passed. Is a multiple of n_swap.
- * @param n_beta size of sinmod
+ * @param n_beta size of chains
  */
-void tempering_interaction(mcmc ** sinmod, unsigned int n_beta,
+void tempering_interaction(mcmc ** chains, unsigned int n_beta,
 		unsigned long iter);
 
 #endif /* TEMPERING_INTERACTION_H_ */
