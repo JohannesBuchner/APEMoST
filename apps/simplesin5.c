@@ -14,7 +14,7 @@
 
 double apply_formula(mcmc * m, unsigned int i, double param0, double param1,
 		double param2) {
-	double x = gsl_vector_get(m->x_dat, i);
+	double x = gsl_matrix_get(m->data, i, 0);
 	double y = param0 * gsl_sf_sin(2.0 * M_PI * param1 * x + param2);
 	gsl_vector_set(m->model, i, y);
 	return y;
@@ -33,7 +33,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	/*dump_v("recalculating model for parameter values", m->params);*/
 	for (i = 0; i < m->x_dat->size; i++) {
 		y = apply_formula(m, i, param0, param1, param2) + param3
-				- gsl_vector_get(m->y_dat, i);
+				- gsl_matrix_get(m->data, i, 1);;
 		square_sum += y * y;
 	}
 	set_prob(m, get_beta(m) * square_sum / (-2 * SIGMA * SIGMA));

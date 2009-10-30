@@ -102,7 +102,7 @@ mcmc ** setup_chains() {
 	chains = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(chains != NULL);
 
-	printf("Initializing parallel tempering for %d chains\n", n_beta);
+	printf("Initializing %d chains\n", n_beta);
 	for (i = 0; i < n_beta; i++) {
 		chains[i] = mcmc_load_params(params_filename);
 		if (i == 0) {
@@ -157,6 +157,7 @@ void read_calibration_file(mcmc ** chains, unsigned int n_chains) {
 		if (feof(f) && j < n_par) {
 			fprintf(f, "could not read %d chain calibrations. \nError with "
 				"line %d.\n", n_chains, i + 1);
+			exit(1);
 		}
 	}
 
@@ -513,7 +514,7 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
 /* calculate data probability */
 void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 	unsigned int i;
-	int j;
+	unsigned int j;
 	unsigned long n = 0;
 	double v;
 	double sums[100];
@@ -525,6 +526,7 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 	assert(n_beta < 100);
 	for (i = 0; i < n_beta; i++) {
 		sprintf(buf, "prob-chain%d.dump", i);
+		dump_s("summing up probability file", buf);
 		f = fopen(buf, "r");
 		if (f == NULL) {
 			fprintf(stderr,
@@ -548,34 +550,46 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 				"no data points found in %s\n", buf);
 			return;
 		}
-		sums[i] /= n;
+		sums[i] = sums[i] / get_beta(chains[i]) / n;
+
+		/*
+		 * add uniform priors
+		 * these are not calculated in the application because they are constant
+		 * for all results.
+		 */
+		for (j = 0; j < get_n_par(chains[i]); j++) {
+			sums[i] = sums[i] - gsl_sf_log(get_params_max_for(chains[i], j)
+					- get_params_min_for(chains[i], j));
+		}
 	}
 
 	data_logprob = 0;
 	previous_beta = 0;
 	/* calculate the integral by an estimate */
-	for (j = n_beta - 1; j >= 0; j--) {
-
+	for (j = n_beta - 1;; j--) {
 		assert((get_beta(chains[j]) > previous_beta));
 
 		data_logprob += sums[j] * (get_beta(chains[j]) - previous_beta);
 
+		if (j == 0)
+			break;
 		previous_beta = get_beta(chains[j]);
 	}
 
-	printf("Model probability ln(p(D|M, I)) was estimated as: " DUMP_FORMAT
+	printf("Model probability ln(p(D|M, I)): [about 10^%.0f] %.5f"
 	"\n"
 	"\nTable to compare support against other models (Jeffrey):\n"
-	" other model ln(p(D|M,I)) | result \n"
+	" other model ln(p(D|M,I)) | supporting evidence for this model\n"
 	" --------------------------------- \n"
-	"    < %4.1f \tnegative (supports other model)\n"
-	"    < %4.1f \tBarely worth mentioning\n"
-	"    < %4.1f \tSubstantial\n"
-	"    < %4.1f \tStrong\n"
-	"    < %4.1f \tVery strong\n"
-	"    > %4.1f \tDecisive\n", data_logprob, data_logprob + 0, data_logprob
-			+ 10, data_logprob + 23, data_logprob + 34, data_logprob + 46,
-			data_logprob + 46);
+	"        >  %04.1f \tnegative (supports other model)\n"
+	"  %04.1f .. %04.1f \tBarely worth mentioning\n"
+	"  %04.1f .. %04.1f \tSubstantial\n"
+	"  %04.1f .. %04.1f \tStrong\n"
+	"  %04.1f .. %04.1f \tVery strong\n"
+	"        <  %04.1f \tDecisive\n", data_logprob / gsl_sf_log(10), data_logprob,
+			data_logprob, data_logprob, data_logprob - 10, data_logprob - 10,
+			data_logprob - 23, data_logprob - 23, data_logprob - 34,
+			data_logprob - 34, data_logprob - 46, data_logprob - 46);
 	printf("\nbe careful.\n");
 }
 
