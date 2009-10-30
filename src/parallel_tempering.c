@@ -11,7 +11,7 @@
 
 void register_signal_handlers();
 
-void run_sampler(mcmc ** chains, int n_beta, unsigned int n_swap);
+void run_sampler(mcmc ** chains, int n_beta, unsigned int n_swap, char * mode);
 
 void report(const mcmc ** chains, const int n_beta) {
 	int i = 0;
@@ -326,8 +326,6 @@ void calibrate_rest() {
 	}
 	write_calibration_summary(chains, n_beta);
 	write_calibrations_file(chains, n_beta);
-
-	register_signal_handlers();
 }
 
 void prepare_and_run_sampler(int append) {
@@ -348,7 +346,8 @@ void prepare_and_run_sampler(int append) {
 		printf("automatic n_swap: %d\n", n_swap);
 	}
 
-	run_sampler(chains, n_beta, n_swap);
+	register_signal_handlers();
+	run_sampler(chains, n_beta, n_swap, (append == 1 ? "a" : "w"));
 
 	report((const mcmc **) chains, n_beta);
 
@@ -421,12 +420,16 @@ void adapt(mcmc ** chains, const unsigned int n_beta, const unsigned int n_swap)
 }
 
 void dump(const mcmc ** chains, const unsigned int n_beta,
-		const unsigned long iter, FILE * acceptance_file) {
+		const unsigned long iter, FILE * acceptance_file,
+		FILE ** probabilities_file) {
 	unsigned int i;
 	if (iter % PRINT_PROB_INTERVAL == 0) {
 		if (dumpflag) {
 			report(chains, n_beta);
 			dumpflag = 0;
+			for (i = 0; i < n_beta; i++) {
+				fflush(probabilities_file[i]);
+			}
 		}
 		fprintf(acceptance_file, "%lu\t", iter);
 		for (i = 0; i < n_beta; i++) {
@@ -454,7 +457,8 @@ void dump(const mcmc ** chains, const unsigned int n_beta,
 	}
 }
 
-void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
+void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap,
+		char * mode) {
 	int i;
 	unsigned long iter = chains[0]->n_iter;
 	unsigned int subiter;
@@ -465,7 +469,7 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
 	assert(probabilities_file != NULL);
 	for (i = 0; i < n_beta; i++) {
 		sprintf(buf, "prob-chain%d.dump", i);
-		probabilities_file[i] = fopen(buf, "w");
+		probabilities_file[i] = fopen(buf, mode);
 		if (probabilities_file[i] == NULL) {
 			fprintf(stderr, "opening file %s failed\n", buf);
 			perror("opening file failed");
@@ -474,7 +478,7 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
 	}
 	assert(n_beta < 100);
 
-	acceptance_file = fopen("acceptance_rate.dump", "w");
+	acceptance_file = fopen("acceptance_rate.dump", mode);
 	assert(acceptance_file != NULL);
 	get_duration();
 	run = 1;
@@ -499,7 +503,8 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
 		adapt(chains, n_beta, iter);
 		iter += n_swap;
 		tempering_interaction(chains, n_beta, iter);
-		dump((const mcmc **) chains, n_beta, iter, acceptance_file);
+		dump((const mcmc **) chains, n_beta, iter, acceptance_file,
+				probabilities_file);
 	}
 	if (fclose(acceptance_file) != 0) {
 		assert(0);
@@ -509,6 +514,7 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
 			assert(0);
 		}
 	}
+	printf("handled %lu iterations on %d chains\n", iter, n_beta);
 }
 
 /* calculate data probability */
@@ -577,19 +583,20 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 	}
 
 	printf("Model probability ln(p(D|M, I)): [about 10^%.0f] %.5f"
-	"\n"
-	"\nTable to compare support against other models (Jeffrey):\n"
-	" other model ln(p(D|M,I)) | supporting evidence for this model\n"
-	" --------------------------------- \n"
-	"        >  %04.1f \tnegative (supports other model)\n"
-	"  %04.1f .. %04.1f \tBarely worth mentioning\n"
-	"  %04.1f .. %04.1f \tSubstantial\n"
-	"  %04.1f .. %04.1f \tStrong\n"
-	"  %04.1f .. %04.1f \tVery strong\n"
-	"        <  %04.1f \tDecisive\n", data_logprob / gsl_sf_log(10), data_logprob,
-			data_logprob, data_logprob, data_logprob - 10, data_logprob - 10,
-			data_logprob - 23, data_logprob - 23, data_logprob - 34,
-			data_logprob - 34, data_logprob - 46, data_logprob - 46);
+		"\n"
+		"\nTable to compare support against other models (Jeffrey):\n"
+		" other model ln(p(D|M,I)) | supporting evidence for this model\n"
+		" --------------------------------- \n"
+		"        >  %04.1f \tnegative (supports other model)\n"
+		"  %04.1f .. %04.1f \tBarely worth mentioning\n"
+		"  %04.1f .. %04.1f \tSubstantial\n"
+		"  %04.1f .. %04.1f \tStrong\n"
+		"  %04.1f .. %04.1f \tVery strong\n"
+		"        <  %04.1f \tDecisive\n", data_logprob / gsl_sf_log(10),
+			data_logprob, data_logprob, data_logprob, data_logprob - 10,
+			data_logprob - 10, data_logprob - 23, data_logprob - 23,
+			data_logprob - 34, data_logprob - 34, data_logprob - 46,
+			data_logprob - 46);
 	printf("\nbe careful.\n");
 }
 
