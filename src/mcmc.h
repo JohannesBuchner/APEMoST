@@ -94,9 +94,11 @@ void mcmc_dump_flush(const mcmc * m);
 void mcmc_dump_close(mcmc * m);
 
 /**
- * open output files
+ * open dump files
+ *
+ * @param mode 'w' for writing, 'a' for append, 'r' for reading
  */
-void mcmc_open_dump_files(mcmc * m, const char * suffix, int index);
+void mcmc_open_dump_files(mcmc * m, const char * suffix, int index, char * mode);
 
 /**
  * append current parameters to files, unflushed.

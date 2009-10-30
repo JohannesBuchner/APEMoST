@@ -37,12 +37,16 @@
 #define PRINT_PROB_INTERVAL 1000
 #endif
 
+#define CALIBRATION_FILE "calibration_results"
+
 /** applications can run the follwing functions */
 
 void calibrate_first();
 
-void prepare_and_run_sampler();
+void prepare_and_run_sampler(int append);
 
 void calibrate_rest();
+
+void analyse();
 
 #endif /* PARALLEL_TEMPERING_H_ */
