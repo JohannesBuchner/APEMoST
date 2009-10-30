@@ -91,13 +91,17 @@
 #include "define_defaults.h"
 char * progname;
 void usage();
+void help_phase(char * phase);
 void check();
 
 int main(int argc, char ** argv) {
+	progname = argv[0];
 	if (argc > 1) {
-		progname = argv[0];
 		if (0 == strcmp(argv[1], "help") || 0 == strcmp(argv[1], "-h")) {
-			usage();
+			if (argc == 3)
+				help_phase(argv[2]);
+			else
+				usage();
 		} else if (0 == strcmp(argv[1], "check")) {
 			check();
 		} else if (0 == strcmp(argv[1], "calibrate_first")) {
@@ -105,33 +109,127 @@ int main(int argc, char ** argv) {
 		} else if (0 == strcmp(argv[1], "calibrate_rest")) {
 			calibrate_rest();
 		} else if (0 == strcmp(argv[1], "run")) {
-			prepare_and_run_sampler();
-		/*} else if (0 == strcmp(argv[1], "analyze")) {
-			analyze();*/
+			if (argc == 3 && strcmp(argv[2], "--append") == 0)
+				prepare_and_run_sampler(1);
+			else if (argc == 2)
+				prepare_and_run_sampler(0);
+			else {
+				fprintf(stderr, "You are doing it wrong.\n");
+				fprintf(stderr, "Did you want to write --append?\n");
+				usage(argv[0]);
+			}
+		} else if (0 == strcmp(argv[1], "analyse")) {
+			analyse();
 		} else {
 			fprintf(stderr, "You are doing it wrong.\n");
 			usage(argv[0]);
 		}
 	} else {
-		fprintf(stderr, "You are doing it wrong.\n");
+		fprintf(stderr, "No phase specified.\n");
 		usage(argv[0]);
 	}
 	return 0;
 }
 
 void usage() {
-	fprintf(stderr, "%s: SYNAPSIS\n\n"
-		"\t-h, help\tthis clutter\n"
-		"\tcheck\toutput which parameters and files will be used\n"
-		"\t       \tand check if they are there\n"
-		"\tcalibrate_first\tcalibrate first chain (beta = 1)\n"
-		"\tcalibrate_rest\tcalibrate remaining chains (beta < 1)\n"
-		"\trun\tcreate and dump sampling data\n"
-		"\tanalyze\tanalyze the available data\n"
-		"\t       \tmarginal distribution, data probability"
-		"\n"
-		"Read the manual on how to setup a working directory and \n"
-		"what parameters can be set.\n", progname);
+	fprintf(stderr, "SYNAPSIS: %s <phase> <...>\n\n", progname);
+	fprintf(stderr, "\t-h, help\tthis clutter\n"
+		"\tphase is one of: \n"
+		"\t\tcheck          \toutput which parameters and files will be used\n"
+		"\t\t               \tand check if they are there\n"
+		"\t\tcalibrate_first\tcalibrate first chain (beta = 1)\n"
+		"\t\tcalibrate_rest \tcalibrate remaining chains (beta < 1)\n"
+		"\t\trun [--append] \tcreate and dump sampling data\n"
+		"\t\t               \twithout adding --append, existing data is overwritten\n"
+		"\t\tanalyse        \tanalyse the available data probability\n"
+		"\t\thelp <phase>   \tprint more information about a phase\n"
+		"\n");
+	fprintf(stderr,
+			"Read the manual on how to setup a working directory and \n"
+				"what parameters can be set.\n\n"
+				"Remember: Scientific simulations should be repeatable, unbiased, \n"
+				"          statistically sound and rigorous.\n");
+}
+
+void help_phase(char * phase) {
+	if (0 == strcmp(phase, "check")) {
+		printf("Phase 'check'\n\n"
+			"Prerequisites: \n"
+			"\tnone\n"
+			"Provides: \n"
+			"Does:\n"
+			"\tChecks if data and parameter files are available\n"
+			"\tPrints compile information such as defined algorithm "
+			"behaviour)\n");
+	} else if (0 == strcmp(phase, "calibrate_first")) {
+		printf("Phase 'calibrate_first'\n\n"
+			"Prerequisites: \n"
+			"\tparameters file " PARAMS_FILENAME "\n"
+		"\tdata file " DATA_FILENAME "\n"
+		"\tBURN_IN_ITERATIONS\n"
+		"Provides: \n"
+		"\tstepwidths for chain 0 (beta = 1)\n"
+		"\tstart parameters for chain 0 (beta = 1)\n"
+		"Does:\n"
+		"\tBurn-in and step-width calibration for first chain\n"
+		"\twrites the resulting stepwidths and current parameter values\n"
+		"\t\tout to the file " CALIBRATION_FILE " and a new params file\n"
+		"\t\tat " PARAMS_FILENAME "_suggested\n"
+		"\n");
+	} else if (0 == strcmp(phase, "calibrate_rest")) {
+		printf("Phase 'calibrate_rest'\n\n"
+			"Prerequisites: \n"
+			"\tparameters file " PARAMS_FILENAME "\n"
+		"\tdata file " DATA_FILENAME "\n"
+		"\tBURN_IN_ITERATIONS\n"
+		"\tBETA_0\n"
+		"\tN_BETA\n"
+		"\tBETA_ALIGNMENT\n"
+		"\tstepwidths and start parameters of chain 0 (beta = 1)\n"
+		"\t\t(read from first line of file "CALIBRATION_FILE ")\n");
+		printf("Provides: \n"
+			"\tstepwidths for all chains\n"
+			"\tstart parameters for chains\n"
+			"\tbeta values for all chains\n"
+			"Does:\n"
+			"\tBurn-in and step-width calibration for the remaining chains (beta < 1)\n"
+			"\twrites the resulting stepwidths, betas and current parameter values\n"
+			"\t\tout to the file " CALIBRATION_FILE "\n"
+		"\n");
+	} else if (0 == strcmp(phase, "run")) {
+		printf("Phase 'run'\n\n"
+			"Prerequisites: \n"
+			"\tparameters file " PARAMS_FILENAME "\n"
+		"\tdata file " DATA_FILENAME "\n"
+		"\tN_BETA\n"
+		"\tstepwidths, betas and start parameters of all chains\n"
+		"\t\t(read from file "CALIBRATION_FILE ")\n"
+		"Provides: \n"
+		"\tdata dumps (probabilities and visited parameters)\n"
+		"Does:\n"
+		"\tRun the MCMC engine and continously write out the data of\n"
+		"\tthe visited parameters and probabilities to files. \n"
+		"\n");
+	} else if (0 == strcmp(phase, "analyse")) {
+		printf("Phase 'run'\n\n"
+			"Prerequisites: \n"
+			"\tparameters file " PARAMS_FILENAME "\n"
+		"\tdata file " DATA_FILENAME "\n"
+		"\tN_BETA\n"
+		"\tbetas of all chains\n"
+		"\t\t(read from file "CALIBRATION_FILE ")\n"
+		"\tprobabilities data dumps\n"
+		"Provides: \n"
+		"\tmodel probability\n"
+		"Does:\n"
+		"\tAnalyses the model probability of the visited values.\n"
+		"\tThe resulting value can be used to compare to other models.\n"
+		"\nFor the marginal distribution, use a histogram tool.\n"
+		"\n");
+	} else {
+		printf("No help available for unknown phase.\n");
+		usage();
+	}
 }
 
 void checkfile(char * filename) {

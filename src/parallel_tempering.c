@@ -63,8 +63,8 @@ void write_calibration_summary(mcmc ** chains, unsigned int n_chains) {
 		fprintf(f, "\nBETA TABLE\n");
 		fprintf(f, "Chain # | Calculated | Calibrated\n");
 		for (i = 0; i < n_chains; i++) {
-			fprintf(f, "Chain %d | " DUMP_FORMAT " | %f\n", i, get_chain_beta(i, n_chains,
-					beta_0), get_beta(chains[i]));
+			fprintf(f, "Chain %d | " DUMP_FORMAT " | %f\n", i, get_chain_beta(
+					i, n_chains, beta_0), get_beta(chains[i]));
 		}
 		fprintf(f, "\nSTEPWIDTH TABLE\n");
 		fprintf(f, "Chain # | Calibrated stepwidths... \n");
@@ -83,7 +83,7 @@ void write_calibration_summary(mcmc ** chains, unsigned int n_chains) {
 		for (i = 0; i < n_chains; i++) {
 			fprintf(f, "%d", i);
 			for (j = 0; j < n_pars; j++) {
-				fprintf(f, "\t" DUMP_FORMAT , get_steps_for(chains[i], j));
+				fprintf(f, "\t" DUMP_FORMAT, get_steps_for(chains[i], j));
 			}
 			fprintf(f, "\n");
 		}
@@ -120,8 +120,6 @@ mcmc ** setup_chains() {
 	}
 	return chains;
 }
-
-#define CALIBRATION_FILE "calibration_results"
 
 /**
  * read betas, stepwidths and start values of all chains
@@ -181,7 +179,7 @@ void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
 			fprintf(f, "\t" DUMP_FORMAT, get_steps_for(chains[j], i));
 		}
 		for (i = 0; i < n_par; i++) {
-			fprintf(f, "\t" DUMP_FORMAT , get_params_best_for(chains[j], i));
+			fprintf(f, "\t" DUMP_FORMAT, get_params_best_for(chains[j], i));
 		}
 		fprintf(f, "\n");
 	}
@@ -331,7 +329,7 @@ void calibrate_rest() {
 	register_signal_handlers();
 }
 
-void prepare_and_run_sampler() {
+void prepare_and_run_sampler(int append) {
 	unsigned int n_beta = N_BETA;
 	unsigned int i;
 	int n_swap = N_SWAP;
@@ -341,7 +339,7 @@ void prepare_and_run_sampler() {
 	read_calibration_file(chains, n_beta);
 
 	for (i = 0; i < n_beta; i++) {
-		mcmc_open_dump_files(chains[i], "-chain", i);
+		mcmc_open_dump_files(chains[i], "-chain", i, (append == 1 ? "a" : "w"));
 	}
 
 	if (n_swap < 0) {
@@ -512,3 +510,87 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap) {
 	}
 }
 
+/* calculate data probability */
+void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
+	unsigned int i;
+	int j;
+	unsigned long n = 0;
+	double v;
+	double sums[100];
+	double previous_beta;
+	double data_logprob;
+	FILE * f;
+
+	char buf[100];
+	assert(n_beta < 100);
+	for (i = 0; i < n_beta; i++) {
+		sprintf(buf, "prob-chain%d.dump", i);
+		f = fopen(buf, "r");
+		if (f == NULL) {
+			fprintf(stderr,
+					"calculating data probability failed: file %s not found\n",
+					buf);
+			return;
+		}
+		n = 0;
+		while (!feof(f)) {
+			if (fscanf(f, "%le", &v) == 1) {
+				/*
+				 * note: rounding errors could occur here
+				 * since the values are of the same magnitude, they hopefully won't
+				 */
+				sums[i] += v;
+				n++;
+			}
+		}
+		if (n == 0) {
+			fprintf(stderr, "calculating data probability failed: "
+				"no data points found in %s\n", buf);
+			return;
+		}
+		sums[i] /= n;
+	}
+
+	data_logprob = 0;
+	previous_beta = 0;
+	/* calculate the integral by an estimate */
+	for (j = n_beta - 1; j >= 0; j--) {
+
+		assert((get_beta(chains[j]) > previous_beta));
+
+		data_logprob += sums[j] * (get_beta(chains[j]) - previous_beta);
+
+		previous_beta = get_beta(chains[j]);
+	}
+
+	printf("Model probability ln(p(D|M, I)) was estimated as: " DUMP_FORMAT
+	"\n"
+	"\nTable to compare support against other models (Jeffrey):\n"
+	" other model ln(p(D|M,I)) | result \n"
+	" --------------------------------- \n"
+	"    < %4.1f \tnegative (supports other model)\n"
+	"    < %4.1f \tBarely worth mentioning\n"
+	"    < %4.1f \tSubstantial\n"
+	"    < %4.1f \tStrong\n"
+	"    < %4.1f \tVery strong\n"
+	"    > %4.1f \tDecisive\n", data_logprob, data_logprob + 0, data_logprob
+			+ 10, data_logprob + 23, data_logprob + 34, data_logprob + 46,
+			data_logprob + 46);
+	printf("\nbe careful.\n");
+}
+
+void analyse() {
+	unsigned int n_beta = N_BETA;
+	unsigned int i;
+
+	mcmc ** chains = setup_chains();
+
+	read_calibration_file(chains, n_beta);
+
+	/* find relevant dump files */
+	for (i = 0; i < n_beta; i++) {
+		mcmc_open_dump_files(chains[i], "-chain", i, "r");
+	}
+
+	calc_data_probability(chains, n_beta);
+}

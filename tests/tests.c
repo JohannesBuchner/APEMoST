@@ -169,7 +169,7 @@ int test_write(void) {
 
 int test_write_prob(void) {
 	mcmc * m = mcmc_load("tests/testinput1", "tests/testlc.dat");
-	mcmc_open_dump_files(m, "", 0);
+	mcmc_open_dump_files(m, "", 0, "w");
 	debug("add starting points, ...");
 	mcmc_append_current_parameters(m);
 	mcmc_check(m);
