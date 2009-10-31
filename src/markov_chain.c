@@ -204,6 +204,8 @@ void markov_chain_calibrate_alt(mcmc * m,
 	double best_worst_accuracy = 1;
 	unsigned int iter = 0;
 	FILE * progress_plot_file = fopen("calibration_progress.data", "w");
+	gsl_vector * accuracies = gsl_vector_alloc(n_par);
+	gsl_vector_set_all(accuracies, 0);
 
 	mul = iter_limit + adjust_step; /* avoiding unused */
 
@@ -227,6 +229,11 @@ void markov_chain_calibrate_alt(mcmc * m,
 					worst_accuracy_previous / MAX_ACCURACY_IMPROVEMENT);
 			worst_accuracy = 0;
 			for (i = 0; i < n_par; i++) {
+				if (gsl_vector_get(accuracies, i) < 0.1
+						* worst_accuracy_previous) {
+					continue;
+				}
+
 				/*
 				 * the idea is to reuse the accuracy of the worst parameter in the
 				 * previous round. So in this round, we only want an accuracy
@@ -250,6 +257,7 @@ void markov_chain_calibrate_alt(mcmc * m,
 				/*if (worst_accuracy < accuracy) {*/
 				worst_accuracy += accuracy;
 				/*}*/
+				gsl_vector_set(accuracies, i, accuracy);
 
 				movedirection = current_acceptance_rate
 						- desired_acceptance_rate;
