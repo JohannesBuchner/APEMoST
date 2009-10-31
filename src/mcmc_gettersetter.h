@@ -13,6 +13,7 @@ double get_accept_rate_global(const mcmc * m);
 long get_params_accepts_for(const mcmc * m, const unsigned int i);
 long get_params_rejects_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params(const mcmc * m);
+double get_params_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params_min(const mcmc * m);
 double get_params_min_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params_max(const mcmc * m);

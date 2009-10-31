@@ -62,4 +62,6 @@ void markov_chain_step_for(mcmc * m, const unsigned int index);
  */
 void rmw_adapt_stepwidth(mcmc * m, double prob_old);
 
+
+void burn_in(mcmc * m, const unsigned int burn_in_iterations);
 #endif /* MCMC_MARKOV_CHAIN_H_ */

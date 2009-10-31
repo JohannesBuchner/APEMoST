@@ -170,17 +170,21 @@ gsl_vector * get_params(const mcmc * m) {
 	return m->params;
 }
 
+double get_params_for(const mcmc * m, const unsigned int i) {
+	return gsl_vector_get(m->params, i);
+}
+
 gsl_vector * get_params_min(const mcmc * m) {
 	return m->params_min;
 }
 
-double get_params_min_for(const mcmc * m, unsigned int i) {
+double get_params_min_for(const mcmc * m, const unsigned int i) {
 	return gsl_vector_get(m->params_min, i);
 }
 gsl_vector * get_params_max(const mcmc * m) {
 	return m->params_max;
 }
-double get_params_max_for(const mcmc * m, unsigned int i) {
+double get_params_max_for(const mcmc * m, const unsigned int i) {
 	return gsl_vector_get(m->params_max, i);
 }
 

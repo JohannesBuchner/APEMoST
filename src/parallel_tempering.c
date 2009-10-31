@@ -159,6 +159,7 @@ void read_calibration_file(mcmc ** chains, unsigned int n_chains) {
 				"line %d.\n", n_chains, i + 1);
 			exit(1);
 		}
+		set_params_best(chains[i], get_params(chains[i]));
 	}
 
 	fclose(f);
@@ -180,7 +181,7 @@ void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
 			fprintf(f, "\t" DUMP_FORMAT, get_steps_for(chains[j], i));
 		}
 		for (i = 0; i < n_par; i++) {
-			fprintf(f, "\t" DUMP_FORMAT, get_params_best_for(chains[j], i));
+			fprintf(f, "\t" DUMP_FORMAT, get_params_for(chains[j], i));
 		}
 		fprintf(f, "\n");
 	}
@@ -315,6 +316,8 @@ void calibrate_rest() {
 #ifndef SKIP_CALIBRATE_ALLCHAINS
 		markov_chain_calibrate(chains[i], burn_in_iterations, rat_limit,
 				iter_limit, mul, DEFAULT_ADJUST_STEP);
+#else
+		burn_in(chains[i], burn_in_iterations);
 #endif
 	}
 	gsl_vector_free(stepwidth_factors);
