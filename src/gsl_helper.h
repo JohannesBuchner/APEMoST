@@ -7,6 +7,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
 
 #ifdef NOASSERT
 #define assert(cond)
@@ -79,5 +80,29 @@ void min_vector(gsl_vector * a, const gsl_vector * b);
  * selection sort
  */
 void sort(gsl_vector ** vs, unsigned int nvectors, unsigned int vector_size);
+
+/**
+ * given the first index of the matrix, iterate through the second to find
+ * the smallest entry
+ */
+double min_column(const gsl_matrix * m, const unsigned int i);
+
+/**
+ * given the second index of the matrix, iterate through the first to find
+ * the smallest entry
+ */
+double min_row(const gsl_matrix * m, const unsigned int i);
+
+/**
+ * given the first index of the matrix, iterate through the second to find
+ * the largest entry
+ */
+double max_column(const gsl_matrix * m, const unsigned int i);
+
+/**
+ * given the second index of the matrix, iterate through the first to find
+ * the largest entry
+ */
+double max_row(const gsl_matrix * m, const unsigned int i);
 
 #endif

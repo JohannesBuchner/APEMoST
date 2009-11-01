@@ -180,3 +180,44 @@ void sort(gsl_vector ** vs, unsigned int nvectors, unsigned int vector_size) {
 				printf("sorted: %u/%u\r", j, vector_size);
 	}
 }
+
+double min_column(const gsl_matrix * m, const unsigned int i) {
+	unsigned int j = 1;
+	double min = gsl_matrix_get(m, i, 0);
+	while (j < m->size2) {
+		if (min > gsl_matrix_get(m, i, j))
+			min = gsl_matrix_get(m, i, j);
+		j++;
+	}
+	return min;
+}
+double min_row(const gsl_matrix * m, const unsigned int i) {
+	unsigned int j = 1;
+	double min = gsl_matrix_get(m, 0, i);
+	while (j < m->size2) {
+		if (min > gsl_matrix_get(m, j, i))
+			min = gsl_matrix_get(m, j, i);
+		j++;
+	}
+	return min;
+}
+double max_column(const gsl_matrix * m, const unsigned int i) {
+	unsigned int j = 1;
+	double max = gsl_matrix_get(m, i, 0);
+	while (j < m->size2) {
+		if (max < gsl_matrix_get(m, i, j))
+			max = gsl_matrix_get(m, i, j);
+		j++;
+	}
+	return max;
+}
+double max_row(const gsl_matrix * m, const unsigned int i) {
+	unsigned int j = 1;
+	double max = gsl_matrix_get(m, 0, i);
+	while (j < m->size2) {
+		if (max < gsl_matrix_get(m, j, i))
+			max = gsl_matrix_get(m, j, i);
+		j++;
+	}
+	return max;
+}
