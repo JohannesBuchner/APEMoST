@@ -544,6 +544,7 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 			return;
 		}
 		n = 0;
+		sums[i] = 0;
 		while (!feof(f)) {
 			if (fscanf(f, "%le", &v) == 1) {
 				/*
@@ -560,16 +561,6 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 			return;
 		}
 		sums[i] = sums[i] / get_beta(chains[i]) / n;
-
-		/*
-		 * add uniform priors
-		 * these are not calculated in the application because they are constant
-		 * for all results.
-		 */
-		for (j = 0; j < get_n_par(chains[i]); j++) {
-			sums[i] = sums[i] - gsl_sf_log(get_params_max_for(chains[i], j)
-					- get_params_min_for(chains[i], j));
-		}
 	}
 
 	data_logprob = 0;
