@@ -4,7 +4,7 @@ function die() {
 	exit $2
 }
 
-mcmcdir=..
+mcmcdir=$(dirname $0)/..
 measure=$mcmcdir/peaks.exe
 if [ "$CATCOMMAND" == "" ]; then
 	cat="cat"

@@ -6,7 +6,7 @@ function die() {
 
 TMP=$(mktemp)
 TMP2=$(mktemp)
-mcmcdir=~/Desktop/Arbeit
+mcmcdir=$(dirname $0)/..
 matrix_man=$mcmcdir/matrix_man.exe
 
 
@@ -30,7 +30,7 @@ for j in Amplitude Phase Frequenz; do
 done
 
 echo stuck chains 1>&2
-chains=$(cat acceptance_rate.dump |~/Desktop/Arbeit/matrix_man.exe diff 'i>1'|grep -w '0.000000e+00' -c)
+chains=$(cat acceptance_rate.dump |$mcmcdir/matrix_man.exe diff 'i>1'|grep -w '0.000000e+00' -c)
 echo $(($chains*1000)) # stuck chains are expensive
 
 } | tee $TMP 1>&2

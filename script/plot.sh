@@ -21,7 +21,7 @@ function die() {
 	exit $2
 }
 
-mcmcdir=~/Desktop/Arbeit/
+mcmcdir=$(dirname $0)/..
 
 for dir in *_*; do 
 	cd $dir || continue
