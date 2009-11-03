@@ -24,12 +24,6 @@
 #define BURN_IN_ITERATIONS 10000
 #endif
 /**
- * How much deviation from the desired acceptance rate is acceptable
- */
-#ifndef RAT_LIMIT
-#define RAT_LIMIT 0.5
-#endif
-/**
  * How many iterations should be used after burn-in for adjusting
  * the step widths?
  */
@@ -59,3 +53,16 @@
 #define DATA_FILENAME "data"
 #endif
 
+/**
+ * Desired acceptance rate after calibration
+ */
+#ifndef TARGET_ACCEPTANCE_RATE
+#define TARGET_ACCEPTANCE_RATE 0.25
+#endif
+
+/**
+ * How much deviation from the desired acceptance rate is acceptable
+ */
+#ifndef MAX_AR_DEVIATION
+#define MAX_AR_DEVIATION 0.01
+#endif

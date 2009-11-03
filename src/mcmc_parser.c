@@ -58,7 +58,7 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	}
 	if (step < 0) {
 		step = (max - min) * 0.1;
-		dump_d("using auto step size, 10%% of parameter space\n", step);
+		dump_d("using auto step size, 10% of parameter space\n", step);
 	}
 	gsl_vector_set(m->params_min, i, min);
 	gsl_vector_set(m->params_max, i, max);

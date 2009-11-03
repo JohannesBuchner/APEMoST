@@ -209,7 +209,8 @@ void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
  **/
 void calibrate_first() {
 	mcmc ** chains = setup_chains();
-	const double rat_limit = RAT_LIMIT;
+	const double desired_acceptance_rate = TARGET_ACCEPTANCE_RATE;
+	const double max_ar_deviation = MAX_AR_DEVIATION;
 	const unsigned long burn_in_iterations = BURN_IN_ITERATIONS;
 	const unsigned long iter_limit = ITER_LIMIT;
 	const double mul = MUL;
@@ -218,8 +219,9 @@ void calibrate_first() {
 	fflush(stdout);
 	calc_model(chains[0], NULL);
 	mcmc_check(chains[0]);
-	markov_chain_calibrate(chains[0], burn_in_iterations, rat_limit,
-			iter_limit, mul, DEFAULT_ADJUST_STEP);
+	markov_chain_calibrate(chains[0], burn_in_iterations,
+			desired_acceptance_rate, max_ar_deviation, iter_limit, mul,
+			DEFAULT_ADJUST_STEP);
 	write_calibrations_file(chains, 1);
 	write_params_file(chains[0]);
 }
@@ -244,7 +246,8 @@ void calibrate_first() {
  **/
 void calibrate_rest() {
 	int n_beta = N_BETA;
-	const double rat_limit = RAT_LIMIT;
+	const double desired_acceptance_rate = TARGET_ACCEPTANCE_RATE;
+	const double max_ar_deviation = MAX_AR_DEVIATION;
 	double beta_0 = BETA_0;
 	const unsigned long burn_in_iterations = BURN_IN_ITERATIONS;
 	const unsigned long iter_limit = ITER_LIMIT;
@@ -279,8 +282,9 @@ void calibrate_rest() {
 		printf("beta = %f\tsteps: ", get_beta(chains[i]));
 		dump_vectorln(get_steps(chains[i]));
 		fflush(stdout);
-		markov_chain_calibrate(chains[i], burn_in_iterations, rat_limit,
-				iter_limit, mul, DEFAULT_ADJUST_STEP);
+		markov_chain_calibrate(chains[i], burn_in_iterations,
+				desired_acceptance_rate, max_ar_deviation, iter_limit, mul,
+				DEFAULT_ADJUST_STEP);
 		gsl_vector_scale(stepwidth_factors, pow(get_beta(chains[i]), -0.5));
 		gsl_vector_mul(stepwidth_factors, get_steps(chains[0]));
 		gsl_vector_div(stepwidth_factors, get_steps(chains[i]));
@@ -314,8 +318,9 @@ void calibrate_rest() {
 		dump_vectorln(get_steps(chains[i]));
 		fflush(stdout);
 #ifndef SKIP_CALIBRATE_ALLCHAINS
-		markov_chain_calibrate(chains[i], burn_in_iterations, rat_limit,
-				iter_limit, mul, DEFAULT_ADJUST_STEP);
+		markov_chain_calibrate(chains[i], burn_in_iterations,
+				desired_acceptance_rate, max_ar_deviation, iter_limit, mul,
+				DEFAULT_ADJUST_STEP);
 #else
 		burn_in(chains[i], burn_in_iterations);
 #endif

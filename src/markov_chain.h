@@ -2,20 +2,15 @@
 #define MCMC_MARKOV_CHAIN_H_
 
 #include "mcmc.h"
+#include "define_defaults.h"
 
-#define DEFAULT_MUL 0.85
 #define DEFAULT_ADJUST_STEP 0.5
-#define DEFAULT_RAT_LIMIT -1 /* is calculated then */
 #ifndef NO_RESCALING_LIMIT
 #define NO_RESCALING_LIMIT 15
 #endif
 
 #ifndef ITER_READJUST
 #define ITER_READJUST 200
-#endif
-
-#ifndef TARGET_ACCEPTANCE_RATE
-#define TARGET_ACCEPTANCE_RATE 0.23
 #endif
 
 #ifndef CIRCULAR_PARAMS
@@ -42,9 +37,9 @@
  * @param mul factor for adjusting the step width during calibration
  * @param adjust_step gives the factor with which to adjust the stepwidths after burn-in
  */
-void markov_chain_calibrate(mcmc * m, unsigned int burn_in_iterations,
-		double rat_limit, unsigned int iter_limit, double mul,
-		double adjust_step);
+void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
+		double desired_acceptance_rate, const double max_ar_deviation,
+		const unsigned int iter_limit, double mul, const double adjust_step);
 /**
  * take a step using the markov-chain
  * @param m
@@ -61,7 +56,6 @@ void markov_chain_step_for(mcmc * m, const unsigned int index);
  * adapts the step width
  */
 void rmw_adapt_stepwidth(mcmc * m, double prob_old);
-
 
 void burn_in(mcmc * m, const unsigned int burn_in_iterations);
 #endif /* MCMC_MARKOV_CHAIN_H_ */
