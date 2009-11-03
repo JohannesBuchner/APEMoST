@@ -57,5 +57,43 @@ void markov_chain_step_for(mcmc * m, const unsigned int index);
  */
 void rmw_adapt_stepwidth(mcmc * m, double prob_old);
 
+/**
+ * Perform the given number of burn-in operations
+ */
 void burn_in(mcmc * m, const unsigned int burn_in_iterations);
+
+#ifndef ACCURACY_DEVIATION_FACTOR
+/**
+ * How good should the acceptance rate be calculated in dependence of
+ * deviation from the desired value?
+ * accuracy = factor * deviation
+ */
+#define ACCURACY_DEVIATION_FACTOR 0.25
+#endif
+
+/**
+ * Get acceptance rate.
+ * The closer the acceptance rate is to the desired acceptance rate, the more
+ * accurately will it be assessed.
+ *
+ * @param min_accuracy you can request a upper limit on the accuracy, e.g. 1%.
+ * 		any calculation will have at most the accuracy of 1% then. Otherwise put 0 here.
+ * @param max_accuracy you can request a lower limit on the accuracy, e.g. 0.1%
+ * 		any calculation will have at least the accuracy of 0.1% then. Otherwise put 1 here.
+ *
+ * @param acceptance_rate here the a/r gets stored
+ * @param accuracy here the accuracy gets stored
+ *
+ * @return iterations used
+ */
+unsigned int assess_acceptance_rate(mcmc * m, unsigned int param,
+		double desired_acceptance_rate, double min_accuracy,
+		double max_accuracy, double * acceptance_rate, double * accuracy);
+
+/**
+ * Set the best parameters value found so far as current value, as well as the
+ * probability.
+ */
+void restart_from_best(mcmc * m);
+
 #endif /* MCMC_MARKOV_CHAIN_H_ */
