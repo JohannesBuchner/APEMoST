@@ -55,7 +55,7 @@ void write_params_file(mcmc * m) {
 void write_calibration_summary(mcmc ** chains, unsigned int n_chains) {
 	unsigned int i;
 	unsigned int j;
-	double beta_0 = get_beta(chains[0]);
+	double beta_0 = get_beta(chains[n_chains - 1]);
 	unsigned int n_pars = get_n_par(chains[0]);
 	FILE * f = fopen("calibration_summary", "w");
 	if (f != NULL) {
@@ -78,7 +78,7 @@ void write_calibration_summary(mcmc ** chains, unsigned int n_chains) {
 		fprintf(f, "\nSTEPWIDTH ESTIMATE TABLE\n");
 		fprintf(f, "If you find that the estimate deviates much or "
 			"systematically from the");
-		fprintf(f, "calibrated stepwidths, please contact the authors.\n");
+		fprintf(f, "calibrated stepwidths, please notify the authors.\n");
 		fprintf(f, "Chain # | Calculated stepwidths... \n");
 		for (i = 0; i < n_chains; i++) {
 			fprintf(f, "%d", i);
@@ -439,25 +439,26 @@ void dump(const mcmc ** chains, const unsigned int n_beta,
 				fflush(probabilities_file[i]);
 			}
 		}
-		fprintf(acceptance_file, "%lu\t", iter);
+		fprintf(acceptance_file, "%lu", iter);
 		for (i = 0; i < n_beta; i++) {
-			fprintf(acceptance_file, "%lu\t", get_params_accepts_sum(chains[i]));
-			fprintf(acceptance_file, "%lu\t", get_params_rejects_sum(chains[i]));
+			fprintf(acceptance_file, "\t%lu", get_params_accepts_global(
+					chains[i]));
 		}
 		fprintf(acceptance_file, "\n");
 		fflush(acceptance_file);
 		IFDEBUG {
 			debug("dumping distribution");
 			dump_ul("iteration", iter);
-			dump_ul("acceptance rate: accepts", get_params_accepts_sum(chains[0]));
-			dump_ul("acceptance rate: rejects", get_params_rejects_sum(chains[0]));
+			dump_ul("acceptance rate: accepts", get_params_accepts_global(chains[0]));
+			dump_ul("acceptance rate: rejects", get_params_rejects_global(chains[0]));
 			dump_mcmc(chains[0]);
 		} else {
 			printf("iteration: %lu, a/r: %lu/%lu = %f, v:", iter,
-					get_params_accepts_sum(chains[0]), get_params_rejects_sum(
-							chains[0]), (double) get_params_accepts_sum(
-							chains[0]) / (double) (get_params_accepts_sum(
-							chains[0]) + get_params_rejects_sum(chains[0])));
+					get_params_accepts_global(chains[0]),
+					get_params_rejects_global(chains[0]),
+					(double) get_params_accepts_global(chains[0])
+							/ (double) (get_params_accepts_global(chains[0])
+									+ get_params_rejects_global(chains[0])));
 			dump_vector(get_params(chains[0]));
 			printf(" [%d/%lu ticks]\r", get_duration(), get_ticks_per_second());
 			fflush(stdout);
@@ -486,6 +487,22 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap,
 	}
 	assert(n_beta < 100);
 
+	acceptance_file = fopen("acceptance_rate.dump.gnuplot", "w");
+	if (acceptance_file != NULL) {
+		fprintf(acceptance_file,
+				"# format: iteration | number of accepts for each chain\n");
+		fprintf(acceptance_file, "plot ");
+		for (i = 0; i < n_beta; i++) {
+			fprintf(
+					acceptance_file,
+					"\"acceptance_rate.dump\" u 1:%d title \"chain %d, beta = %f\"",
+					i + 2, i, get_beta(chains[i]));
+			if (i != n_beta - 1)
+				fprintf(acceptance_file, ", ");
+		}
+		fprintf(acceptance_file, "\n");
+		fclose(acceptance_file);
+	}
 	acceptance_file = fopen("acceptance_rate.dump", mode);
 	assert(acceptance_file != NULL);
 	get_duration();

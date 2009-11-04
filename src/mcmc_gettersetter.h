@@ -6,6 +6,7 @@
 /* getter + setter */
 const char ** get_params_descr(const mcmc * m);
 unsigned long get_params_accepts_global(const mcmc * m);
+unsigned long get_params_rejects_global(const mcmc * m);
 unsigned long get_params_accepts_sum(const mcmc * m);
 unsigned long get_params_rejects_sum(const mcmc * m);
 gsl_vector * get_accept_rate(const mcmc * m);

@@ -1032,7 +1032,9 @@ void markov_chain_calibrate_orig(mcmc * m, double rat_limit,
 	unsigned long subiter;
 	int nchecks_without_rescaling = 0;
 	int rescaled;
+	FILE * progress_plot_file = fopen("calibration_progress.data", "w");
 
+	assert(progress_plot_file != NULL);
 	/* we want a acceptance rate for each parameter */
 	rat_limit = pow(rat_limit, 1.0 / get_n_par(m));
 
@@ -1119,6 +1121,12 @@ void markov_chain_calibrate_orig(mcmc * m, double rat_limit,
 			gsl_vector_free(accept_rate);
 			accept_rate = get_accept_rate(m);
 			dump_v("New overall accept rate after reset", accept_rate);
+			for (i = 0; i < get_n_par(m); i++) {
+				fprintf(progress_plot_file, "%d\t%lu\t%f\t%f\t%f\n", i, iter,
+						get_steps_for_normalized(m, i), gsl_vector_get(
+								accept_rate, i), -1.);
+				fflush(progress_plot_file);
+			}
 			gsl_vector_free(accept_rate);
 			delta_reject_accept_t = get_accept_rate_global(m)
 					- TARGET_ACCEPTANCE_RATE;
@@ -1150,6 +1158,7 @@ void markov_chain_calibrate_orig(mcmc * m, double rat_limit,
 		}
 	}
 	reset_accept_rejects(m);
+	fclose(progress_plot_file);
 	debug("calibration of markov-chain done.");
 }
 
@@ -1159,7 +1168,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 
 	burn_in(m, burn_in_iterations);
 
-	dump_d("desired acceptance rate per parameter", desired_acceptance_rate);
+	dump_d("desired acceptance rate", desired_acceptance_rate);
 
 #ifdef CALIBRATE_MULTILIN
 	markov_chain_calibrate_multilinear_regression
