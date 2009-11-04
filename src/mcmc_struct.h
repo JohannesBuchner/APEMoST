@@ -47,12 +47,12 @@ typedef struct {
 	 * number of accepted steps for individual parameters
 	 * size = n_par
 	 */
-	long * params_accepts;
+	unsigned long * params_accepts;
 	/**
 	 * number of rejected steps for individual parameters
 	 * size = n_par
 	 */
-	long * params_rejects;
+	unsigned long * params_rejects;
 	/**
 	 * current step widths for individual parameters
 	 * size = n_par; set by calibration

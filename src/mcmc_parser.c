@@ -10,6 +10,11 @@
 #include "utils.h"
 
 #define MAX_LINE_LENGTH 256
+#ifdef DEBUGPARSER
+#define IFDEBUGPARSER if(1)
+#else
+#define IFDEBUGPARSER if(0)
+#endif
 
 static int strnlen(char * s, int maxlen) {
 	int i;
@@ -28,6 +33,7 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	double max;
 	double step;
 	char * descr = (char*) mem_calloc(MAX_LINE_LENGTH, sizeof(char));
+	IFDEBUGPARSER
 	dump_i("parsing line", i);
 
 	col = fscanf(input, "%lf\t%lf\t%lf\t%s\t%lf\n", &start, &min, &max, descr,
@@ -41,6 +47,7 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 		fprintf(stderr, "description invalid: %s\n", descr);
 		return 1;
 	}
+	IFDEBUGPARSER
 	debug("setting values");
 	gsl_vector_set(m->params, i, start);
 	gsl_vector_set(m->params_best, i, start);
@@ -58,12 +65,13 @@ static int load_parameter(mcmc * m, FILE * input, int i) {
 	}
 	if (step < 0) {
 		step = (max - min) * 0.1;
-		dump_d("using auto step size, 10% of parameter space\n", step);
+		dump_d("using auto step size, 10% of parameter space", step);
 	}
 	gsl_vector_set(m->params_min, i, min);
 	gsl_vector_set(m->params_max, i, max);
 	m->params_descr[i] = descr;
 	gsl_vector_set(m->params_step, i, step /* * (max - min) */);
+	IFDEBUGPARSER
 	debug("setting values done.");
 	return 0;
 }
@@ -73,7 +81,9 @@ static void load_data(mcmc * m, const char * filename) {
 	int npoints = countlines(filename);
 	int ndim = get_column_count(filename);
 	gsl_matrix * data;
+	IFDEBUGPARSER
 	dump_i("lines", npoints);
+	IFDEBUGPARSER
 	dump_i("dimensions", ndim);
 
 	data = gsl_matrix_alloc(npoints, ndim);
@@ -89,6 +99,7 @@ static void load_data(mcmc * m, const char * filename) {
 
 	m->data = data;
 
+	IFDEBUGPARSER
 	dump_i("loaded data points", npoints);
 }
 
@@ -100,12 +111,14 @@ char * my_strdup(const char * s) {
 }
 
 void mcmc_load_data(mcmc * m, const char * datafilename) {
+	IFDEBUGPARSER
 	dump_s("looking for data in file", datafilename);
 	load_data(m, datafilename);
 	mcmc_check(m);
 }
 
 void mcmc_reuse_data(mcmc * m, const mcmc * m_orig) {
+	IFDEBUGPARSER
 	debug("reusing data from other struct");
 	assert(m_orig->data != NULL);
 	m->data = m_orig->data;
@@ -121,6 +134,7 @@ mcmc * mcmc_load_params(const char * filename) {
 
 	int nlines;
 	nlines = countlines(filename);
+	IFDEBUGPARSER
 	dump_i("number of lines", nlines);
 
 	m = mcmc_init(nlines - pretext);

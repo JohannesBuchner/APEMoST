@@ -25,7 +25,7 @@ void burn_in(mcmc * m, const unsigned int burn_in_iterations) {
 	debug("Beginning calibration of MCMC ...");
 	debug("Starting burn-in ...");
 	mcmc_check(m);
-	for (iter = 0; iter < burn_in_iterations / 2; iter++) {
+	for (iter = 0; iter < burn_in_iterations / 2; ) {
 		for (subiter = 0; subiter < 200; subiter++) {
 			markov_chain_step(m);
 		}
@@ -40,7 +40,7 @@ void burn_in(mcmc * m, const unsigned int burn_in_iterations) {
 	debug("Re-initializing burn-in ...");
 	restart_from_best(m);
 	gsl_vector_scale(m->params_step, 0.5);
-	for (; iter < burn_in_iterations; iter++) {
+	for (; iter < burn_in_iterations; ) {
 		for (subiter = 0; subiter < 200; subiter++) {
 			markov_chain_step(m);
 		}
@@ -99,15 +99,16 @@ unsigned int assess_acceptance_rate(mcmc * m, unsigned int param,
 	unsigned int i = 0;
 	unsigned int j;
 	unsigned int n = 40;
-	unsigned int accepts = 0;
+	unsigned int n_par = get_n_par(m);
+	unsigned long accepts = 0;
 	double stdev = 0;
 	unsigned int maxdev = 0;
 	double accept_rate;
 	double required_accuracy = min_accuracy;
 	char * acceptslog = NULL;
 	/*
-	gsl_vector * start_params = dup_vector(get_params(m));
-	double start_prob = get_prob(m);
+	 gsl_vector * start_params = dup_vector(get_params(m));
+	 double start_prob = get_prob(m);
 	 */
 	reset_accept_rejects(m);
 
@@ -118,23 +119,35 @@ unsigned int assess_acceptance_rate(mcmc * m, unsigned int param,
 		assert(acceptslog != NULL);
 
 		for (; i < n; i++) {
-			accepts = get_params_accepts_for(m, param);
-			/*restart_from_best(m);*/
-			markov_chain_step_for(m, param);
-			mcmc_check_best(m);
-			/*set_prob(m, start_prob);
-			set_params(m, dup_vector(start_params));*/
-			if (accepts == get_params_accepts_for(m, param)) {
-				/* had a reject -> set bit to 0 */
-				clear_bit(acceptslog, i);
+			if (param < n_par) {
+				accepts = get_params_accepts_for(m, param);
+				/*restart_from_best(m);*/
+				markov_chain_step_for(m, param);
+				mcmc_check_best(m);
+				/*set_prob(m, start_prob);
+				 set_params(m, dup_vector(start_params));*/
+				if (accepts == get_params_accepts_for(m, param)) {
+					/* had a reject -> set bit to 0 */
+					clear_bit(acceptslog, i);
+				} else {
+					/* had a accept -> set bit to 1 */
+					set_bit(acceptslog, i);
+				}
 			} else {
-				/* had a accept -> set bit to 1 */
-				set_bit(acceptslog, i);
+				accepts = get_params_accepts_global(m);
+				markov_chain_step(m);
+				mcmc_check_best(m);
+				if (accepts == get_params_accepts_global(m)) {
+					clear_bit(acceptslog, i);
+				} else {
+					set_bit(acceptslog, i);
+				}
+
 			}
 		}
 		accept_rate = accepts / (double) n;
 		IFVERBOSE
-			printf("accept rate: %f (%d/%d)\n", accept_rate, accepts, n);
+			printf("accept rate: %f (%lu/%d)\n", accept_rate, accepts, n);
 
 		/* get max deviation */
 		accepts = 0;

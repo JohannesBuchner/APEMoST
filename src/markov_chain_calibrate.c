@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <gsl/gsl_linalg.h>
 
 #include "mcmc.h"
 #include "mcmc_internal.h"
@@ -10,6 +11,212 @@
 #define BETWEEN(x, min, max) ( (x) >= (min) && (x) <= (max) )
 #define MAX(a, b) ((a) > (b) ? a : b)
 #define MIN(a, b) ((a) < (b) ? a : b)
+
+void markov_chain_calibrate_multilinear_regression(mcmc * m,
+		double desired_acceptance_rate, const double max_ar_deviation,
+		const unsigned int iter_limit, double mul, const double adjust_step) {
+
+	unsigned int n_par = get_n_par(m);
+	unsigned int i;
+	unsigned int j;
+	unsigned int iter = 0;
+	double current_acceptance_rate;
+	double accuracy;
+	double nextpoint;
+	double averagestepwidth;
+	double calc_accuracy = max_ar_deviation;
+	unsigned int n = 0;
+	unsigned int n_all = 100 * n_par;
+	unsigned int best;
+	double min;
+	double max;
+	gsl_matrix * stepwidths = gsl_matrix_alloc(n_all, n_par);
+	gsl_vector * acceptance_rates = gsl_vector_alloc(n_all);
+	gsl_vector * weights = gsl_vector_alloc(n_all);
+	gsl_vector * accuracies = gsl_vector_alloc(n_all);
+	gsl_vector * k;
+	gsl_vector * minmax;
+	double d;
+	double sigma;
+
+	mul = adjust_step; /* avoid unused */
+
+	gsl_matrix_set_all(stepwidths, -1);
+	gsl_vector_set_all(acceptance_rates, -1);
+	gsl_vector_set_all(accuracies, -1);
+	gsl_vector_set_all(weights, 0);
+
+	/* evaluate */
+	best = 0;
+	dump_v("next stepwidths", get_steps(m));
+	iter += assess_acceptance_rate(m, 0, desired_acceptance_rate, 0,
+			calc_accuracy * 5, &current_acceptance_rate, &accuracy);
+	for (j = 0; j < n_par; j++) {
+		gsl_matrix_set(stepwidths, n, j, get_steps_for_normalized(m, j));
+	}
+	gsl_vector_set(acceptance_rates, n, current_acceptance_rate);
+	gsl_vector_set(accuracies, n, accuracy);
+	gsl_vector_set(weights, n, 1. / MAX(abs_double(current_acceptance_rate
+					- desired_acceptance_rate), accuracy));
+
+	IFDEBUG
+		printf("%d: a/r %d: %f (+-%f)\n", 0, n, current_acceptance_rate,
+				accuracy);
+	n++;
+
+	/* add point in each dimension */
+	for (i = 0; i < n_par; i++) {
+		for (j = 0; j < n_par; j++) {
+			set_steps_for_normalized(m, gsl_matrix_get(stepwidths, best, j)
+					* (1 + gsl_rng_uniform(get_random(m))) * 0.01, j);
+		}
+		nextpoint = gsl_matrix_get(stepwidths, best, i) * (1 + 5
+				* (gsl_vector_get(acceptance_rates, best)
+						- desired_acceptance_rate));
+		if (nextpoint > 1)
+			nextpoint = 1;
+		if (nextpoint < gsl_matrix_get(stepwidths, best, i) * 0.01)
+			nextpoint = gsl_matrix_get(stepwidths, best, i) * 0.01;
+		set_steps_for_normalized(m, nextpoint, i);
+
+		/* evaluate */
+		dump_v("next stepwidths", get_steps(m));
+		iter += assess_acceptance_rate(m, i, desired_acceptance_rate, 0,
+				calc_accuracy * 5, &current_acceptance_rate, &accuracy);
+		for (j = 0; j < n_par; j++) {
+			gsl_matrix_set(stepwidths, n, j, get_steps_for_normalized(m, j));
+		}
+		gsl_vector_set(acceptance_rates, n, current_acceptance_rate);
+		gsl_vector_set(accuracies, n, accuracy);
+		gsl_vector_set(weights, n, 1. / MAX(abs_double(current_acceptance_rate
+						- desired_acceptance_rate), accuracy));
+		IFDEBUG
+			printf("%d: a/r %d: %f (+-%f)\n", i, n, current_acceptance_rate,
+					accuracy);
+		/* check if best */
+		if (abs_double(current_acceptance_rate - desired_acceptance_rate)
+				< abs_double(gsl_vector_get(acceptance_rates, best)
+						- desired_acceptance_rate)) {
+			best = n;
+			IFDEBUG
+				printf("   best\n");
+		}
+		n++;
+	}
+
+	while (n < n_all && iter < iter_limit) {
+		printf("                                        %d iterations\n", iter);
+		/* now start linear regression in n_par dimensions */
+		acceptance_rates->size = n;
+		accuracies->size = n;
+		stepwidths->size1 = n;
+		weights->size = n;
+		gsl_vector_set_all(weights, 1.);
+
+		k = linreg_n(stepwidths, acceptance_rates, &d, weights);
+		sigma = calc_deviation(stepwidths, acceptance_rates, k, d, weights);
+
+		printf("d = %g, sigma = %g, k = \n", d, sigma);
+		gsl_vector_fprintf(stdout, k, "%g");
+
+		/* foretell next point */
+
+		if (sigma < calc_accuracy / 3)
+			sigma = calc_accuracy / 3;
+		else
+			sigma = sigma / 3;
+
+		/* we try to distribute the a/r evenly */
+		averagestepwidth = (desired_acceptance_rate - d) / n_par;
+		for (i = 0; i < n_par; i++) {
+			if (gsl_vector_get(k, i) > 0)
+				gsl_vector_set(k, i, -5);
+
+			nextpoint = averagestepwidth / gsl_vector_get(k, i)
+					+ gsl_rng_uniform(get_random(m)) * sigma / 3;
+
+			minmax = gsl_vector_alloc(n);
+			gsl_matrix_get_col(minmax, stepwidths, i);
+			gsl_vector_minmax(minmax, &min, &max);
+			gsl_vector_free(minmax);
+
+			if (nextpoint < min * 0.01)
+				nextpoint = min * 0.01;
+			if (nextpoint > max * 100) {
+				nextpoint = max * 100 + log(nextpoint - max * 100) + 1;
+			}
+
+			set_steps_for_normalized(m, nextpoint, i);
+			gsl_vector_set(k, i, abs_double(gsl_vector_get(k, i) / sigma));
+		}
+
+		acceptance_rates->size = n_all;
+		accuracies->size = n_all;
+		stepwidths->size1 = n_all;
+		weights->size = n_all;
+
+		/*
+		 * sigma may be very high. So if we already have a point within
+		 * the noise box:  max(calc_accuracy/3, sigma) / k
+		 * it is not worth evaluating further. The noise is simply too high
+		 * to get a better value around here. We would be test around forever.
+		 */
+
+		dump_v("next stepwidths", get_steps(m));
+		dump_v("+-", k);
+		if (n > n_par * 2 && gsl_vector_max(k) < 0) {
+			for (j = 0; j < n; j++) {
+				best = j;
+				for (i = 0; i < n_par; i++) {
+					if (abs_double(gsl_matrix_get(stepwidths, j, i) - get_steps_for_normalized(m, i))
+							> abs_double(gsl_vector_get(k, i))) {
+						best++;
+						break;
+					}
+				}
+				if (best == j) {
+					printf("were we wanted to jump, we were already. done. ");
+					j = n + 1;
+					break;
+				}
+			}
+			if (j == n + 1)
+				break;
+		}
+		gsl_vector_free(k);
+
+		/* evaluate */
+		iter += assess_acceptance_rate(m, -1, desired_acceptance_rate, 0,
+				calc_accuracy / 4, &current_acceptance_rate, &accuracy);
+		for (j = 0; j < n_par; j++) {
+			gsl_matrix_set(stepwidths, n, j, get_steps_for_normalized(m, j));
+		}
+		gsl_vector_set(acceptance_rates, n, current_acceptance_rate);
+		gsl_vector_set(accuracies, n, accuracy);
+		gsl_vector_set(weights, n, 1. / MAX(abs_double(current_acceptance_rate
+						- desired_acceptance_rate), accuracy));
+		IFDEBUG
+			printf("%d: a/r %d: %f (+-%f)\n", i, n, current_acceptance_rate,
+					accuracy);
+		if (abs_double(current_acceptance_rate - desired_acceptance_rate)
+				< abs_double(gsl_vector_get(acceptance_rates, best)
+						- desired_acceptance_rate)) {
+			best = n;
+			IFDEBUG
+				printf("   best\n");
+		}
+		n++;
+	}
+
+	for (i = 0; i < n_par; i++) {
+		set_steps_for_normalized(m, gsl_matrix_get(stepwidths, best, i), i);
+	}
+	gsl_matrix_free(stepwidths);
+	gsl_vector_free(acceptance_rates);
+	gsl_vector_free(weights);
+	gsl_vector_free(accuracies);
+
+}
 
 void markov_chain_calibrate_linear_regression(mcmc * m,
 		double desired_acceptance_rate, const double max_ar_deviation,
@@ -224,9 +431,9 @@ void markov_chain_calibrate_linear_regression(mcmc * m,
 	fclose(progress_plot_file);
 }
 
-void markov_chain_calibrate_quadratic(mcmc * m,
-		double desired_acceptance_rate, const double max_ar_deviation,
-		const unsigned int iter_limit, double mul, const double adjust_step) {
+void markov_chain_calibrate_quadratic(mcmc * m, double desired_acceptance_rate,
+		const double max_ar_deviation, const unsigned int iter_limit,
+		double mul, const double adjust_step) {
 
 	unsigned int n_par = get_n_par(m);
 	unsigned int i;
@@ -469,11 +676,8 @@ void markov_chain_calibrate_quadratic(mcmc * m,
 				 * algebra system tells us:
 				 * x=(+-sqrt(4*a*desired_acceptance_rate-4*a*c+b^2)-b)/(2*a)
 				 */
-				if (4 * a * (desired_acceptance_rate - c) + b * b < 0 ||
-						!(isnormal(a) || a == 0) ||
-						!(isnormal(b) || b == 0) ||
-						!(isnormal(c) || c == 0)
-					) {
+				if (4 * a * (desired_acceptance_rate - c) + b * b < 0 || !(a
+						- a == 0 && b - b == 0 && c - c == 0)) {
 					printf(" polynomial has no solutions. \n");
 					gsl_vector_int_set(points_discovered, i,
 							gsl_vector_int_get(points_discovered, i) + 100);
@@ -633,8 +837,11 @@ void markov_chain_calibrate_quadratic(mcmc * m,
 					}
 					if (j < 3) {
 						/* add border points of this rectangle */
-						set_steps_for_normalized(m, MIN(nextpoint - calc_accuracy
-								* 3 / (2 * a * nextpoint + b), 0.1*nextpoint), i);
+						set_steps_for_normalized(
+								m,
+								MIN(nextpoint - calc_accuracy
+										* 3 / (2 * a * nextpoint + b), 0.1*nextpoint),
+								i);
 
 						iter += assess_acceptance_rate(m, i,
 								desired_acceptance_rate, 0, calc_accuracy,
@@ -652,8 +859,9 @@ void markov_chain_calibrate_quadratic(mcmc * m,
 									gsl_matrix_get(acceptance_rates, i, 1),
 									accuracy);
 
-						set_steps_for_normalized(m, MAX(nextpoint + calc_accuracy
-								* 3 / (2 * a * nextpoint + b), 1.0), i);
+						set_steps_for_normalized(m,
+								MAX(nextpoint + calc_accuracy
+										* 3 / (2 * a * nextpoint + b), 1.0), i);
 
 						iter += assess_acceptance_rate(m, i,
 								desired_acceptance_rate, 0, calc_accuracy,
@@ -953,6 +1161,9 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 
 	dump_d("desired acceptance rate per parameter", desired_acceptance_rate);
 
+#ifdef CALIBRATE_MULTILIN
+	markov_chain_calibrate_multilinear_regression
+#else
 #ifdef CALIBRATE_QUADRATIC
 	markov_chain_calibrate_quadratic
 #else
@@ -960,6 +1171,7 @@ void markov_chain_calibrate(mcmc * m, const unsigned int burn_in_iterations,
 	markov_chain_calibrate_alt
 #else
 	markov_chain_calibrate_orig
+#endif
 #endif
 #endif
 	(m, desired_acceptance_rate, max_ar_deviation, iter_limit, mul, adjust_step);

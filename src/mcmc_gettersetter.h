@@ -5,13 +5,14 @@
 
 /* getter + setter */
 const char ** get_params_descr(const mcmc * m);
-long get_params_accepts_sum(const mcmc * m);
-long get_params_rejects_sum(const mcmc * m);
+unsigned long get_params_accepts_global(const mcmc * m);
+unsigned long get_params_accepts_sum(const mcmc * m);
+unsigned long get_params_rejects_sum(const mcmc * m);
 gsl_vector * get_accept_rate(const mcmc * m);
 double get_accept_rate_for(const mcmc * m, const unsigned int i);
 double get_accept_rate_global(const mcmc * m);
-long get_params_accepts_for(const mcmc * m, const unsigned int i);
-long get_params_rejects_for(const mcmc * m, const unsigned int i);
+unsigned long get_params_accepts_for(const mcmc * m, const unsigned int i);
+unsigned long get_params_rejects_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params(const mcmc * m);
 double get_params_for(const mcmc * m, const unsigned int i);
 gsl_vector * get_params_min(const mcmc * m);

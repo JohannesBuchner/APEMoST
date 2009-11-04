@@ -32,9 +32,11 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	m->params_best = gsl_vector_alloc(m->n_par);
 	assert(m->params_best != NULL);
 
-	m->params_accepts = (long*) mem_calloc(m->n_par, sizeof(long));
+	m->params_accepts
+			= (unsigned long*) mem_calloc(m->n_par, sizeof(unsigned long));
 	assert(m->params_accepts != NULL);
-	m->params_rejects = (long*) mem_calloc(m->n_par, sizeof(long));
+	m->params_rejects
+			= (unsigned long*) mem_calloc(m->n_par, sizeof(unsigned long));
 	assert(m->params_rejects != NULL);
 	m->params_step = gsl_vector_calloc(m->n_par);
 	assert(m->params_step != NULL);

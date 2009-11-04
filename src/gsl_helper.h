@@ -105,4 +105,17 @@ double max_column(const gsl_matrix * m, const unsigned int i);
  */
 double max_row(const gsl_matrix * m, const unsigned int i);
 
+/**
+ * n-dimensional weighted square deviation
+ */
+double calc_deviation(const gsl_matrix * x, const gsl_vector * y,
+		const gsl_vector * k, const double d, const gsl_vector * weights);
+
+/**
+ * n-dimensional weighted linear regression
+ * returns k and d.
+ */
+gsl_vector * linreg_n(const gsl_matrix * x, const gsl_vector * y, double * d,
+		const gsl_vector * weights);
+
 #endif

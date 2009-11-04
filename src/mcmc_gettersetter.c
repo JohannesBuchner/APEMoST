@@ -4,29 +4,29 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf.h>
 
-long get_params_accepts_sum(const mcmc * m) {
+unsigned long get_params_accepts_sum(const mcmc * m) {
 	unsigned int i;
-	long sum = 0;
+	unsigned long sum = 0;
 	for (i = 0; i < get_n_par(m); i++) {
 		sum += m->params_accepts[i];
 	}
 	return sum;
 }
 
-long get_params_rejects_sum(const mcmc * m) {
+unsigned long get_params_rejects_sum(const mcmc * m) {
 	unsigned int i;
-	long sum = 0;
+	unsigned long sum = 0;
 	for (i = 0; i < get_n_par(m); i++) {
 		sum += m->params_rejects[i];
 	}
 	return sum;
 }
 
-long get_params_accepts_for(const mcmc * m, const unsigned int i) {
+unsigned long get_params_accepts_for(const mcmc * m, const unsigned int i) {
 	return m->params_accepts[i];
 }
 
-long get_params_rejects_for(const mcmc * m, const unsigned int i) {
+unsigned long get_params_rejects_for(const mcmc * m, const unsigned int i) {
 	return m->params_rejects[i];
 }
 double get_accept_rate_for(const mcmc * m, const unsigned int i) {
@@ -46,7 +46,7 @@ double get_accept_rate_global(const mcmc * m) {
 			(get_params_accepts_global(m) + get_params_rejects_global(m));
 }
 
-gsl_vector * get_vector_from_array(const long * array, const unsigned int size)
+gsl_vector * get_vector_from_array(const unsigned long * array, const unsigned int size)
 {
 	unsigned int i;
 	gsl_vector * v = gsl_vector_alloc(size);
