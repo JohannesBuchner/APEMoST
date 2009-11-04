@@ -37,7 +37,7 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 
 	(void) old_values;
 	assert((get_n_par(m) - 2) % 2 == 0);
-	for (i = 0; i < m->data->size; i++) {
+	for (i = 0; i < m->data->size1; i++) {
 		y = 0;
 		freq = gsl_matrix_get(m->data, i, 0);
 		for (j = 2; j < get_n_par(m); j += 2) {
