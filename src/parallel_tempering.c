@@ -635,6 +635,33 @@ void analyse_data_probability() {
 	printf("\nbe careful.\n");
 }
 
+double calc_mcmc_error(const double mean, const char * filename,
+		unsigned long batchsize) {
+	double v;
+	unsigned long n = 0;
+	int nbatches = 0;
+	FILE * f = openfile(filename);
+	double batchsum = 0;
+	double batchmean;
+	double batcherror;
+	double errorsum = 0;
+
+	while (!feof(f)) {
+		if (fscanf(f, "%lf", &v) == 1) {
+			n++;
+			batchsum += v;
+		}
+		if (n % batchsize == batchsize - 1) {
+			batchmean = batchsum / batchsize;
+			batcherror = batchsize * pow(batchmean - mean, 2);
+			errorsum += batcherror;
+			batchsum = 0;
+			nbatches++;
+		}
+	}
+	return sqrt(errorsum / nbatches);
+}
+
 #ifndef NBINS
 #define NBINS 200
 #endif
@@ -661,6 +688,8 @@ void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
 	gsl_vector * max;
 	gsl_histogram * h;
 	FILE * outfile;
+	double iter;
+	double mean;
 	char outfilename[100];
 	const char * paramname = get_params_descr(chains[0])[param];
 
@@ -703,7 +732,6 @@ void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
 		dump_v("minima", min);
 		dump_v("maxima", max);
 	}
-	debug("creating histogram ...");
 	h = create_hist(nbins, gsl_vector_get(min, 0), gsl_vector_get(max, 0));
 	debug("filling histogram... ");
 	for (i = 0; i < filecount; i++) {
@@ -711,24 +739,26 @@ void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
 		fflush(stdout);
 		dump_s("with file", filenames[i]);
 		append_to_hists(&h, 1, filenames[i]);
-		free(filenames[i]);
 	}
-	free(filenames);
+	iter = gsl_histogram_sum(h);
 	gsl_histogram_scale(h, (gsl_vector_get(max, 0) - gsl_vector_get(min, 0))
-			/ nbins / gsl_histogram_sum(h));
+			/ nbins / iter);
 
 	outfile = fopen(outfilename, "w");
 	debug("writing histogram... ");
 	assert(outfile != NULL);
 	gsl_histogram_fprintf(outfile, h, DUMP_FORMAT, DUMP_FORMAT);
-	/*for (i = 0; i < gsl_histogram_bins(h); i++) {
-	 gsl_histogram_get_range(h, i, &lower, &upper);
-
-	 fprintf(outfile, DUMP_FORMAT "\t" DUMP_FORMAT "\t" DUMP_FORMAT "\t",
-	 lower, upper, gsl_histogram_get(h, i));
-	 }*/
 	dump_s("histogram file done", outfilename);
 	fclose(outfile);
+
+	mean = gsl_histogram_mean(h);
+	for (i = 0; i < filecount; i++) {
+		printf("mcmc error estimate of %s: %f (mean %f)\n", paramname,
+				calc_mcmc_error(mean, filenames[i], sqrt(nbins)), mean);
+		free(filenames[i]);
+	}
+	printf("Note: Include the error in your publication!\n");
+	free(filenames);
 
 	gsl_histogram_free(h);
 }

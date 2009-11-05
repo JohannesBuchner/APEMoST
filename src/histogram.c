@@ -20,7 +20,7 @@ gsl_histogram * create_hist(int nbins, double min, double max) {
 	gsl_histogram_set_ranges_uniform(h, min, max);
 
 	/* with out the following, the max element doesn't fall in the last bin */
-	h->range[h->n] += 1;
+	h->range[h->n] += (max - min) / 10000;
 	return h;
 }
 
