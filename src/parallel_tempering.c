@@ -566,6 +566,8 @@ void analyse_data_probability() {
 	for (i = 0; i < n_beta; i++) {
 		sprintf(buf, "prob-chain%d.dump", i);
 		dump_s("summing up probability file", buf);
+		printf("reading probabilities of chain %d\r", i);
+		fflush(stdout);
 		f = fopen(buf, "r");
 		if (f == NULL) {
 			fprintf(stderr,
