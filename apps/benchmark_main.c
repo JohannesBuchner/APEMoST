@@ -16,7 +16,17 @@ int main(int argc, char ** argv) {
 	mcmc * m;
 	double prob;
 
-	assert(argc == 2 + 1);
+	if(argc != 2 + 1) {
+		fprintf(stderr, "SYNOPSIS: %s <npartialcalc> <ncalc>\n"
+				"\n"
+				"This program calculates the model the given number of times\n"
+				"to allow benchmarking of the model calculations.\n"
+				"\n"
+				"\tnpartialcalc\tnumber of calls to calc_model_for\n"
+				"\tncalc\tnumber of calls to calc_model\n"
+				"", argv[0]);
+		exit(1);
+	}
 	assert(atoi(argv[1]) >= 0);
 	assert(atoi(argv[2]) >= 0);
 	n = atoi(argv[1]);
