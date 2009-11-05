@@ -9,6 +9,7 @@
 #include "mcmc_internal.h"
 #include "debug.h"
 #include "gsl_helper.h"
+#include "histogram.h"
 
 #define DUMPONFAIL 1
 

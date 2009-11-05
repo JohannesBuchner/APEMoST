@@ -116,17 +116,24 @@ int main(int argc, char ** argv) {
 			else {
 				fprintf(stderr, "You are doing it wrong.\n");
 				fprintf(stderr, "Did you want to write --append?\n");
-				usage(argv[0]);
+				usage();
 			}
 		} else if (0 == strcmp(argv[1], "analyse")) {
-			analyse();
+			if (argc == 3 && strcmp(argv[2], "marginal") == 0)
+				analyse_marginal_distributions();
+			else if (argc == 3 && strcmp(argv[2], "model") == 0)
+				analyse_marginal_distributions();
+			else {
+				analyse_marginal_distributions();
+				analyse_data_probability();
+			}
 		} else {
 			fprintf(stderr, "You are doing it wrong.\n");
-			usage(argv[0]);
+			usage();
 		}
 	} else {
 		fprintf(stderr, "No phase specified.\n");
-		usage(argv[0]);
+		usage();
 	}
 	return 0;
 }
@@ -197,21 +204,24 @@ void help_phase(char * phase) {
 			"\t\tout to the file " CALIBRATION_FILE "\n"
 		"\n");
 	} else if (0 == strcmp(phase, "run")) {
-		printf("Phase 'run'\n\n"
-			"Prerequisites: \n"
-			"\tparameters file " PARAMS_FILENAME "\n"
-		"\tdata file " DATA_FILENAME "\n"
-		"\tN_BETA\n"
-		"\tstepwidths, betas and start parameters of all chains\n"
-		"\t\t(read from file "CALIBRATION_FILE ")\n"
-		"Provides: \n"
-		"\tdata dumps (probabilities and visited parameters)\n"
-		"Does:\n"
-		"\tRun the MCMC engine and continously write out the data of\n"
-		"\tthe visited parameters and probabilities to files. \n"
-		"\n");
+		printf(
+				"Phase 'run'\n\n"
+					"Prerequisites: \n"
+					"\tparameters file " PARAMS_FILENAME "\n"
+				"\tdata file " DATA_FILENAME "\n"
+				"\tN_BETA\n"
+				"\tstepwidths, betas and start parameters of all chains\n"
+				"\t\t(read from file "CALIBRATION_FILE ")\n"
+				"Provides: \n"
+				"\tdata dumps (probabilities and visited parameters)\n"
+				"Does:\n"
+				"\tRun the MCMC engine and continously write out the data of\n"
+				"\tthe visited parameters and probabilities to files. \n"
+				"Options:\n"
+				"\t--append\tcauses to append to the existing dump files rather than overwrite\n"
+				"\n");
 	} else if (0 == strcmp(phase, "analyse")) {
-		printf("Phase 'run'\n\n"
+		printf("Phase 'analyse'\n\n"
 			"Prerequisites: \n"
 			"\tparameters file " PARAMS_FILENAME "\n"
 		"\tdata file " DATA_FILENAME "\n"
@@ -219,13 +229,18 @@ void help_phase(char * phase) {
 		"\tbetas of all chains\n"
 		"\t\t(read from file "CALIBRATION_FILE ")\n"
 		"\tprobabilities data dumps\n"
+		"\tvisited values data dumps\n"
 		"Provides: \n"
 		"\tmodel probability\n"
 		"Does:\n"
 		"\tAnalyses the model probability of the visited values.\n"
 		"\tThe resulting value can be used to compare to other models.\n"
-		"\nFor the marginal distribution, use a histogram tool.\n"
-		"\n");
+		"\tAnalyses the marginal distribution by making a histograms of all\n"
+		"\tvisited values.\n");
+		printf("Options:\n"
+			"\tmarginal\tcalculate marginal distribution only\n"
+			"\tmodel\tcalculate model probability only\n"
+			"\n");
 	} else {
 		printf("No help available for unknown phase.\n");
 		usage();

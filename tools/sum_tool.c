@@ -10,7 +10,8 @@
 #include <ctype.h>
 #include "gsl_helper.h"
 #include "debug.h"
-#include "histogram.c"
+#include "histogram.h"
+#include "utils.h"
 
 void usage(char * progname) {
 	fprintf(stderr, "%s: SYNOPSIS: [-s] [-1] file1 file2 ...\n"

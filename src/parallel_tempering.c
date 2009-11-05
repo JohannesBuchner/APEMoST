@@ -8,6 +8,8 @@
 #include "define_defaults.h"
 #include "gsl_helper.h"
 #include "parallel_tempering_run.h"
+#include "histogram.h"
+#include "utils.h"
 
 void register_signal_handlers();
 
@@ -542,8 +544,10 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap,
 	printf("handled %lu iterations on %d chains\n", iter, n_beta);
 }
 
-/* calculate data probability */
-void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
+/*
+ * calculate data probability
+ */
+void analyse_data_probability() {
 	unsigned int i;
 	unsigned int j;
 	unsigned long n = 0;
@@ -551,9 +555,13 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 	double sums[100];
 	double previous_beta;
 	double data_logprob;
-	FILE * f;
-
 	char buf[100];
+	FILE * f;
+	unsigned int n_beta = N_BETA;
+	mcmc ** chains = setup_chains();
+
+	read_calibration_file(chains, n_beta);
+
 	assert(n_beta < 100);
 	for (i = 0; i < n_beta; i++) {
 		sprintf(buf, "prob-chain%d.dump", i);
@@ -616,18 +624,139 @@ void calc_data_probability(mcmc ** chains, unsigned int n_beta) {
 	printf("\nbe careful.\n");
 }
 
-void analyse() {
-	unsigned int n_beta = N_BETA;
-	unsigned int i;
+#ifndef NBINS
+#define NBINS 200
+#endif
 
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * If not set, the marginal distribution will be calculated for the whole
+ * parameter range. Pros: faster, comparable. Cons: Not as detailed.
+ *
+ * If set, the maximum and minimum values found are used for
+ * the histogram. Pros: more detailed in the area of interest
+ */
+#define HISTOGRAMS_MINMAX
+#endif
+
+void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
+		unsigned int param, int find_minmax) {
+	const unsigned int nbins = NBINS;
+	char ** filenames;
+	unsigned int filecount = n_beta;
+
+	unsigned int i;
+	gsl_vector * min;
+	gsl_vector * max;
+	gsl_histogram * h;
+	FILE * outfile;
+	char outfilename[100];
+	const char * paramname = get_params_descr(chains[0])[param];
+
+#ifdef HISTOGRAMS_ALLCHAINS
+	filecount = n_beta;
+#else
+	filecount = 1;
+#endif
+
+	filenames = (char **) calloc(filecount + 1, sizeof(char*));
+	for (i = 0; i < filecount; i++) {
+		filenames[i] = (char *) malloc(100 * sizeof(char));
+		sprintf(filenames[i], "%s-chain-%d.prob.dump", paramname, i);
+	}
+	sprintf(outfilename, "%s.histogram", paramname);
+
+	min = gsl_vector_alloc(1);
+	max = gsl_vector_alloc(1);
+
+	gsl_vector_set(min, 0, get_params_min_for(chains[0], param));
+	gsl_vector_set(max, 0, get_params_max_for(chains[0], param));
+
+	if (find_minmax != 0) {
+		for (i = 0; i < filecount; i++) {
+			printf("minmax search : chain %3d parameter %s   \r", i, paramname);
+			fflush(stdout);
+			if (1 != get_column_count(filenames[i])) {
+				fprintf(
+						stderr,
+						"number of columns different in file %s: %i vs %i in %s\n",
+						filenames[i], 1, get_column_count(filenames[i]),
+						filenames[0]);
+				exit(1);
+			}
+			if (i == 0)
+				find_min_max(filenames[0], min, max);
+			else
+				update_min_max(filenames[i], min, max);
+		}
+		dump_v("minima", min);
+		dump_v("maxima", max);
+	}
+	debug("creating histogram ...");
+	h = create_hist(nbins, gsl_vector_get(min, 0), gsl_vector_get(max, 0));
+	debug("filling histogram... ");
+	for (i = 0; i < filecount; i++) {
+		printf("reading values: chain %3d parameter %s   \r", i, paramname);
+		fflush(stdout);
+		dump_s("with file", filenames[i]);
+		append_to_hists(&h, 1, filenames[i]);
+		free(filenames[i]);
+	}
+	free(filenames);
+	gsl_histogram_scale(h, (gsl_vector_get(max, 0) - gsl_vector_get(min, 0))
+			/ nbins / gsl_histogram_sum(h));
+
+	outfile = fopen(outfilename, "w");
+	debug("writing histogram... ");
+	assert(outfile != NULL);
+	gsl_histogram_fprintf(outfile, h, DUMP_FORMAT, DUMP_FORMAT);
+	/*for (i = 0; i < gsl_histogram_bins(h); i++) {
+	 gsl_histogram_get_range(h, i, &lower, &upper);
+
+	 fprintf(outfile, DUMP_FORMAT "\t" DUMP_FORMAT "\t" DUMP_FORMAT "\t",
+	 lower, upper, gsl_histogram_get(h, i));
+	 }*/
+	dump_s("histogram file done", outfilename);
+	fclose(outfile);
+
+	gsl_histogram_free(h);
+}
+
+#ifndef GNUPLOT_STYLE
+#define GNUPLOT_STYLE "with histeps"
+#endif
+
+void analyse_marginal_distributions() {
+	unsigned int i;
+	int find_minmax = 0;
+	unsigned int n_beta = N_BETA;
 	mcmc ** chains = setup_chains();
+	FILE * plotplate;
 
 	read_calibration_file(chains, n_beta);
 
-	/* find relevant dump files */
-	for (i = 0; i < n_beta; i++) {
-		mcmc_open_dump_files(chains[i], "-chain", i, "r");
+#ifdef HISTOGRAMS_MINMAX
+	find_minmax = 1;
+#endif
+
+	for (i = 0; i < get_n_par(chains[0]); i++) {
+		calc_marginal_distribution(chains, n_beta, i, find_minmax);
 	}
 
-	calc_data_probability(chains, n_beta);
+	plotplate = fopen("marginal_distributions.gnuplot", "w");
+	assert(plotplate != NULL);
+	fprintf(plotplate, "# set terminal png size %d,%d; set output "
+		"\"marginal_distributions.png\"\n", 600, 300 * get_n_par(chains[0]));
+	fprintf(plotplate, "set multiplot\n");
+	fprintf(plotplate, "set size 1,%f\n", 1. / get_n_par(chains[0]));
+	for (i = 0; i < get_n_par(chains[0]); i++) {
+		fprintf(plotplate, "set origin 0,%f\n", (get_n_par(chains[0]) - i - 1)
+				* 1. / get_n_par(chains[0]));
+		fprintf(plotplate, "plot \"%s.histogram\" u 1:3 title \"%s\" "
+		GNUPLOT_STYLE
+		"\n", get_params_descr(chains[0])[i], get_params_descr(chains[0])[i]);
+	}
+	fprintf(plotplate, "unset multiplot\n");
+	fclose(plotplate);
 }
+

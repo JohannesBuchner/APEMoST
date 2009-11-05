@@ -47,6 +47,8 @@ void prepare_and_run_sampler(int append);
 
 void calibrate_rest();
 
-void analyse();
+void analyse_marginal_distributions();
+
+void analyse_data_probability();
 
 #endif /* PARALLEL_TEMPERING_H_ */

@@ -6,10 +6,10 @@
 ## You might want to compile your gsl with -DHAVE_INLINE 
 ## 
 
-CFLAGS=-O3 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
+CFLAGS=-O3 -std=c99 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm -lgc
 CC=gcc
-COMMON_SOURCES=src/gsl_helper.c src/debug.c src/utils.c
+COMMON_SOURCES=src/gsl_helper.c src/histogram.c src/debug.c src/utils.c
 MCMC_SOURCES=src/mcmc*.c
 MARKOV_CHAIN_SOURCES=src/markov_chain*.c
 PARALLEL_TEMPERING_SOURCES=src/parallel_tempering*.c

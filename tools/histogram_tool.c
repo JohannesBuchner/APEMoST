@@ -10,7 +10,8 @@
 #include <ctype.h>
 #include "gsl_helper.h"
 #include "debug.h"
-#include "histogram.c"
+#include "histogram.h"
+#include "utils.h"
 
 void usage(char * progname) {
 	fprintf(
@@ -92,8 +93,8 @@ void run(unsigned int nbins, char ** filenames, unsigned int filecount) {
 	for (i = 0; i < ncolumns; i++) {
 		printf("column %d:\n", i + 1);
 		output_hist(hists[i]);
-		gsl_histogram_free(hists[i]);
 		printf("\n");
+		gsl_histogram_free(hists[i]);
 	}
 	free(hists);
 }

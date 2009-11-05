@@ -10,7 +10,8 @@
 #include <ctype.h>
 #include "gsl_helper.h"
 #include "debug.h"
-#include "histogram.c"
+#include "utils.h"
+#include "histogram.h"
 
 typedef struct {
 	long * values;

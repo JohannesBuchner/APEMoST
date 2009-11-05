@@ -11,7 +11,7 @@
 #include "gsl_helper.h"
 #include "debug.h"
 #include "utils.h"
-#include "histogram.c"
+#include "histogram.h"
 
 void usage(char * progname) {
 	fprintf(stderr, "%s: SYNOPSIS: min max file\n"
