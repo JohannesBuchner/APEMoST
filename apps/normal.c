@@ -16,15 +16,16 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	double c;
 
 	(void) old_values;
+	*prior = 0;
 	a = -pow( (x-APOS)*400, 2)/2;
 	b = -pow( (x-BPOS)*400, 2)/2;
 	c = -pow( (x-CPOS)*400, 2)/2;
 
-	if(a > b && a > c) 
+	if(a > b && a > c)
 		set_prob(m, get_beta(m) * a);
-	else if(b > c) 
+	else if(b > c)
 		set_prob(m, get_beta(m) * b);
-	else 
+	else
 		set_prob(m, get_beta(m) * c);
 }
 

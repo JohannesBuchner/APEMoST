@@ -29,6 +29,7 @@ unsigned int get_n_par(const mcmc * m);
 #endif
 gsl_rng * get_random(const mcmc * m);
 double get_prob(const mcmc * m);
+double get_prior(const mcmc * m);
 double get_prob_best(const mcmc * m);
 gsl_vector * get_steps(const mcmc * m);
 double get_steps_for(const mcmc * m, const unsigned int i);
@@ -49,6 +50,7 @@ void set_params_descr_for(mcmc * m, const char * new_par_descr,
 		const unsigned int i);
 void set_random(mcmc * m, gsl_rng * newrandom);
 void set_prob(mcmc * m, const double new_prob);
+void set_prior(mcmc * m, const double new_prior);
 void set_data(mcmc * m, const gsl_matrix * new_data);
 void set_steps_for(mcmc * m, const double new_steps, const unsigned int i);
 void set_steps_for_normalized(mcmc * m, const double new_step,

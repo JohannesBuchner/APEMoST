@@ -22,6 +22,7 @@ mcmc * mcmc_init(const unsigned int n_pars) {
 	m->accept = 0;
 	m->reject = 0;
 	m->prob = -1e+10;
+	m->prior = 0;
 	m->prob_best = -1e+10;
 	m->files = NULL;
 

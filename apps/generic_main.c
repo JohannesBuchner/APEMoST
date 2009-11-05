@@ -123,9 +123,14 @@ int main(int argc, char ** argv) {
 				analyse_marginal_distributions();
 			else if (argc == 3 && strcmp(argv[2], "model") == 0)
 				analyse_marginal_distributions();
-			else {
+			else if (argc == 2) {
 				analyse_marginal_distributions();
 				analyse_data_probability();
+			} else {
+				fprintf(stderr, "You are doing it wrong.\n");
+				fprintf(stderr, "Did you want to write 'analyse marginal' or "
+					"'analyse model'?\n");
+				usage();
 			}
 		} else {
 			fprintf(stderr, "You are doing it wrong.\n");

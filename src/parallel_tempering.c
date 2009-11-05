@@ -279,6 +279,7 @@ void calibrate_rest() {
 		gsl_vector_scale(get_steps(chains[i]), pow(get_beta(chains[i]), -0.5));
 		set_params(chains[i], dup_vector(get_params_best(chains[0])));
 		calc_model(chains[i], NULL);
+		mcmc_check(chains[i]);
 		printf("Calibrating second chain to infer stepwidth factor\n");
 		printf("\tChain %2d - ", i);
 		printf("beta = %f\tsteps: ", get_beta(chains[i]));
@@ -316,6 +317,7 @@ void calibrate_rest() {
 		gsl_vector_mul(get_steps(chains[i]), stepwidth_factors);
 		set_params(chains[i], dup_vector(get_params_best(chains[0])));
 		calc_model(chains[i], NULL);
+		mcmc_check(chains[i]);
 		printf("beta = %f\tsteps: ", get_beta(chains[i]));
 		dump_vectorln(get_steps(chains[i]));
 		fflush(stdout);
@@ -340,16 +342,20 @@ void calibrate_rest() {
 
 void prepare_and_run_sampler(int append) {
 	unsigned int n_beta = N_BETA;
-	unsigned int i;
+	unsigned int i = 0;
 	int n_swap = N_SWAP;
 
 	mcmc ** chains = setup_chains();
 
 	read_calibration_file(chains, n_beta);
 
-	for (i = 0; i < n_beta; i++) {
+	mcmc_open_dump_files(chains[i], "-chain", i, (append == 1 ? "a" : "w"));
+
+#ifdef DUMP_ALLCHAINS
+	for (i = 1; i < n_beta; i++) {
 		mcmc_open_dump_files(chains[i], "-chain", i, (append == 1 ? "a" : "w"));
 	}
+#endif
 
 	if (n_swap < 0) {
 		n_swap = 2000 / n_beta;
@@ -524,7 +530,9 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap,
 				markov_chain_step(chains[i]);
 				mcmc_check_best(chains[i]);
 				mcmc_append_current_parameters(chains[i]);
-				fprintf(probabilities_file[i], "%6e\n", get_prob(chains[i]));
+				fprintf(probabilities_file[i], "%6e\t%6e\n",
+						get_prob(chains[i]), get_prob(chains[i]) - get_prior(
+								chains[i]));
 			}
 		}
 		adapt(chains, n_beta, iter);
@@ -552,6 +560,7 @@ void analyse_data_probability() {
 	unsigned int j;
 	unsigned long n = 0;
 	double v;
+	double w;
 	double sums[100];
 	double previous_beta;
 	double data_logprob;
@@ -578,7 +587,7 @@ void analyse_data_probability() {
 		n = 0;
 		sums[i] = 0;
 		while (!feof(f)) {
-			if (fscanf(f, "%le", &v) == 1) {
+			if (fscanf(f, "%le\t%le", &w, &v) == 2) {
 				/*
 				 * note: rounding errors could occur here
 				 * since the values are of the same magnitude, they hopefully won't

@@ -116,6 +116,10 @@ double get_prob(const mcmc * m) {
 	return m->prob;
 }
 
+double get_prior(const mcmc * m) {
+	return m->prior;
+}
+
 double get_prob_best(const mcmc * m) {
 	return m->prob_best;
 }
@@ -220,6 +224,9 @@ void set_random(mcmc * m, gsl_rng * newrandom) {
 
 void set_prob(mcmc * m, const double new_prob) {
 	m->prob = new_prob;
+}
+void set_prior(mcmc * m, const double new_prior) {
+	m->prior = new_prior;
 }
 const gsl_matrix * get_data(const mcmc * m) {
 	return m->data;

@@ -18,6 +18,8 @@ typedef struct {
 	unsigned long reject;
 	/** probability of the most recently evaluated parameter values */
 	double prob;
+	/** explicit prior, so it can be subtracted from prob */
+	double prior;
 	/** probability of best parameter values yet */
 	double prob_best;
 	/**

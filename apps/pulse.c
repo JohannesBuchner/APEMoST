@@ -19,7 +19,7 @@ static double calc_prior(const mcmc * m) {
 		prior += gsl_sf_log(mode_height + HMIN);
 	}
 	i = (get_n_par(m) - 2) / 2;
-	return prior / i;
+	return -prior / i;
 }
 
 void calc_model(mcmc * m, const gsl_vector * old_values) {
@@ -31,9 +31,9 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 	double distance;
 	double freq;
 	const gsl_vector * params = m->params;
-	double prior = calc_prior(m);
 	double prob = gsl_vector_get(params, 1);
 	double lifetime = gsl_vector_get(params, 0);
+	set_prior(m, calc_prior(m));
 
 	(void) old_values;
 	assert((get_n_par(m) - 2) % 2 == 0);
@@ -44,18 +44,18 @@ void calc_model(mcmc * m, const gsl_vector * old_values) {
 			mode_freq = gsl_vector_get(params, j);
 			mode_height = gsl_vector_get(params, j + 1);
 			distance = mode_freq - freq;
-			y += mode_height / (1 + 4 * distance * distance * M_PI * M_PI * lifetime * lifetime);
+			y += mode_height / (1 + pow(2 * M_PI * distance * lifetime, 2));
 		}
 
 		prob += gsl_sf_log(y) + gsl_matrix_get(m->data, i, 1) / y;
 	}
 
-	set_prob(m, - prior - get_beta(m) * prob);
+	set_prob(m, get_prior(m) + -get_beta(m) * prob);
 }
 
 void calc_model_for(mcmc * m, const unsigned int j, const double old_value) {
-	(void)j;
-	(void)old_value;
+	(void) j;
+	(void) old_value;
 	calc_model(m, NULL);
 	return;
 }
