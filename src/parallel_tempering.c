@@ -59,6 +59,8 @@ void write_calibration_summary(mcmc ** chains, unsigned int n_chains) {
 	unsigned int j;
 	double beta_0 = get_beta(chains[n_chains - 1]);
 	unsigned int n_pars = get_n_par(chains[0]);
+	gsl_vector * steps;
+
 	FILE * f = fopen("calibration_summary", "w");
 	if (f != NULL) {
 		fprintf(f, "Summary of calibrations\n");
@@ -79,14 +81,17 @@ void write_calibration_summary(mcmc ** chains, unsigned int n_chains) {
 		}
 		fprintf(f, "\nSTEPWIDTH ESTIMATE TABLE\n");
 		fprintf(f, "If you find that the estimate deviates much or "
-			"systematically from the");
+			"systematically from the ");
 		fprintf(f, "calibrated stepwidths, please notify the authors.\n");
 		fprintf(f, "Chain # | Calculated stepwidths... \n");
 		for (i = 0; i < n_chains; i++) {
 			fprintf(f, "%d", i);
+			steps = dup_vector(get_steps(chains[0]));
+			gsl_vector_scale(steps, pow(get_beta(chains[i]), -0.5));
 			for (j = 0; j < n_pars; j++) {
-				fprintf(f, "\t" DUMP_FORMAT, get_steps_for(chains[i], j));
+				fprintf(f, "\t" DUMP_FORMAT, gsl_vector_get(steps, j));
 			}
+			gsl_vector_free(steps);
 			fprintf(f, "\n");
 		}
 		fclose(f);
@@ -650,13 +655,15 @@ double calc_mcmc_error(const double mean, const char * filename,
 		if (fscanf(f, "%lf", &v) == 1) {
 			n++;
 			batchsum += v;
-		}
-		if (n % batchsize == batchsize - 1) {
-			batchmean = batchsum / batchsize;
-			batcherror = batchsize * pow(batchmean - mean, 2);
-			errorsum += batcherror;
-			batchsum = 0;
-			nbatches++;
+			if (n % batchsize == batchsize - 1) {
+				batchmean = batchsum / batchsize;
+				/*printf("batchmean: %f (batchsize = %lu, batchnr %d)\n",
+				 batchmean, batchsize, nbatches);*/
+				batcherror = /*batchsize * */pow(batchmean - mean, 2);
+				errorsum += batcherror;
+				batchsum = 0;
+				nbatches++;
+			}
 		}
 	}
 	return sqrt(errorsum / nbatches);
@@ -753,11 +760,11 @@ void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
 
 	mean = gsl_histogram_mean(h);
 	for (i = 0; i < filecount; i++) {
-		printf("mcmc error estimate of %s: %f (mean %f)\n", paramname,
-				calc_mcmc_error(mean, filenames[i], sqrt(nbins)), mean);
+		printf("mcmc error estimate of %s: %f\n", paramname, calc_mcmc_error(
+				mean, filenames[i], sqrt(iter)));
 		free(filenames[i]);
 	}
-	printf("Note: Include the error in your publication!\n");
+	printf("Note: Include a error estimate in your publication!\n");
 	free(filenames);
 
 	gsl_histogram_free(h);
