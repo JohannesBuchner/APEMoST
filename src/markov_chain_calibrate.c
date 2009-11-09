@@ -1134,8 +1134,7 @@ void markov_chain_calibrate_orig(mcmc * m, double rat_limit,
 			if (abs_double(delta_reject_accept_t) < max_rat_deviation) {
 				reached_perfection = 1;
 				debug("calibration reached the desired acceptance rate");
-				printf("\n %d steps without rescaling \n",
-						nchecks_without_rescaling);
+				dump_i("steps without rescaling", nchecks_without_rescaling);
 			} else {
 				reached_perfection = 0;
 				if (delta_reject_accept_t < 0) {

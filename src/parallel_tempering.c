@@ -466,12 +466,12 @@ void dump(const mcmc ** chains, const unsigned int n_beta,
 			dump_ul("acceptance rate: rejects", get_params_rejects_global(chains[0]));
 			dump_mcmc(chains[0]);
 		} else {
-			printf("iteration: %lu, a/r: %lu/%lu = %f, v:", iter,
-					get_params_accepts_global(chains[0]),
-					get_params_rejects_global(chains[0]),
+			printf("iteration: %lu, a/r: %.3f(%lu/%lu), v:", iter,
 					(double) get_params_accepts_global(chains[0])
 							/ (double) (get_params_accepts_global(chains[0])
-									+ get_params_rejects_global(chains[0])));
+									+ get_params_rejects_global(chains[0])),
+					get_params_accepts_global(chains[0]),
+					get_params_rejects_global(chains[0]));
 			dump_vector(get_params(chains[0]));
 			printf(" [%d/%lu ticks]\r", get_duration(), get_ticks_per_second());
 			fflush(stdout);
