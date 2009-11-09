@@ -697,6 +697,8 @@ void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
 	FILE * outfile;
 	double iter;
 	double mean;
+	double sigma;
+	double mcmcerror;
 	char outfilename[100];
 	const char * paramname = get_params_descr(chains[0])[param];
 
@@ -759,9 +761,11 @@ void calc_marginal_distribution(mcmc ** chains, unsigned int n_beta,
 	fclose(outfile);
 
 	mean = gsl_histogram_mean(h);
+	sigma = gsl_histogram_sigma(h);
 	for (i = 0; i < filecount; i++) {
-		printf("mcmc error estimate of %s: %f\n", paramname, calc_mcmc_error(
-				mean, filenames[i], sqrt(iter)));
+		mcmcerror = calc_mcmc_error(mean, filenames[i], sqrt(iter));
+		printf("mcmc error estimate of %s: %f %s\n", paramname, mcmcerror,
+				(mcmcerror > sigma * 0.01 ? "** high!" : " (ok)"));
 		free(filenames[i]);
 	}
 	printf("Note: Include a error estimate in your publication!\n");
