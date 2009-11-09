@@ -31,7 +31,8 @@
  * create/calibrate the markov-chain
  *
  * @param m
- * @param rat_limit average acceptance rates for individual parameters to be achieved
+ * @param desired_acceptance_rate average acceptance rates for individual parameters to be achieved
+ * @param max_ar_deviation allowed deviation from desired_acceptance_rate
  * @param burn_in_iterations number of burn-in iterations
  * @param iter_limit number of iterations for step width calibration
  * @param mul factor for adjusting the step width during calibration

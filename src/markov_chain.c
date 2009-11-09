@@ -83,6 +83,9 @@ int get_bit(char * bitfield, unsigned int i) {
  * The closer the acceptance rate is to the desired acceptance rate, the more
  * accurately will it be assessed.
  *
+ * @param m
+ * @param param
+ * @param desired_acceptance_rate
  * @param min_accuracy you can request a upper limit on the accuracy, e.g. 1%.
  * 		any calculation will have at most the accuracy of 1% then. Otherwise put 0 here.
  * @param max_accuracy you can request a lower limit on the accuracy, e.g. 0.1%

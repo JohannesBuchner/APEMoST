@@ -95,10 +95,16 @@ void mcmc_dump_close(mcmc * m);
 
 /**
  * open dump files
+ * The filenames are created by the scheme paramname+suffix+"-"+index+extension
  *
+ * @param m
+ * @param suffix
+ * @param index
  * @param mode 'w' for writing, 'a' for append, 'r' for reading
  */
-void mcmc_open_dump_files(mcmc * m, const char * suffix, int index, char * mode);
+void
+		mcmc_open_dump_files(mcmc * m, const char * suffix, int index,
+				char * mode);
 
 /**
  * append current parameters to files, unflushed.

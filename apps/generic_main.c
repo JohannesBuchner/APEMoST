@@ -35,7 +35,7 @@
  * <li>#N_BETA</li>
  * <li>#BETA_0</li>
  * <li>#BURN_IN_ITERATIONS</li>
- * <li>#RAT_LIMIT</li>
+ * <li>#TARGET_ACCEPTANCE_RATE</li>
  * <li>#ITER_LIMIT</li>
  * <li>#MUL</li>
  * <li>#N_SWAP</li>
