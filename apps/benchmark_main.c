@@ -4,9 +4,7 @@
 #include "debug.h"
 #include "parallel_tempering.h"
 #include "parallel_tempering_interaction.h"
-
-#define PARAMS_FILENAME "params"
-#define DATA_FILENAME "data"
+#include "define_defaults.h"
 
 int main(int argc, char ** argv) {
 	unsigned int n;

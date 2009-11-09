@@ -20,4 +20,4 @@ cat params|cut -f4|while read param; do
 	$cat $param-chain-0.prob.dump > $TMP
 	$mcmcdir/peaks.exe $min $max $TMP|head -n2|tail -n1
 done
-
+rm $TMP
