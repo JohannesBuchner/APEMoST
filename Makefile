@@ -16,6 +16,7 @@ PARALLEL_TEMPERING_SOURCES=src/parallel_tempering*.c
 TEST_SOURCES=tests/*.c
 MAIN=apps/generic_main.c
 BENCH_MAIN=apps/benchmark_main.c
+EVAL_MAIN=apps/eval_main.c
 
 ## help: this clutter
 help:
@@ -24,7 +25,7 @@ help:
 	@grep -E '^## [.a-z]{2,}:' Makefile|sed 's,^## *,\t,g' |sed 's,: ,\t,g'
 
 ## all: 
-all: tests.exe tools 
+all: tests.exe tools simplesin.exe benchmark_simplesin.exe eval_simplesin.exe
 
 tools: histogram_tool.exe random_tool.exe ndim_histogram_tool.exe sum_tool.exe matrix_man.exe peaks.exe
 
@@ -37,7 +38,10 @@ tests.exe: $(MCMC_SOURCES) $(TEST_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOUR
 benchmark_%.exe: apps/%.c  $(MCMC_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES) $(BENCH_MAIN) 
 	$(CC) -pg -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-%.exe: tools/%.c $(MCMC_SOURCES) $(COMMON_SOURCES)
+eval_%.exe: apps/%.c  $(MCMC_SOURCES) $(COMMON_SOURCES) $(MARKOV_CHAIN_SOURCES) $(PARALLEL_TEMPERING_SOURCES) $(EVAL_MAIN) 
+	$(CC) -pg -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+%.exe: tools/%.c $(MCMC_SOURCES) $(COMMON_SOURCES) 
 	$(CC) -I src $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 ## tests: run the tests
