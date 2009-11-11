@@ -6,7 +6,7 @@
 ## You might want to compile your gsl with -DHAVE_INLINE 
 ## 
 
-CFLAGS=-O3 -std=c99 -fopenmp -Wall -Werror -Wextra -g -ansi -pedantic ${CCFLAGS}
+CFLAGS=-O3 -std=c99 -fopenmp -Wall -Werror -Wextra -ansi -pedantic ${CCFLAGS}
 LDFLAGS=-lgsl -lgslcblas -lm -lgc
 CC=gcc
 COMMON_SOURCES=src/gsl_helper.c src/histogram.c src/debug.c src/utils.c
@@ -55,6 +55,6 @@ clean:
 ## doc: build the documentation
 doc: doxygen.config
 	doxygen doxygen.config
-
+	make -C doc/
 
 .PHONY: clean tests run all help doc

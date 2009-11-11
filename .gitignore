@@ -1,5 +1,7 @@
 *.exe
-doc/
+doc/api/
+doc/*.html
 *.dump
 *.o
 .*
+*~
