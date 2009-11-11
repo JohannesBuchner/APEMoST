@@ -216,6 +216,8 @@ You may get this error, which can be a little confusing::
 This means you tried to access a element beyond the size of the vector (or matrix). 
 In that case, the function expects a different number of parameters than the params file provides.
 
+.. _benchmark:
+
 Although this is less relevant for the first read, you can also benchmark your likelihood function with 
 the benchmark_simplesin.exe you produced. It takes the number of evaluations as arguments.
 
@@ -469,8 +471,7 @@ In this phase the program will do the actual sampling, parallel tempering and wr
 	The files are named by the scheme paramname-chain-0.prob.dump.
 	These just consist of the visited values for each iteration (doubles for rejects).
 	
-	If you enable DUMP_ALL_CHAINS, the visited values off all chains are dumped. This is 
-	not necessary, since you can only use the default chain for parameter estimation.
+	These will be used for parameter estimation.
 	
 #. The probabilities of all chains
 	
@@ -480,6 +481,8 @@ In this phase the program will do the actual sampling, parallel tempering and wr
 	#. posterior probability including prior (as set by the likelihood function
 	#. likelihood (excluding prior) as calculated by the likelihood function, but the prior subtracted.
 	
+	These will be used for the data probability and model selection.
+
 #. "acceptance_rate.dump" allows you to watch the acceptance rates. 
 
 	Its first column is the iteration count, the succeeding columns are the number of accepts.
@@ -534,6 +537,19 @@ Unless you specified MAX_ITERATIONS, the program will happily run forever.
 
 You can also pause and continue the program using normal job control (see the manual 
 of your shell on how to send STOP and CONT signals).
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Speeding up the run
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the benchmark_ program to evaluate the speed of your loglikelihood function.
+For example, `pow(a*b, 2)` is faster than `a*a*b*b`. 
+
+You can also get speed improvements from setting N_PARAMETERS. The program will then 
+expect the given number of parameters. This allows the compiler to do loop unrolling.
+
+
 
 --------------------------------------------
 
@@ -658,7 +674,7 @@ Ideally, get familiar with git, which is the version control system in use.
 Some resources are here:
 
 - http://cworth.org/hgbook-git/tour/
-- http://git-scm.com/
+- http://git-scm.com/ http://book.git-scm.com/1_welcome_to_git.html
 - http://zrusin.blogspot.com/2007/09/git-cheat-sheet.html
 
 The most important commands are "git pull", "git commit" and "git format-patch". 

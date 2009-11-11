@@ -1,3 +1,21 @@
+/*
+    APEMoST - Automated Parameter Estimation and Model Selection Toolkit
+    Copyright (C) 2009  Johannes Buchner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <omp.h>
 
 #include "mcmc.h"
@@ -356,7 +374,7 @@ void prepare_and_run_sampler(int append) {
 
 	mcmc_open_dump_files(chains[i], "-chain", i, (append == 1 ? "a" : "w"));
 
-#ifdef DUMP_ALLCHAINS
+#ifdef DUMP_ALL_CHAINS
 	for (i = 1; i < n_beta; i++) {
 		mcmc_open_dump_files(chains[i], "-chain", i, (append == 1 ? "a" : "w"));
 	}

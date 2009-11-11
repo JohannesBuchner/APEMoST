@@ -7,7 +7,7 @@ it uses the GPLv3 (GNU Public License).
 
 When using APEMoST, you are expected to
 
-- Notify the authors if you find any bugs
+- Notify the authors, Johannes Buchner and Michael Gruberbauer, if you find any bugs
 
 - Send modifications you make to the authors
 
@@ -17,7 +17,7 @@ We would also encourage you to send in the params file and C code you
 used in your publication, so we can make a neat gallery on how APEMoST
 is and can be used.
 
-You can find `our contact here<contact.html>` (also for questions regarding the license).
+You can find `our contact here <contact.html>`_ (also for questions regarding the license).
 
 Here is the license::
 

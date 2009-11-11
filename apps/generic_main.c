@@ -1,3 +1,21 @@
+/*
+    APEMoST - Automated Parameter Estimation and Model Selection Toolkit
+    Copyright (C) 2009  Johannes Buchner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <unistd.h>
 #include <string.h>
 #include "mcmc.h"
@@ -8,16 +26,11 @@
 /**
  * \mainpage
  *
- * This is the documentation of mcmc, a parameter fitting program.
+ * This is the code documentation of APEMoST, the Automated Parameter 
+ * Estimation and Model Selection Toolkit.
  *
- * It uses markov chain and Michael Gruberbauers most sophisticated
- * algorithms to check a model with a number of parameters against
- * observed data.
- * You can read more about the theory behind it in
- * Gregory, "Bayesian Logical Data Analysis for the Physical Sciences".
- *
- * \section Compiling
- * See the file INSTALL
+ * You can find more information about it <a href="../../index.html">in
+ * its documentation</a>.
  *
  * \section cc-params Compile-time parameters
  * Instead of adjusting parameters in files (which would cause a lot of
@@ -36,6 +49,7 @@
  * <li>#BETA_0</li>
  * <li>#BURN_IN_ITERATIONS</li>
  * <li>#TARGET_ACCEPTANCE_RATE</li>
+ * <li>#MAX_AR_DEVIATION</li>
  * <li>#ITER_LIMIT</li>
  * <li>#MUL</li>
  * <li>#N_SWAP</li>
@@ -53,7 +67,11 @@
  * <li>#MAX_ITERATIONS</li>
  * <li>#DUMP_ALL_CHAINS</li>
  * <li>#PRINT_PROB_INTERVAL</li>
- * <li>#PRINT_PROB_INTERVAL</li>
+ * </ul>
+ * \subsection Analyzing
+ * <ul>
+ * <li>#GNUPLOT_STYLE</li>
+ * <li>#HISTOGRAMS_MINMAX</li>
  * </ul>
  * \subsection Others
  * <ul>
@@ -61,31 +79,14 @@
  * <li>#VERBOSE</li>
  * <li>#SEGV</li>
  * <li>#NOASSERT</li>
+ * <li>#WITHOUT_GARBAGE_COLLECTOR</li>
  * </ul>
  *
  * \section run-params Runtime parameters
  * At runtime, the program looks for the files #PARAMS_FILENAME and
  * #DATA_FILENAME.
- * #PARAMS_FILENAME should contain the following columns (tab seperated):
- * start-value, minimum, maximum, name, step-size.
- * Example: <br>
- * <code>0.7	0.4	3.0   Amplitude 0.01</code>
- *
- * The file #DATA_FILENAME should contain two columns (x/y) values.
- *
- * \section Results
- * So the program runs and shows you where your chains are. But how do you
- * get the visited datapoints in parameter space?
- * For performance reasons, these are not dumped all the time.
- * The are written out on exit (or termination with Ctrl-C).
- *
- * You can also send the process a signal to dump the datapoints: <br>
- * <code>$ kill -SIGUSR1 processid</code>
- *
- * If your program is called "simplesin.exe", you can do
- *
- * <code>$ kill -SIGUSR1 $(pidof simplesin.exe)</code>
- *
+ * 
+ * Really, read the manual.
  */
 
 #include "define_defaults.h"
@@ -160,7 +161,12 @@ void usage() {
 			"Read the manual on how to setup a working directory and \n"
 				"what parameters can be set.\n\n"
 				"Remember: Scientific simulations should be repeatable, unbiased, \n"
-				"          statistically sound and rigorous.\n");
+				"          statistically sound and rigorous.\n"
+			"\n"
+			"APEMoST  Copyright (C) 2009  Johannes Buchner\n"
+			"This program comes with ABSOLUTELY NO WARRANTY; for details see the file LICENSE.\n"
+			"This is free software, and you are welcome to redistribute it\n"
+			"under certain conditions; see the file LICENSE.\n");
 }
 
 void help_phase(char * phase) {

@@ -1,39 +1,7 @@
 
-You have to install the following packages for dependencies:
+ See the doc/manual.rst, or, if you generated the documentation 
+ doc/manual.html
 
-gsl (GNU Scientific Library)
-boehmgc (Garbage Collector) 
-	unless you use -DWITHOUT_GARBAGE_COLLECTOR
-duma (optional)
-	install them using your package manager. 
+ You can find information on how to generate the documentation in
+ doc/readme.
 
-Compile:
-	make clean all tests doc
-
-	This should never give you errors. Check running this command before 
-	committing a revision.  
-
-	Check that you have a reasonably new gcc (i.e. gcc-4).
-
-
-
-
-
-
-____________________________________________
-
-Alternative way to install the dependencies:
-	**Only if you can't install with a package** (e.g. no root rights or no package)!
-	download+extract each tar and run 
-		./configure --prefix=/home/buchner/bin/
-		make; make install
-	to install it locally
-	To run with the locally installed libraries and headers, you have to 
-	set
-	CCFLAGS="-I /home/buchner/bin/include/ -L /home/buchner/bin/lib/" 
-	LD_LIBRARY_PATH=/home/buchner/bin/lib/
-
-	urls:
-		http://www.hpl.hp.com/personal/Hans_Boehm/gc/
-		http://www.gnu.org/software/gsl/
-		http://duma.sourceforge.net/

@@ -26,6 +26,9 @@ Frequently Asked Questions
 
 - *How do I cite APEMoST correctly?*
 
+	A publication is in the works. Please write us a email, so we can notify you of the correct
+	citation. In the meantime, you can use the website as a placeholder.
+
 - *Can I run APEMoST on a Cluster/Grid?*
 
 	Since Parallel Tempering requires the chains to intercompare and swap their status frequently,

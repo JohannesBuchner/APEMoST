@@ -1,3 +1,21 @@
+/*
+    APEMoST - Automated Parameter Estimation and Model Selection Toolkit
+    Copyright (C) 2009  Johannes Buchner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /**
  * Enabling the garbage collector
  */
@@ -8,6 +26,16 @@
 #include "debug.h"
 
 #define FREEMSG(x) IFSEGV dump_p("about to free", (void*)x);
+
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * The garbage collector (boehmgc) is enabled by default, 
+ * but is not required. This disables it.
+ * 
+ * You may also want to remove the -lgc flag.
+ **/
+#define WITHOUT_GARBAGE_COLLECTOR
+#endif
 
 #ifdef WITHOUT_GARBAGE_COLLECTOR
 
