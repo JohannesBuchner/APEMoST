@@ -57,6 +57,14 @@ Frequently Asked Questions
 	Alternatively, if you run into trouble, you can try working in a cygwin environment
 	or run a Linux in a virtual machine.
 
+- *How can I stay up to date?*
+
+	The easiest to get notified is to `contact us <contact.html>`_.
+
+	You can follow the `news on our project page <http://sourceforge.net/projects/apemost/>`_
+	and also the `code changes <http://apemost.git.sourceforge.net/git/gitweb.cgi?p=apemost/apemost;a=summary>`_.
+	
+
 - *My question has not been answered.*
 
 	If you have a technical question, maybe the answer is in the manual?
@@ -65,5 +73,5 @@ Frequently Asked Questions
 
 
 
-Written by Johannes Buchner.
+Written by Johannes Buchner. `Back to the main site <index.html>`_
 

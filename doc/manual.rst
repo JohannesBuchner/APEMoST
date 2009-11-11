@@ -4,16 +4,7 @@
 Automated Parameter Estimation and Model Selection Toolkit
 -------------------------------------------------------------
 
-	There should be a great step-by-step introduction to APEMoST here.
-
-
-	But there isn't.
-
-
-	Yet.
-
-
-A general introduction, frequently asked questions and the license can be found at `the main site <index.html>`_. The website of APEMoST is http://apemost.sourceforge.net/.
+A general introduction, frequently asked questions and the license can be found at `the main site <index.html>`_. The website of APEMoST is http://apemost.sourceforge.net/. The latest version of this manual can be found there aswell.
 
 --------------------------
  Prerequisites
@@ -37,6 +28,8 @@ For generating the documentation (make doc):
 - docutils (python-docutils)
 
 It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
+
+You can get a release of APEMoST from the `project page<http://sourceforge.net/projects/apemost/>`, or the latest version using `git clone git://apemost.git.sourceforge.net/gitroot/apemost/apemost`.
 
 ---------------------------
  The general concept

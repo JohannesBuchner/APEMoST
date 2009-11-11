@@ -19,6 +19,8 @@ is and can be used.
 
 You can find `our contact here <contact.html>`_ (also for questions regarding the license).
 
+Written by Johannes Buchner. `Back to the main site <index.html>`_
+
 Here is the license::
 
 		            GNU GENERAL PUBLIC LICENSE

@@ -12,4 +12,4 @@ You can mail me (Johannes Buchner) at::
 Try putting apemost in the subject. Maybe there will be a guestbook 
 or a mailing list later on.
 
-
+Written by Johannes Buchner. `Back to the main site <index.html>`_

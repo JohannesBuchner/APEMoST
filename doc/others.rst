@@ -15,7 +15,7 @@ In one paragraph? Lets try. This is just to get a grasp on how the terms relate 
 	An example of a model with three parameters (A, B, F) is "y(t) = A*sin(F*t + B)". It describes the 
 	relation between y and t.*
 
-	*Assume now you can specify how likely it is that the real observation data has been observed by this data.
+	*Assume now you can specify how likely it is that the real observation data has been observed under this model.
 	This is called the likelihood function p(D|M, I). Now we would need to evaluate this function everywhere
 	in parameter space, which is simply unfeasible. We would need a method that evaluates there more densely,
 	where the value is high. This is where Markov Chain Monte Carlo comes in (Metropolis algorithm, proposal distribution).
@@ -41,7 +41,7 @@ Well, not quite one paragraph.
 
 	*TODO, link*
 	
-	It is based on the `work of Michael Gruberbauer <http://arxiv.org/abs/0811.3345>`.
+	It is based on the `work of Michael Gruberbauer <http://arxiv.org/abs/0811.3345>`_.
 
 #. Then there is always Wikipedia, although I found it hard to understand for novices.
 
@@ -95,11 +95,11 @@ We think it differs from existing programs by
 - Metropolis sampling
    
 	Other programs usually use Gibbs Sampling, we use classic Metropolis sampling (usually without 
-	the Hastings extension, since the proposal distributions are normally symmetric). 
+	needing the Hastings extension, since the proposal distributions are normally symmetric). 
 
 - general purpose for data analysis
 
-	We are no ''pure staticians'', but we also don't just target Astronomy and Physics. All natural
+	We are no ''pure statistician'', but we also don't just target Astronomy and Physics. All natural
 	sciences are invited to use and extend our program.
 
 - speed

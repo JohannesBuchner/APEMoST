@@ -16,17 +16,18 @@ Specification
 APEMoST enables the user to perform parameter estimation in a simple way: 
 Only three things have to be provided:
 
-#. The Likelihood function
+#. The likelihood function
    
-   Specified as a C function (usually ~15 lines of code)
+	Specified as a C function (usually ~15 lines of code)
    
-#. The Parameter space
+#. The parameter space
    
-   Specified as a text file, containing the borders and starting points
+	Specified as a text file, containing the borders and starting points
    
 #. A data file
    
-   A table of data the Likelihood function can work on is read in as a matrix.
+	A table of data the likelihood function can work on is read in and 
+	available as a matrix.
 
 
 Fundamentals
@@ -63,6 +64,5 @@ We also have some `differences to other software <other.html>`_.
 Ready to dig in? **Get started** with the `user manual <manual.html>`_, it explains APEMoST step by step.
 
 
-Written by Johannes Buchner.
-
+Written by Johannes Buchner. `Back to the main site <index.html>`_
 
