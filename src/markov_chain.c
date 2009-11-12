@@ -226,29 +226,31 @@ unsigned int assess_acceptance_rate(mcmc * m, unsigned int param,
 void do_step_for(mcmc * m, const unsigned int i) {
 	const double step = gsl_vector_get(m->params_step, i);
 	const double old_value = gsl_vector_get(m->params, i);
-	double new_value = old_value + get_next_gauss_random(m, step);
+	double new_value;
 	const double max = gsl_vector_get(m->params_max, i);
 	const double min = gsl_vector_get(m->params_min, i);
 	/* dump_d("Jumping from", old_value); */
 
 #if CIRCULAR_PARAMS == 0
-	while (new_value > max || new_value < min) {
-		new_value = old_value + get_next_gauss_random(m, step);
+	do {
+		new_value = old_value + get_next_random_jump(m, step);
 		IFVERBOSE
 			printf("Value borders reached; looking for new starting point"
 				" for %d \n", i);
-	}
+	} while (new_value > max || new_value < min);
 #else
 	unsigned int j = 0;
 	/** circular parameters **/
 	unsigned int parameters[] = {CIRCULAR_PARAMS, 0};
-
+	
+	new_value = old_value + get_next_random_jump(m, step);
+	
 	if (new_value > max || new_value < min) {
 		while (1) {
 			if (parameters[j] == 0) {
 				/* non-circular parameter */
 				do {
-					new_value = old_value + get_next_gauss_random(m, step);
+					new_value = old_value + get_next_random_jump(m, step);
 				}while (new_value > max || new_value < min);
 				break;
 			}

@@ -286,9 +286,25 @@ double get_next_uniform_plusminus_random(const mcmc * m) {
 double get_next_uniform_random(const mcmc * m) {
 	return gsl_rng_uniform(get_random(m));
 }
-double get_next_gauss_random(const mcmc * m, const double sigma) {
+
+double get_next_random_jump(const mcmc * m, const double sigma) {
+#ifdef PROPOSAL_LOGISTIC
+	return gsl_ran_logistic(get_random(m), sigma);
+#elif defined PROPOSAL_UNIFORM
+	return gsl_ran_flat(get_random(m), -sigma, sigma);
+#else
+/**
+ * You can choose a proposal distribution. The default is a gaussian 
+ * distribution.
+ *
+ * Set PROPOSAL_LOGISTIC, PROPOSAL_UNIFORM if you want to use a different
+ * proposal distribution.
+ */
+#define PROPOSAL
 	return gsl_ran_gaussian(get_random(m), sigma);
+#endif
 }
 double get_next_alog_urandom(const mcmc * m) {
 	return gsl_sf_log(get_next_uniform_random(m));
 }
+

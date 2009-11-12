@@ -104,8 +104,8 @@ double get_next_uniform_plusminus_random(const mcmc * m);
 double get_next_alog_urandom(const mcmc * m);
 
 /**
- * get next random number (gauss distributed)
+ * get next random number (distributed by the proposal distribution)
  */
-double get_next_gauss_random(const mcmc * m, const double sigma);
+double get_next_random_jump(const mcmc * m, const double sigma);
 
 #endif /* MCMC_GETTERSETTER_H_ */

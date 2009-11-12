@@ -75,7 +75,7 @@
  * Desired acceptance rate after calibration
  */
 #ifndef TARGET_ACCEPTANCE_RATE
-#define TARGET_ACCEPTANCE_RATE 0.25
+#define TARGET_ACCEPTANCE_RATE 0.50
 #endif
 
 /**

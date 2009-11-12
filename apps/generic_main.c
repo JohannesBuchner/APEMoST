@@ -55,6 +55,7 @@
  * <li>#N_SWAP</li>
  * <li>#N_PARAMETERS</li>
  * <li>#SKIP_CALIBRATE_ALLCHAINS</li>
+ * <li>#PROPOSAL</li>
  * </ul>
  * \subsection alg Defining algorithm behaviour
  * <ul>
@@ -283,6 +284,24 @@ void check() {
 	OUTPUT_PARAMI(ITER_LIMIT);
 	OUTPUT_PARAMD(MUL);
 	OUTPUT_PARAMI(N_SWAP);
+#ifdef SKIP_CALIBRATE_ALLCHAINS
+	printf("\tSKIP_CALIBRATE_ALLCHAINS: enabled (calibrating only 2 chains)\n");
+#else
+	printf("\tSKIP_CALIBRATE_ALLCHAINS: disabled (calibrating all chains)\n");
+#endif
+#ifdef PROPOSAL_UNIFORM
+	printf("\tPROPOSAL: uniform proposal distribution\n");
+#elif defined PROPOSAL_LOGISTIC
+	printf("\tPROPOSAL: logistic proposal distribution\n");
+#else
+	printf("\tPROPOSAL: gaussian/normal proposal distribution\n");
+#endif
+
+#ifdef N_PARAMETERS
+	printf("\tN_PARAMETERS: Compiled for fixed number of parameters: %d\n", N_PARAMETERS);
+#else
+	printf("\tN_PARAMETERS: Compiled for variable number of parameters\n");
+#endif
 
 	printf("\nDefining algorithm behaviour:\n");
 	printf("\tRANDOMSWAP: Random swapping: ");
@@ -329,10 +348,10 @@ void check() {
 #else
 	printf("on\n");
 #endif
-#ifdef N_PARAMETERS
-	printf("\tN_PARAMETERS: Compiled for fixed number of parameters: %d\n", N_PARAMETERS);
+#ifdef WITHOUT_GARBAGE_COLLECTOR
+	printf("WITHOUT_GARBAGE_COLLECTOR: no garbage collector\n");
 #else
-	printf("\tN_PARAMETERS: Compiled for variable number of parameters\n");
+	printf("WITHOUT_GARBAGE_COLLECTOR: garbage collector enabled\n");
 #endif
 
 }

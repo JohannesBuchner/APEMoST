@@ -13,7 +13,10 @@ Frequently Asked Questions
 	State the version of APEMoST, and that you used it (see next question). 
 
 	Also double-check that your results make sense.
+	
 	Include error estimates in your publication.
+	
+	Mention that you set the PRNG seed.
 
 	If you made modifications to APEMoST, `contribute them back<contact.html>` or publish them otherwise. 
 	If you don't, others can not check your results and uncover errors.

@@ -24,9 +24,14 @@
 #include "gsl_helper.h"
 #include "debug.h"
 
+gsl_rng * r = NULL;
+
 void init_seed(mcmc * m) {
-	gsl_rng_env_setup();
-	m->random = gsl_rng_alloc(gsl_rng_default);
+	if (r == NULL) {
+		gsl_rng_env_setup();
+		r = gsl_rng_alloc(gsl_rng_default);
+	}
+	m->random = r;
 }
 
 mcmc * mcmc_init(const unsigned int n_pars) {
@@ -76,7 +81,12 @@ mcmc * mcmc_free(mcmc * m) {
 	unsigned int i;
 
 	mcmc_dump_close(m);
-	gsl_rng_free(m->random);
+	
+	if (r == m->random) {
+		gsl_rng_free(r);
+		r = NULL;
+	}
+	
 	IFSEGV
 		debug("freeing params");
 	gsl_vector_free(m->params);

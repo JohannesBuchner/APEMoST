@@ -634,15 +634,27 @@ Problems in this phase
 
 #. Some possible values in the parameter space may have not been detected
 
-	This is one real mean danger, because you probably will never know. You can try
+	This is one real mean danger, because you probably will never know. 
+	A as high number iteration as possible helps.
+	
+	If two or more peaks have been detected already, you can try to find out
+	after how many iterations the last peak showed up. Maybe you should run
+	for another so many iterations.
+	
+	You can try to increase or decrease BETA_0, the beta value of the hottest 
+	chain.
+	
+	You can also try
 	to tinker with the calibration or the proposal distribution (e.g. using a 
 	distribution with a wider tail such as logit).
 
-	It is a good idea to run the sampling several times and also with different starting points.
+	It is a good idea to run the sampling several times and also with 
+	different starting points.
 
 #. The heights of different, independent peaks in the histograms do not correctly represent the probability relations.
 
-	This will almost always be the case. Since the runtime is finite, the frequency of visits will be distorted.
+	This will almost always be the case. Since the runtime is finite, the 
+	frequency of visits will be distorted.
 
 	You should evaluate the likelihood function at the peaks to get their real values.
 	The eval_ executable and peaks.exe will help you with this.
@@ -683,6 +695,29 @@ tarball or zip file is also welcome. The contact address can be found at the
 That said, a version control system is really useful to stay on top of things (e.g. trying out 
 some code). Consider using it for your other projects. 
 If you don't like git, try hg, which has better GUIs. There is also a hg-git bridge. 
+
+-------------------------------------
+Other topics
+-------------------------------------
+Random generator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(Pseudo-) random number generation is a very important topic and should be
+addressed. We use the default random generator from GSL. This can be influenced
+with environment variables, for example setting GSL_RANDOM_SEED and GSL_RNG_TYPE.
+See the GSL manual.
+
+Only one random generator is used for the whole program, so setting the 
+seed will not result in multiple, synchronized random generators.
+
+Set a different seed for different runs, otherwise you will always obtain the
+same results! 
+
+For example, you can use a random number as the initial seed. If you use bash::
+
+	export GSL_RANDOM_SEED=$RANDOM
+
+Mention in your publication that you set or varied the seed. Otherwise you may
+be victim to systematic errors!
 
 ---------------------------------------
 Concluding remarks
