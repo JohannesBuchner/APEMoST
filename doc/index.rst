@@ -18,5 +18,5 @@ for parameter estimation and model selection.
 #. `Other programs <others.html>`_
 
 
-Written by Johannes Buchner. `Back to the main site <index.html>`_
+Written by Johannes Buchner.
 

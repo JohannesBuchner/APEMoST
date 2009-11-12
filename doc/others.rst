@@ -186,6 +186,6 @@ I (Johannes) find it hard to get into the programs and to understand them. A toy
 
 
 
-Written by Johannes Buchner.
+Written by Johannes Buchner.  `Back to the main site <index.html>`_
 
 
