@@ -19,7 +19,8 @@ void usage(char * progname) {
 			"%s: SYNOPSIS: nbins file1 file2 ...\n"
 				"\n"
 				"\tnbins\tNumber of bins to use\n"
-				"\tfiles\tfiles to include. these should contain float values in one or more columns\n"
+				"\tfiles\tfiles to include. these should contain float values "
+				"in one or more columns\n"
 				"\n"
 				"This program calculates a histogram from datafiles.\n",
 			progname);
@@ -107,3 +108,4 @@ int main(int argc, char ** argv) {
 	}
 	return 0;
 }
+
