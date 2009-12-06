@@ -18,7 +18,7 @@ Frequently Asked Questions
 	
 	Mention that you set the PRNG seed.
 
-	If you made modifications to APEMoST, `contribute them back<contact.html>` or publish them otherwise. 
+	If you made modifications to APEMoST, `contribute them back <contact.html>`_ or publish them otherwise. 
 	If you don't, others can not check your results and uncover errors.
 
 	You can publish your likelihood function, parameter and data file in the appendix of your paper.
@@ -72,7 +72,7 @@ Frequently Asked Questions
 
 	If you have a technical question, maybe the answer is in the manual?
 
-	Otherwise feel free to `contact us <contact.html>`.
+	Otherwise feel free to `contact us <contact.html>`_.
 
 
 

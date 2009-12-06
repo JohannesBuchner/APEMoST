@@ -141,7 +141,7 @@ You are welcome to notify us if you know others!
 - COSMOMC http://cosmologist.info/cosmomc/ http://cosmologist.info/notes/
 
 	A mcmc program specialized to cosmological problems. Also uses the GSL.
-	Has a nice `presentation <http://cosmologist.info/notes/MCMC.ppt>` on what it is about.
+	Has a nice `presentation <http://cosmologist.info/notes/MCMC.ppt>`_ on what it is about.
 
 - FBM Software for Flexible Bayesian Modeling http://www.cs.utoronto.ca/~radford/fbm.software.html
 

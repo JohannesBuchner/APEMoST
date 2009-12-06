@@ -29,7 +29,7 @@ For generating the documentation (make doc):
 
 It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
 
-You can get a release of APEMoST from the `project page<http://sourceforge.net/projects/apemost/>`, or the latest version using `git clone git://apemost.git.sourceforge.net/gitroot/apemost/apemost`.
+You can get a release of APEMoST from the `project page <http://sourceforge.net/projects/apemost/>`_, or the latest version using `git clone git://apemost.git.sourceforge.net/gitroot/apemost/apemost`.
 
 ---------------------------
  The general concept
@@ -241,7 +241,7 @@ The check subcommand outputs the values currently set (after compilation)::
 
 	$ apemost-directory/simplesin.exe check
 
-A full list of flags can be found in the `api documentation <api/html/index.html>`, with their 
+A full list of flags can be found in the `api documentation <api/html/index.html>`_, with their 
 meaning and default values. This is a good resource that you should keep open.
 
 If you were to write a new calibration algorithm, or use a different adaptive MCMC algorithm, 
@@ -670,7 +670,7 @@ Problems in this phase
 
 Feel free to read all the source, write and change algorithms and everything. 
 
-Feedback, ideas, remarks and problems are welcome and will be added to the `FAQ <faq.html>`.
+Feedback, ideas, remarks and problems are welcome and will be added to the `FAQ <faq.html>`_.
 
 As the `license <license.html>`_ states, since we worked so hard on APEMoST and you get it for free,
 you are expected to contribute changes back to us, so everyone can profit. 
