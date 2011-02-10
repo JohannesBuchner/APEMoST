@@ -651,11 +651,13 @@ void analyse_data_probability() {
 		"  %04.1f .. %04.1f \tStrong\n"
 		"  %04.1f .. %04.1f \tVery strong\n"
 		"        <  %04.1f \tDecisive\n", data_logprob / gsl_sf_log(10),
-			data_logprob, data_logprob, data_logprob, data_logprob - 10,
-			data_logprob - 10, data_logprob - 23, data_logprob - 23,
-			data_logprob - 34, data_logprob - 34, data_logprob - 46,
-			data_logprob - 46);
-	printf("\nbe careful.\n");
+			data_logprob, data_logprob, data_logprob, 
+			data_logprob - gsl_sf_log(3), data_logprob - gsl_sf_log(3), 
+			data_logprob - gsl_sf_log(10), data_logprob - gsl_sf_log(10),
+			data_logprob - gsl_sf_log(30), data_logprob - gsl_sf_log(30),
+			data_logprob - gsl_sf_log(100), data_logprob - gsl_sf_log(100)
+       );
+       printf("\nbe careful.\n");
 }
 
 double calc_mcmc_error(const double mean, const char * filename,
