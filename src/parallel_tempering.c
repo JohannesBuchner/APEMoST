@@ -213,8 +213,14 @@ void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
 	fclose(f);
 	printf("wrote calibration results for %d chains to %s\n", n_chains,
 			CALIBRATION_FILE);
-
 }
+
+#ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
+/**
+ * how many iterations should be spent on burn-in
+ */
+#define BURN_IN_ITERATIONS
+#endif
 
 /**
  * needs:
