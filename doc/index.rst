@@ -17,6 +17,15 @@ for parameter estimation and model selection.
 #. `License <license.html>`_
 #. `Other programs <others.html>`_
 
-
 Written by Johannes Buchner.
+
+
+News:
+===========================
+
+New Publication using APEMoST:
+
+- "Gamma-ray bursts as cosmological probes: LambdaCDM vs. conformal gravity" `Antonaldo Diaferio et al, 2011 <http://arxiv.org/abs/1103.5501>`_
+
+
 
