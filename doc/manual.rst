@@ -1,10 +1,12 @@
-===================================
-  APEMoST manual
-===================================
-Automated Parameter Estimation and Model Selection Toolkit
+.. include:: header.txt
+
+-------------------------------------------------------------
+User Manual
 -------------------------------------------------------------
 
 A general introduction, frequently asked questions and the license can be found at `the main site <index.html>`_. The website of APEMoST is http://apemost.sourceforge.net/. The latest version of this manual can be found there aswell.
+
+.. contents::
 
 --------------------------
  Prerequisites
@@ -13,14 +15,14 @@ A general introduction, frequently asked questions and the license can be found 
 You need to have the following software installed:
 
 - gcc (>= 4.1, for OpenMP)
-- GNU scientific library (libgsl0-dev)
-- Boehm garbage collector (boehmgc)
+- GNU scientific library (libgsl0-dev or gsl-devel)
+- Boehm garbage collector (boehmgc or gc)
 	
 	You can disable the garbage collector by specifying the WITHOUT_GARBAGE_COLLECTOR flag (see below).
 
 For the version control (keeping track of different versions, experimenting with code and patches)
 
-- git (git-core)
+- git (git-core or git)
 
 For generating the documentation (make doc):
 
@@ -29,7 +31,21 @@ For generating the documentation (make doc):
 
 It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
 
-You can get a release of APEMoST from the `project page <http://sourceforge.net/projects/apemost/>`_, or the latest version using `git clone git://apemost.git.sourceforge.net/gitroot/apemost/apemost`.
+----------------------------
+ Getting APEMoST
+----------------------------
+
+.. image:: http://sflogo.sourceforge.net/sflogo.php?group_id=275812&type=5
+  :height: 62
+  :width: 210
+  :alt: Sourceforge project page of APEMoST
+  :target: https://sourceforge.net/projects/apemost/
+  :align: right
+
+You can get a release of APEMoST from the `Sourceforge project page http://sourceforge.net/projects/apemost/ <http://sourceforge.net/projects/apemost/>`_
+
+or `fetch the latest code using git <https://sourceforge.net/scm/?type=git&group_id=275812>`_.
+
 
 ---------------------------
  The general concept
@@ -732,7 +748,5 @@ None.
 
 
 
-
-Written by Johannes Buchner. `Back to the main site <index.html>`_
-
+.. include:: footer.txt
 

@@ -1,14 +1,13 @@
-===================================
-  APEMoST documentation
-===================================
+.. include:: header.txt
+-------------------------------------------------------------
 Automated Parameter Estimation and Model Selection Toolkit
 -------------------------------------------------------------
 
 If you are unfamiliar with Bayesian inference using MCMC (Markov Chain Monte Carlo) sampling/updates, you can find some information in `the Links section <others.html#introduction>`_.
 
-The program was first written by Michael Gruberbauer (University of Vienna, now Saint Mary's University).
-Later it was rewritten for parallelization by Johannes Buchner (University of Vienna, Technical University of Vienna, now Auckland University of Technology), which was funded by Werner W. Weiss (University of Vienna). 
-Now it is worked on in our spare time.
+The program was first written by Michael Gruberbauer (at the time University of Vienna).
+Later it was rewritten for parallelization by Johannes Buchner (at the time University of Vienna, Technical University of Vienna), which was funded by Werner W. Weiss (University of Vienna). 
+Now it is maintained by Johannes Buchner.
 
 Specification
 ~~~~~~~~~~~~~~~
@@ -63,6 +62,5 @@ We also have some `differences to other software <other.html>`_.
 
 Ready to dig in? **Get started** with the `user manual <manual.html>`_, it explains APEMoST step by step.
 
-
-Written by Johannes Buchner. `Back to the main site <index.html>`_
+.. include:: footer.txt
 

@@ -1,6 +1,7 @@
-===========================================
-  APEMoST License 
-===========================================
+.. include:: header.txt
+-------------------------------------------------------------
+  License 
+-------------------------------------------------------------
 
 APEMoST is free and open source software. As all software using the GSL, 
 it uses the GPLv3 (GNU Public License). 
@@ -19,7 +20,7 @@ is and can be used.
 
 You can find `our contact here <contact.html>`_ (also for questions regarding the license).
 
-Written by Johannes Buchner. `Back to the main site <index.html>`_
+.. include:: footer.txt
 
 Here is the license::
 

@@ -1,8 +1,9 @@
-===========================================
-  APEMoST FAQ
-===========================================
-Frequently Asked Questions
----------------------------
+.. include:: header.txt
+
+APEMoST FAQ - Frequently Asked Questions
+--------------------------------------------
+
+.. contents::
 
 - *Is APEMoST free? How is APEMoST licensed? What are my obligations?*
 
@@ -75,6 +76,5 @@ Frequently Asked Questions
 	Otherwise feel free to `contact us <contact.html>`_.
 
 
-
-Written by Johannes Buchner. `Back to the main site <index.html>`_
+.. include:: footer.txt
 

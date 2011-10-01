@@ -1,0 +1,15 @@
+--------
+
+:Author: Johannes Buchner
+:Copyright: This work is licensed under a `Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License <https://creativecommons.org/licenses/by-nc-sa/3.0/>`_ and the `GPLv3 <license.html>`_.
+
+`« Back to the main site <index.html>`_
+
+.. image:: http://sflogo.sourceforge.net/sflogo.php?group_id=275812&type=5
+  :height: 62
+  :width: 210
+  :alt: Sourceforge project page of APEMoST
+  :target: https://sourceforge.net/projects/apemost/
+  :align: right
+
+

@@ -8,7 +8,7 @@ all: $(DOCFILES)
 clean: 
 	rm $(DOCFILES)
 
-%.html: %.rst
+%.html: %.rst header.txt footer.txt
 	$(CONVERTER) $< > $@
 
 readme.html: readme

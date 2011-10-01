@@ -1,6 +1,6 @@
-===========================================
-  APEMoST documentation
-===========================================
+.. include:: header.txt
+
+.. contents::
 
 Introduction to MCMC and Bayesian inference
 --------------------------------------------
@@ -31,15 +31,13 @@ Well, not quite one paragraph.
 	*Bayesian logical data analysis for the physical sciences* by P.C. Gregory
 	You can find it in `Google Books <http://books.google.com/books?id=yJ_5VFo0zGMC>`_ and at the `Cambridge Catalogue <http://www.cambridge.org/catalogue/catalogue.asp?isbn=052184150X>`_.
 
-#. Then there is always place to promote my bachelor thesis :-)
+#. Then there is always place to promote `my bachelor thesis <http://textfeld.ac.at/text/1589>`_ :-)
 
 	I think it provides a pretty good overview of everything necessary. As a bonus, 
 	we detect pulsations on a star.
 	
 	The tool has a different name in there, and model selection is not covered (which 
 	works very nicely on the pulsation example).
-
-	*TODO, link*
 	
 	It is based on the `work of Michael Gruberbauer <http://arxiv.org/abs/0811.3345>`_.
 
@@ -106,6 +104,11 @@ We think it differs from existing programs by
 
 	If another program converges twice as fast due to some sophisticated, experimental concept,
 	but APEMoST runs 20 times as many iterations in the same time ...
+	
+	Regarding speed we can say that APEMoST, running 2 million iterations,
+	spends less than a minute outside the likelihood function. So, the 
+	bottleneck will definitely not be APEMoST, and C allows the most 
+	efficient implementation of your likelihood function.
 
 ~~~~~~~~~~~~~~~~~
  Other programs
@@ -176,7 +179,7 @@ You are welcome to notify us if you know others!
 
 - YADAS http://www.ccs.lanl.gov/ccs6/yadas/
 
-- There is a MCMC sampler written in Python, `pyMC <http://code.google.com/p/pymc/>`
+- There is a MCMC sampler written in Python, `pyMC <http://code.google.com/p/pymc/>`_
 
 - Programs that are not available for download are not listed (e.g. "bayesiananalysis", and the one from Do Kester)
 
@@ -185,7 +188,5 @@ Some notes: several software packages are abandoned since a few years.
 I (Johannes) find it hard to get into the programs and to understand them. A toy example that works both in e.g. BUGS/JAGS, BioBayes, fbm and APEMoST would be great.
 
 
-
-Written by Johannes Buchner.  `Back to the main site <index.html>`_
-
+.. include:: footer.txt
 
