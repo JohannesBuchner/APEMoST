@@ -27,9 +27,10 @@ For the version control (keeping track of different versions, experimenting with
 
 For generating the documentation (make doc):
 
-- doxygen 
 - docutils (python-docutils)
-- rst2pdf
+- doxygen 
+- rst2pdf (for pdf output)
+- ghostscript (for pdf output)
 
 It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
 

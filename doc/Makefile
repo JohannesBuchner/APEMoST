@@ -1,7 +1,7 @@
 
-CONVERTER := $(shell which rst2html 2>/dev/null || which rst2html.py)
+CONVERTER := $(shell which rst2html 2>/dev/null || which rst2html.py) --stylesheet=page.css
 LATEXCONVERTER := $(shell which rst2latex 2>/dev/null || which rst2latex.py)
-PDFCONVERTER := $(shell which rst2pdf 2>/dev/null || which rst2pdf.py)
+PDFCONVERTER := $(shell which rst2pdf 2>/dev/null || which rst2pdf.py) -c
 PDFCONCAT := gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite
 
 HTMLDOCFILES = $(patsubst %.rst,%.html,$(wildcard *.rst))
@@ -18,7 +18,7 @@ api.pdf: api-doc
 	cd api/latex/ && $(MAKE) api.pdf > make.log
 	cp api/latex/refman.pdf api.pdf
 
-book.pdf: $(PDFDOCFILES) api/latex/refman.pdf
+book.pdf: $(PDFDOCFILES)
 	$(PDFCONCAT) -sOutputFile=book.pdf index.pdf contact.pdf general.pdf manual.pdf faq.pdf others.pdf license.pdf
 
 clean: 
