@@ -75,8 +75,7 @@ clean:
 	rm -f *.exe *.o src/*.o *.a *.so
 
 ## doc: build the documentation
-doc: doxygen.config
-	doxygen doxygen.config
-	make -C doc/
+doc: 
+	cd doc && $(MAKE)
 
 .PHONY: clean tests run all help doc

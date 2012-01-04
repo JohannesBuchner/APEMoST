@@ -18,7 +18,8 @@ You need to have the following software installed:
 - GNU scientific library (libgsl0-dev or gsl-devel)
 - Boehm garbage collector (boehmgc or gc)
 	
-	You can disable the garbage collector by specifying the WITHOUT_GARBAGE_COLLECTOR flag (see below).
+	The garbage collector is optional, but can be enabled by compiling with
+	make WITH_GARBAGE_COLLECTOR=1 
 
 For the version control (keeping track of different versions, experimenting with code and patches)
 
@@ -28,6 +29,7 @@ For generating the documentation (make doc):
 
 - doxygen 
 - docutils (python-docutils)
+- rst2pdf
 
 It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
 
@@ -314,8 +316,8 @@ Also, the program suggests a new params file ("params_suggested") that contains
 the new stepwidths (last column).
 If you use these stepwidths in your params file, this will make your next calibrate_first run go faster.
 
-Problems in this phase
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Possible problems in this phase
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - stepwidth gets too large
 	
@@ -632,8 +634,8 @@ So far, APEMoST can produce the following statistics:
 
 Pretty neat, eh? No cookie now, you got your histograms.
 
-Problems in this phase
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Possible problems in this phase
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #. Straight peaks in the histograms
 

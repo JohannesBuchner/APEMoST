@@ -14,6 +14,6 @@ Reading the documentation
 
 Point your web browser to the file `index.html <index.html>`_
 
-If you have trouble, you can always read the *.rst files in a 
-text editor or on `our website<http://apemost.sourceforge.net/>`_.
+If you have trouble, you can always read the rst files in a 
+text editor or on `our website <http://apemost.sourceforge.net/>`_.
 
