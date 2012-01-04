@@ -127,7 +127,7 @@ void run(char * filename, unsigned long nmaxvalues, double min, double max) {
 	double empty_space_needed;
 	unsigned int left;
 	unsigned int right;
-	double median, leftquartile, rightquartile, percentage;
+	double median = 0, leftquartile = 0, rightquartile = 0, percentage = 0;
 	gsl_vector * values = gsl_vector_alloc(nmaxvalues);
 	gsl_vector * medians = gsl_vector_alloc(100);
 	gsl_vector * leftquartiles = gsl_vector_alloc(100);
