@@ -73,6 +73,6 @@ clean:
 
 ## doc: build the documentation
 doc: 
-	cd doc && $(MAKE)
+	cd doc && $(MAKE) -k
 
 .PHONY: clean tests run all help doc

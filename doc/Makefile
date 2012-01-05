@@ -1,4 +1,21 @@
-all: manual-html api-doc api.pdf book.pdf
+all: html 
+
+html: manual-html api-doc
+	@echo "-------------------------------------------------------------"
+	@echo
+	@echo "Successfully built HTML documentation!"
+	@echo
+	@echo "The documentation is in file://${PWD}/_build/html/index.html"
+	@echo "API reference     is in file://${PWD}/api/html/index.html"
+
+pdf:  _build/latex/APEMoST.pdf api/latex/refman.pdf
+	@echo "-------------------------------------------------------------"
+	@echo
+	@echo "Successfully built PDF documentation!"
+	@echo
+	@echo "The documentation (PDF) is in file://${PWD}/_build/latex/APEMoST.pdf"
+	@echo "API reference     (PDF) is in file://${PWD}/api/latex/refman.pdf"
+	
 
 api-doc: ../doxygen.config
 	cd .. && doxygen doxygen.config
@@ -25,5 +42,6 @@ clean:
 	rm -f *.html
 	rm -f *.pdf
 	rm -rf _build/website
+	rm -rf api/*
 
 .PHONY: all api-doc manual-html clean
