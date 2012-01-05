@@ -1,9 +1,6 @@
-.. include:: header.txt
-
 .. contents::
-
 Introduction to MCMC and Bayesian inference
---------------------------------------------
+=============================================
 
 If you are unfamiliar with the concept, it can be quite overwhelming what it is all about, 
 especially since there are many incomplete introductions. Here, we try to list several sources we consider good
@@ -56,7 +53,7 @@ Well, not quite one paragraph.
 
 #. ...
 	
-	If you know or have any good resources on the topic, you are welcome to `suggest links <contact.html>`_.
+	If you know or have any good resources on the topic, you are welcome to :doc:`suggest links <contact>`.
 
 Differences and other programs
 --------------------------------
@@ -187,6 +184,4 @@ Some notes: several software packages are abandoned since a few years.
 
 I (Johannes) find it hard to get into the programs and to understand them. A toy example that works both in e.g. BUGS/JAGS, BioBayes, fbm and APEMoST would be great.
 
-
-.. include:: footer.txt
 

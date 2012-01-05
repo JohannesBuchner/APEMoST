@@ -1,4 +1,5 @@
-.. include:: header.txt
+APEMoST documentation -- Bayesian inference using MCMC
+=======================================================
 -------------------------------------------------------------
 Automated Parameter Estimation and Model Selection Toolkit
 -------------------------------------------------------------
@@ -7,23 +8,28 @@ Automated Parameter Estimation and Model Selection Toolkit
 	**APEMoST is a free, fast MCMC engine that allows the user to apply 
 	Bayesian inference for parameter estimation and model selection.**
 
+Contents:
+
+.. toctree::
+   general
+   manual
+   faq
+   license
+   others
+   :maxdepth: 2
+
 -----------------
 
-	#. `General information <general.html>`_
+	#. :doc:`General information <general>`
 	    What is APEMoST? What is Bayesian Inference?
-	#. `User manual <manual.html>`_ 
-	    Includes `how to get APEMoST <manual.html#getting-apemost>`_.
-	#. `FAQ <faq.html>`_
+	#. :doc:`User manual <manual>`
+	    Includes :ref:`how to get APEMoST <getit>`.
+	#. :doc:`FAQ <faq>`
 	    Also see here for contact details
-	#. `License <license.html>`_
-	#. `Other programs <others.html>`_
+	#. :doc:`License <license>`
+	#. :doc:`Other programs <others>`
 
 	Get the `full documentation (PDF) <book.pdf>`_ and `API reference <api.pdf>`_.
-
-
-Written by Johannes Buchner.
-
------------------
 
 News:
 -------
@@ -36,5 +42,19 @@ New Publication using APEMoST:
 
 - "Gamma-ray bursts as cosmological probes: LambdaCDM vs. conformal gravity" `Antonaldo Diaferio et al, 2011 <http://arxiv.org/abs/1103.5501>`_
 
-.. include:: footer.txt
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+.. image:: http://sflogo.sourceforge.net/sflogo.php?group_id=275812&type=5
+  :height: 62
+  :width: 210
+  :alt: Sourceforge project page of APEMoST
+  :target: https://sourceforge.net/projects/apemost/
+  :align: right
+
 

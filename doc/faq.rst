@@ -1,7 +1,5 @@
-.. include:: header.txt
-
-APEMoST FAQ - Frequently Asked Questions
---------------------------------------------
+FAQ - Frequently Asked Questions
+===========================================
 
 .. contents::
 
@@ -75,6 +73,4 @@ APEMoST FAQ - Frequently Asked Questions
 
 	Otherwise feel free to `contact us <contact.html>`_.
 
-
-.. include:: footer.txt
 

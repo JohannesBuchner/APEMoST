@@ -1,7 +1,5 @@
-.. include:: header.txt
--------------------------------------------------------------
-Automated Parameter Estimation and Model Selection Toolkit
--------------------------------------------------------------
+Automated Parameter Estimation and Model Selection Toolkit (APEMoST)
+=====================================================================
 
 If you are unfamiliar with Bayesian inference using MCMC (Markov Chain Monte Carlo) sampling/updates, you can find some information in `the Links section <others.html#introduction>`_.
 
@@ -61,6 +59,4 @@ Features
 We also have some `differences to other software <other.html>`_.
 
 Ready to dig in? **Get started** with the `user manual <manual.html>`_, it explains APEMoST step by step.
-
-.. include:: footer.txt
 

@@ -15,7 +15,7 @@ api-doc: ../doxygen.config
 manual-html: $(HTMLDOCFILES)
 
 api.pdf: api-doc
-	cd api/latex/ && $(MAKE) api.pdf > make.log
+	cd api/latex/ && $(MAKE) refman.pdf > make.log
 	cp api/latex/refman.pdf api.pdf
 
 book.pdf: $(PDFDOCFILES)

@@ -1,10 +1,7 @@
-.. include:: header.txt
-
--------------------------------------------------------------
 User Manual
--------------------------------------------------------------
+==============
 
-A general introduction, frequently asked questions and the license can be found at `the main site <index.html>`_. The website of APEMoST is http://apemost.sourceforge.net/. The latest version of this manual can be found there aswell.
+A general introduction, frequently asked questions and the license can be found at :doc:`the main site <index>`. The website of APEMoST is http://apemost.sourceforge.net/. The latest version of this manual can be found there aswell.
 
 .. contents::
 
@@ -34,6 +31,7 @@ For generating the documentation (make doc):
 
 It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
 
+.. _getit:
 ----------------------------
  Getting APEMoST
 ----------------------------
@@ -689,9 +687,9 @@ Possible problems in this phase
 
 Feel free to read all the source, write and change algorithms and everything. 
 
-Feedback, ideas, remarks and problems are welcome and will be added to the `FAQ <faq.html>`_.
+Feedback, ideas, remarks and problems are welcome and will be added to the :doc:`FAQ <faq>`.
 
-As the `license <license.html>`_ states, since we worked so hard on APEMoST and you get it for free,
+As the :doc:`license <license>` states, since we worked so hard on APEMoST and you get it for free,
 you are expected to contribute changes back to us, so everyone can profit. 
 
 Ideally, get familiar with git, which is the version control system in use.
@@ -709,7 +707,7 @@ me that you will contribute there. This will allow me to pull your changes.
 
 **If this is all too much for you** -- before you decide not to contribute back -- a
 tarball or zip file is also welcome. The contact address can be found at the 
-`contact page <contact.html>`_.
+:doc:`contact page <contact>`.
 
 That said, a version control system is really useful to stay on top of things (e.g. trying out 
 some code). Consider using it for your other projects. 
@@ -748,8 +746,4 @@ None.
 
 
 
-
-
-
-.. include:: footer.txt
 

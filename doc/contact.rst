@@ -1,5 +1,4 @@
-===========================================
-  APEMoST Contact
+APEMoST Contact
 ===========================================
 
 I would love to hear from you. Ideas, questions, remarks, all welcome.
@@ -10,5 +9,3 @@ You can mail me (Johannes Buchner) at::
 	johannes dot buchner dot acad [ät] gmx dot com
 
 Put APEMoST in the subject.
-
-Written by Johannes Buchner. `Back to the main site <index.html>`_
