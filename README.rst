@@ -1,7 +1,21 @@
-Generate the documentation (you need to install doxygen and docutils)
+APEMoST source
+==============================
 
-  $ make doc
+Find the documentation online on `our website <http://apemost.sourceforge.net/>`_
 
-and point your web browser to doc/index.html
-also see the file LICENSE.
+Generating the documentation
+-----------------------------
+You need doxygen and (python-)sphinx installed.
+
+Just run::
+
+  make doc
+
+Then point your web browser to the file doc/_build/website/index.html
+
+Building and installing
+-----------------------------
+The user manual, including the installation process is in
+
+    doc/manual.rst
 
