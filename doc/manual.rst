@@ -542,7 +542,7 @@ To force a flush, you can send the USR1 signal to the program:
 
 Which will cause the program to flush all files, and then continue to run.
 
-To stop the program, press Ctrl-C or send the TERM signal with kill.
+To stop the program, press Ctrl-C or send the TERM signal using "kill".
 This will also cause a flush, and the files will be cleanly finished.
 
 Unless you specified MAX_ITERATIONS, the program will happily run forever.
