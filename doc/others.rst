@@ -1,6 +1,10 @@
+Links and other software
+=================================
+
+
 .. contents::
 Introduction to MCMC and Bayesian inference
-=============================================
+-----------------------------------------------
 
 If you are unfamiliar with the concept, it can be quite overwhelming what it is all about, 
 especially since there are many incomplete introductions. Here, we try to list several sources we consider good

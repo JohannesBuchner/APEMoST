@@ -24,12 +24,10 @@ For the version control (keeping track of different versions, experimenting with
 
 For generating the documentation (make doc):
 
-- docutils (python-docutils)
 - doxygen 
-- rst2pdf (for pdf output)
-- ghostscript (for pdf output)
+- sphinx (the python package)
 
-It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `api documentation <api/html/index.html>`_.
+It may be handy to keep this manual open, and the `GSL manual <http://www.gnu.org/software/gsl/manual/>`_ as well as the `API documentation <api/index.html>`_.
 
 .. _getit:
 ----------------------------
@@ -258,7 +256,7 @@ The check subcommand outputs the values currently set (after compilation)::
 
 	$ apemost-directory/simplesin.exe check
 
-A full list of flags can be found in the `api documentation <api/html/index.html>`_, with their 
+A full list of flags can be found in the `API documentation <api/index.html>`_, with their 
 meaning and default values. This is a good resource that you should keep open.
 
 If you were to write a new calibration algorithm, or use a different adaptive MCMC algorithm, 

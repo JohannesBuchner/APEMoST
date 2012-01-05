@@ -1,0 +1,21 @@
+{% extends "!layout.html" %}
+{% set metatags = '<meta name="keywords" value="MCMC, Bayesian inference, statistics software, APEMoST, parameter estimation, model selection, Bayes" /><meta name="description" value="APEMoST is a free, fast MCMC engine that allows the user to apply Bayesian inference for parameter estimation and model selection." />' %}
+{% set docstitle = 'APEMoST documentation'%}
+{% block footer %}
+    <div class="footer">
+    {%- if show_copyright %}
+      {%- if hasdoc('copyright') %}
+        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}
+      {%- else %}
+        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
+      {%- endif %}
+    {%- endif %}
+This work is licensed under a <a class="reference external" href="https://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a> and the <a class="reference external" href="license.html">GPLv3</a>.
+    {%- if last_updated %}
+      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
+    {%- endif %}
+    {%- if show_sphinx %}
+      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
+    {%- endif %}
+    </div>
+{% endblock %}

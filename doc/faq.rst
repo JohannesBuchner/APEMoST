@@ -47,6 +47,17 @@ FAQ - Frequently Asked Questions
 
 	Other software packages use MPI for running on clusters.
 
+- *Can I write my likelihood function in Fortran/C++/Python/R?*
+
+        Quite possibly. 
+        
+        For Python, check out `PyAPEMoST <http://johannesbuchner.github.com/PyMultiNest>`_.
+
+        For Fortran/C++:
+
+           * Link your program against libapemost and call set_function to tell APEMoST about your probability function. 
+           * Then mimic what generic_main.c does in your program (calling calibrate, run, analyse).
+        
 - *Can I run APEMoST on Linux/Unix/Mac?*
 
 	Yes, all Unix derivates are the primary target of APEMoST. 

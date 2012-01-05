@@ -1,38 +1,29 @@
-
-CONVERTER := $(shell which rst2html 2>/dev/null || which rst2html.py) --stylesheet=page.css
-LATEXCONVERTER := $(shell which rst2latex 2>/dev/null || which rst2latex.py)
-PDFCONVERTER := $(shell which rst2pdf 2>/dev/null || which rst2pdf.py) -c
-PDFCONCAT := gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite
-
-HTMLDOCFILES = $(patsubst %.rst,%.html,$(wildcard *.rst))
-PDFDOCFILES = $(patsubst %.rst,%.pdf,$(wildcard *.rst))
-
-all: manual-html api-doc book.pdf
+all: manual-html api-doc api.pdf book.pdf
 
 api-doc: ../doxygen.config
 	cd .. && doxygen doxygen.config
 
-manual-html: $(HTMLDOCFILES)
+_build/latex/APEMoST.pdf:
+	$(MAKE) -f Makefile.sphinx latexpdf
 
-api.pdf: api-doc
+manual-html: 
+	$(MAKE) -f Makefile.sphinx html
+
+api/latex/refman.pdf: api-doc
 	cd api/latex/ && $(MAKE) refman.pdf > make.log
-	cp api/latex/refman.pdf api.pdf
 
-book.pdf: $(PDFDOCFILES)
-	$(PDFCONCAT) -sOutputFile=book.pdf index.pdf contact.pdf general.pdf manual.pdf faq.pdf others.pdf license.pdf
+website: _build/latex/APEMoST.pdf manual-html api/latex/refman.pdf
+	mkdir -p _build/website
+	cp -uv _build/latex/APEMoST.pdf _build/website/book.pdf
+	cp -uv api/latex/refman.pdf _build/website/api.pdf
+	cp -uv -r _build/html/* _build/website/
+	mkdir -p _build/website/api/
+	cp -uv -r api/html/* _build/website/api/
 
 clean: 
-	rm -f $(HTMLDOCFILES)
-	rm -f $(PDFDOCFILES)
-	rm -rf api
-
-%.html: %.rst header.txt footer.txt
-	$(CONVERTER) $< > $@
-
-%.tex: %.rst header.txt footer.txt
-	$(LATEXCONVERTER) $< > $@
-%.pdf: %.rst header.txt footer.txt
-	$(PDFCONVERTER) $< -o $@
-#pdflatex -interaction=batchmode $<
+	$(MAKE) -f Makefile.sphinx clean
+	rm -f *.html
+	rm -f *.pdf
+	rm -rf _build/website
 
 .PHONY: all api-doc manual-html clean
