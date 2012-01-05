@@ -28,6 +28,10 @@ Written by Johannes Buchner.
 News:
 -------
 
+You can now access and write your likelihood functions in C, C++ and *Python*! 
+
+- Check out the `PyAPEMoST project <http://johannesbuchner.github.com/PyMultiNest>`_ hosted together with PyMultiNest.
+
 New Publication using APEMoST:
 
 - "Gamma-ray bursts as cosmological probes: LambdaCDM vs. conformal gravity" `Antonaldo Diaferio et al, 2011 <http://arxiv.org/abs/1103.5501>`_
