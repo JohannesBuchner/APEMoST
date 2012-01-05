@@ -31,7 +31,7 @@
 
 void register_signal_handlers();
 
-void run_sampler(mcmc ** chains, int n_beta, unsigned int n_swap, char * mode);
+void run_sampler(mcmc ** chains, int n_beta, unsigned int n_swap, const unsigned long max_iterations, char * mode);
 
 void report(const mcmc ** chains, const int n_beta) {
 	int i = 0;
@@ -206,7 +206,7 @@ void calibrate_rest() {
 	write_calibrations_file(chains, n_beta);
 }
 
-void prepare_and_run_sampler(int append) {
+void prepare_and_run_sampler(const unsigned long max_iterations, int append) {
 	unsigned int n_beta = N_BETA;
 	unsigned int i = 0;
 	int n_swap = N_SWAP;
@@ -229,7 +229,7 @@ void prepare_and_run_sampler(int append) {
 	}
 
 	register_signal_handlers();
-	run_sampler(chains, n_beta, n_swap, (append == 1 ? "a" : "w"));
+	run_sampler(chains, n_beta, n_swap, max_iterations, (append == 1 ? "a" : "w"));
 
 	report((const mcmc **) chains, n_beta);
 
@@ -341,7 +341,7 @@ void dump(const mcmc ** chains, const unsigned int n_beta,
 }
 
 void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap,
-		char * mode) {
+		const unsigned long max_iterations, char * mode) {
 	int i;
 	unsigned long iter = chains[0]->n_iter;
 	unsigned int subiter;
@@ -385,11 +385,7 @@ void run_sampler(mcmc ** chains, const int n_beta, const unsigned int n_swap,
 	printf("starting the analysis\n");
 	fflush(stdout);
 
-	while (run
-#ifdef MAX_ITERATIONS
-	&& iter < MAX_ITERATIONS
-#endif
-	) {
+	while (run && (max_iterations == 0 || iter < max_iterations)) {
 #pragma omp parallel for
 		for (i = 0; i < n_beta; i++) {
 			for (subiter = 0; subiter < n_swap; subiter++) {

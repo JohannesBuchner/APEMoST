@@ -91,6 +91,19 @@
  */
 
 #include "define_defaults.h"
+
+#ifndef MAX_ITERATIONS
+/**
+ * set the number of iterations after you want the program to terminate.
+ *
+ * This is especially useful in benchmarking.
+ * Example: Set this to 100000.
+ * 
+ * 0 means run indefinitely
+ */
+#define MAX_ITERATIONS 0
+#endif
+
 char * progname;
 void usage();
 void help_phase(char * phase);
@@ -112,9 +125,9 @@ int main(int argc, char ** argv) {
 			calibrate_rest();
 		} else if (0 == strcmp(argv[1], "run")) {
 			if (argc == 3 && strcmp(argv[2], "--append") == 0)
-				prepare_and_run_sampler(1);
+				prepare_and_run_sampler(MAX_ITERATIONS, 1);
 			else if (argc == 2)
-				prepare_and_run_sampler(0);
+				prepare_and_run_sampler(MAX_ITERATIONS, 0);
 			else {
 				fprintf(stderr, "You are doing it wrong.\n");
 				fprintf(stderr, "Did you want to write --append?\n");

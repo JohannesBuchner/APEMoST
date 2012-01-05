@@ -24,13 +24,6 @@
 
 #ifdef __NEVER_SET_FOR_DOCUMENTATION_ONLY
 /**
- * set the number of iterations after you want the program to terminate.
- *
- * This is especially useful in benchmarking.
- * Example: Set this to 100000.
- */
-#define MAX_ITERATIONS
-/**
  * should all chains be dumped?
  *
  * Otherwise, only chain0 is dumped (beta = 1)
@@ -61,7 +54,7 @@
 
 void calibrate_first();
 
-void prepare_and_run_sampler(int append);
+void prepare_and_run_sampler(unsigned long max_iterations, int append);
 
 void calibrate_rest();
 
