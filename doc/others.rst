@@ -3,6 +3,7 @@ Links and other software
 
 
 .. contents::
+
 Introduction to MCMC and Bayesian inference
 -----------------------------------------------
 
