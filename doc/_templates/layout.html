@@ -2,7 +2,12 @@
 {% set metatags = '<meta name="keywords" value="MCMC, Bayesian inference, statistics software, APEMoST, parameter estimation, model selection, Bayes" /><meta name="description" value="APEMoST is a free, fast MCMC engine that allows the user to apply Bayesian inference for parameter estimation and model selection." />' %}
 {% set docstitle = 'APEMoST documentation'%}
 {% block footer %}
-    <div class="footer">
+  <div class="navigationfooter">
+     <div>       {%- include "globaltoc.html" %}</div>
+     <div>       {%- include "searchbox.html" %}</div>
+     <div class="clearer"></div>
+  </div>
+  <div class="footer">
     {%- if show_copyright %}
       {%- if hasdoc('copyright') %}
         {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}
