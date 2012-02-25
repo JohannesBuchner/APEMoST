@@ -40,7 +40,7 @@ void dump_mcmc(const mcmc * m) {
 	IFDEBUG {
 		debug("dumping m      ---- ");
 		IFSEGV
-			dump_p("dumping m@%p\n", (void*)m);
+			dump_p("dumping m", (void*)m);
 		printf("\t\tn_par=%d; a/r=%lu/%lu prob/best=%f/%f\n", get_n_par(m),
 				m->accept, m->reject, m->prob, m->prob_best);
 		for (i = 0; i < get_n_par(m); i++) {
