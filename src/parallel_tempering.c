@@ -213,8 +213,10 @@ void prepare_and_run_sampler(const unsigned long max_iterations, int append) {
 
 	mcmc ** chains = setup_chains();
 
+	debug("reading calibrations file")
 	read_calibration_file(chains, n_beta);
 
+	debug("opening dump files")
 	mcmc_open_dump_files(chains[i], "-chain", i, (append == 1 ? "a" : "w"));
 
 #ifdef DUMP_ALL_CHAINS
@@ -228,9 +230,11 @@ void prepare_and_run_sampler(const unsigned long max_iterations, int append) {
 		printf("automatic n_swap: %d\n", n_swap);
 	}
 
+	debug("running sampler")
 	register_signal_handlers();
 	run_sampler(chains, n_beta, n_swap, max_iterations, (append == 1 ? "a" : "w"));
 
+	debug("reporting")
 	report((const mcmc **) chains, n_beta);
 
 	for (i = 0; i < n_beta; i++) {

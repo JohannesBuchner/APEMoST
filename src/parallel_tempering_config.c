@@ -101,7 +101,7 @@ mcmc ** setup_chains() {
 	chains = (mcmc**) mem_calloc(n_beta, sizeof(mcmc*));
 	assert(chains != NULL);
 
-	printf("Initializing %d chains\n", n_beta);
+	printf("Initializing %d chains ...\n", n_beta);
 	for (i = 0; i < n_beta; i++) {
 		chains[i] = mcmc_load_params(params_filename);
 		if (i == 0) {
@@ -117,6 +117,8 @@ mcmc ** setup_chains() {
 				sizeof(parallel_tempering_mcmc));
 		set_beta(chains[i], 1);
 	}
+	IFDEBUG
+	printf("Initializing %d chains ... done\n", n_beta);
 	return chains;
 }
 
@@ -131,14 +133,20 @@ void read_calibration_file(mcmc ** chains, unsigned int n_chains) {
 	unsigned int err = 0;
 	unsigned int n_par = get_n_par(chains[0]);
 	double v;
+	int r;
 	FILE * f;
+
+	IFDEBUG
+	printf("opening calibration file %s\n", CALIBRATION_FILE);
 
 	f = fopen(CALIBRATION_FILE, "r");
 	if (f == NULL) {
-		fprintf(f, "could not read calibration file %s\n", CALIBRATION_FILE);
+		perror("could not read calibration file '" CALIBRATION_FILE "'");
 		exit(1);
 	}
 
+	IFDEBUG
+	printf("reading calibration file %s\n", CALIBRATION_FILE);
 	for (i = 0; i < n_chains && !feof(f); i++) {
 		if (fscanf(f, "%lf", &v) != 1)
 			err++;
@@ -161,7 +169,8 @@ void read_calibration_file(mcmc ** chains, unsigned int n_chains) {
 		set_params_best(chains[i], get_params(chains[i]));
 	}
 
-	fclose(f);
+	r = fclose(f);
+	assert(r == 0);
 }
 
 void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
@@ -169,6 +178,7 @@ void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
 	unsigned int i;
 	unsigned int j;
 	unsigned int n_par = get_n_par(chains[0]);
+	int r;
 
 	f = fopen(CALIBRATION_FILE, "w");
 	if (f == NULL) {
@@ -185,7 +195,8 @@ void write_calibrations_file(mcmc ** chains, const unsigned int n_chains) {
 		}
 		fprintf(f, "\n");
 	}
-	fclose(f);
+	r = fclose(f);
+	assert(r == 0);
 	printf("wrote calibration results for %d chains to %s\n", n_chains,
 			CALIBRATION_FILE);
 }

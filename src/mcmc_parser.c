@@ -133,6 +133,8 @@ void mcmc_load_data(mcmc * m, const char * datafilename) {
 	dump_s("looking for data in file", datafilename);
 	load_data(m, datafilename);
 	mcmc_check(m);
+	IFDEBUGPARSER
+	debug("loading data successful")
 }
 
 void mcmc_reuse_data(mcmc * m, const mcmc * m_orig) {
@@ -156,8 +158,12 @@ mcmc * mcmc_load_params(const char * filename) {
 	dump_i("number of lines", nlines);
 
 	m = mcmc_init(nlines - pretext);
+	IFDEBUGPARSER
+	debug("opening params file");
 	input = openfile(filename);
 	while (currentline < nlines) {
+		IFDEBUGPARSER
+		dump_i("reading parameter", currentline);
 		if (load_parameter(m, input, currentline - pretext) != 0) {
 			fprintf(stderr, "Line %d of %s is of incorrect format.\n",
 					currentline + 1, filename);
@@ -165,8 +171,12 @@ mcmc * mcmc_load_params(const char * filename) {
 		}
 		currentline++;
 	}
+	IFDEBUGPARSER
+	debug("closing params file");
 	r = fclose(input);
 	assert (r == 0);
+	IFDEBUGPARSER
+	debug("finished reading params file");
 	return m;
 }
 mcmc * mcmc_load(const char * filename, const char * datafilename) {
